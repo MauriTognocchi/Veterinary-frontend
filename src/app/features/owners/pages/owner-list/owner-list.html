@@ -1,1 +1,34 @@
-<p>owner-list works!</p>
+<section class="owner-list">
+  <h2>Propietarios</h2>
+
+  @if (loading()) {
+    <div>Cargando propietarios...</div>
+  } @else if (error()) {
+    <div>{{ error() }}</div>
+  } @else if (owners().length === 0) {
+    <div>No hay propietarios registrados.</div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          <th>DNI</th>
+          <th>Teléfono</th>
+          <th>Email</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (owner of owners(); track owner.externalId) {
+          <tr>
+            <td>{{ owner.firstName }}</td>
+            <td>{{ owner.lastName }}</td>
+            <td>{{ owner.dni }}</td>
+            <td>{{ owner.phone }}</td>
+            <td>{{ owner.email }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>
