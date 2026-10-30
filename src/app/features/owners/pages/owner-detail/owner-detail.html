@@ -1,1 +1,85 @@
-<p>owner-detail works!</p>
+<section class="owner-detail-container">
+  <div class="owner-detail-card">
+    <div class="owner-detail-header">
+      <h2>Detalle del propietario</h2>
+      <div class="owner-detail-actions">
+        @if (owner(); as owner) {
+          <a [routerLink]="['/owners', owner.externalId, 'edit']" class="primary-button">Editar</a>
+          <button type="button" class="danger-button" [disabled]="deleting()" (click)="deleteOwner()">
+            @if (deleting()) {
+              Eliminando...
+            } @else {
+              Eliminar
+            }
+          </button>
+        }
+        <a routerLink="/owners" class="secondary-button">Volver al listado</a>
+      </div>
+    </div>
+
+    @if (deleteError()) {
+      <div class="error-message">{{ deleteError() }}</div>
+    }
+
+    @if (loading()) {
+      <div class="status-message">Cargando propietario...</div>
+    } @else if (error()) {
+      <div class="error-message">{{ error() }}</div>
+    } @else if (notFound()) {
+      <div class="status-message">No se encontró el propietario solicitado.</div>
+    } @else if (owner(); as owner) {
+      <dl class="owner-details">
+        <div class="detail-row">
+          <dt>Nombre</dt>
+          <dd>{{ owner.firstName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Apellido</dt>
+          <dd>{{ owner.lastName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>DNI</dt>
+          <dd>{{ owner.dni }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Teléfono</dt>
+          <dd>{{ owner.phone }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Email</dt>
+          <dd>{{ owner.email }}</dd>
+        </div>
+      </dl>
+
+      @if (owner.address; as address) {
+        <fieldset>
+          <legend>Dirección</legend>
+          <dl class="owner-details">
+            <div class="detail-row">
+              <dt>Calle</dt>
+              <dd>{{ address.street }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Número</dt>
+              <dd>{{ address.number }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Ciudad</dt>
+              <dd>{{ address.city }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Provincia</dt>
+              <dd>{{ address.province }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>País</dt>
+              <dd>{{ address.country }}</dd>
+            </div>
+          </dl>
+        </fieldset>
+      } @else {
+        <p class="no-address">Este propietario no tiene dirección registrada.</p>
+      }
+    }
+  </div>
+</section>

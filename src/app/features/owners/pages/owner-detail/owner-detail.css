@@ -1,0 +1,157 @@
+.owner-detail-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 1rem;
+  background-color: #f5f5f5;
+}
+
+.owner-detail-card {
+  width: 100%;
+  max-width: 720px;
+  background: #ffffff;
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.owner-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.owner-detail-header h2 {
+  margin: 0;
+  color: #333333;
+}
+
+.owner-details {
+  margin: 0;
+}
+
+.detail-row {
+  display: flex;
+  gap: 1rem;
+  padding: 0.5rem 0;
+  border-bottom: 1px solid #eeeeee;
+}
+
+.detail-row dt {
+  flex: 0 0 120px;
+  color: #555555;
+  font-weight: 500;
+}
+
+.detail-row dd {
+  margin: 0;
+  color: #333333;
+}
+
+fieldset {
+  margin: 1.5rem 0 0 0;
+  padding: 1rem;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+}
+
+legend {
+  padding: 0 0.5rem;
+  color: #555555;
+  font-weight: 500;
+}
+
+.no-address {
+  margin: 1.5rem 0 0 0;
+  color: #777777;
+}
+
+.status-message {
+  padding: 0.75rem;
+  color: #555555;
+  text-align: center;
+}
+
+.error-message {
+  color: #d32f2f;
+  background-color: #ffebee;
+  padding: 0.75rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.owner-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.secondary-button {
+  padding: 0.5rem 1rem;
+  background-color: #ffffff;
+  color: #333333;
+  border: 1px solid #cccccc;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.secondary-button:hover {
+  background-color: #f0f0f0;
+}
+
+.primary-button {
+  padding: 0.5rem 1rem;
+  background-color: #1976d2;
+  color: #ffffff;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.primary-button:hover {
+  background-color: #1565c0;
+}
+
+.danger-button {
+  padding: 0.5rem 1rem;
+  background-color: #d32f2f;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  text-align: center;
+  cursor: pointer;
+}
+
+.danger-button:hover:not(:disabled) {
+  background-color: #b71c1c;
+}
+
+.danger-button:disabled {
+  background-color: #cccccc;
+  cursor: not-allowed;
+}
+
+@media (max-width: 600px) {
+  .owner-detail-card {
+    padding: 1.5rem;
+  }
+
+  .owner-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .detail-row {
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .detail-row dt {
+    flex: none;
+  }
+}

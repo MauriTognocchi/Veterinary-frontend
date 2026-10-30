@@ -1,5 +1,12 @@
 <section class="owner-list">
-  <h2>Propietarios</h2>
+  <div class="owner-list-header">
+    <h2>Propietarios</h2>
+    <a routerLink="/owners/new" class="new-owner-button">Nuevo propietario</a>
+  </div>
+
+  @if (deleteError()) {
+    <div class="error-message">{{ deleteError() }}</div>
+  }
 
   @if (loading()) {
     <div>Cargando propietarios...</div>
@@ -16,6 +23,7 @@
           <th>DNI</th>
           <th>Teléfono</th>
           <th>Email</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -26,6 +34,21 @@
             <td>{{ owner.dni }}</td>
             <td>{{ owner.phone }}</td>
             <td>{{ owner.email }}</td>
+            <td class="actions-cell">
+              <a [routerLink]="['/owners', owner.externalId]" class="detail-link">Ver detalle</a>
+              <button
+                type="button"
+                class="delete-button"
+                [disabled]="deletingId() !== null"
+                (click)="deleteOwner(owner)"
+              >
+                @if (deletingId() === owner.externalId) {
+                  Eliminando...
+                } @else {
+                  Eliminar
+                }
+              </button>
+            </td>
           </tr>
         }
       </tbody>
