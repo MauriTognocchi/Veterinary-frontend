@@ -1,6 +1,9 @@
 <section class="login-container">
   <div class="login-card">
-    <h2>Iniciar sesión</h2>
+    <div class="login-header">
+      <h2>Iniciar sesión</h2>
+      <p>Accedé al sistema de gestión de la clínica.</p>
+    </div>
 
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
@@ -25,7 +28,7 @@
           autocomplete="current-password"
         />
         @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
-          <small class="error">La contraseña es obligatorio.</small>
+          <small class="error">La contraseña es obligatoria.</small>
         }
       </div>
 

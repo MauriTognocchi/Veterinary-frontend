@@ -9,11 +9,11 @@
   }
 
   @if (loading()) {
-    <div>Cargando propietarios...</div>
+    <div class="state-message">Cargando propietarios...</div>
   } @else if (error()) {
-    <div>{{ error() }}</div>
+    <div class="error-message">{{ error() }}</div>
   } @else if (owners().length === 0) {
-    <div>No hay propietarios registrados.</div>
+    <div class="state-message">No hay propietarios registrados.</div>
   } @else {
     <table>
       <thead>
