@@ -1,5 +1,5 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OwnerService } from '../../services/owner';
 import { OwnerResponse } from '../../models/owner.model';
 
@@ -12,12 +12,15 @@ import { OwnerResponse } from '../../models/owner.model';
 })
 export class OwnerDetail implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private ownerService = inject(OwnerService);
 
   owner = signal<OwnerResponse | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
   notFound = signal<boolean>(false);
+  deleting = signal<boolean>(false);
+  deleteError = signal<string | null>(null);
 
   ngOnInit(): void {
     const externalId = this.route.snapshot.paramMap.get('externalId');
@@ -52,6 +55,46 @@ export class OwnerDetail implements OnInit {
           this.error.set('Acceso denegado. No tiene el permiso VIEW_OWNERS para ver el propietario.');
         } else {
           this.error.set('Error al cargar el propietario.');
+        }
+      },
+    });
+  }
+
+  deleteOwner(): void {
+    const owner = this.owner();
+
+    if (!owner || this.deleting()) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar a ${owner.firstName} ${owner.lastName}? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set(null);
+
+    this.ownerService.delete(owner.externalId).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.router.navigate(['/owners']);
+      },
+      error: (err) => {
+        this.deleting.set(false);
+        if (err?.status === 404) {
+          this.deleteError.set('El propietario ya no existe.');
+        } else if (err?.status === 401) {
+          this.deleteError.set(
+            'No autorizado. Es necesario autenticarse para eliminar propietarios.',
+          );
+        } else if (err?.status === 403) {
+          this.deleteError.set('Acceso denegado. No tiene permisos para eliminar propietarios.');
+        } else {
+          this.deleteError.set('Error al eliminar el propietario. Intente nuevamente.');
         }
       },
     });

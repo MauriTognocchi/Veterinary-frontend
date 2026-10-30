@@ -4,6 +4,10 @@
     <a routerLink="/owners/new" class="new-owner-button">Nuevo propietario</a>
   </div>
 
+  @if (deleteError()) {
+    <div class="error-message">{{ deleteError() }}</div>
+  }
+
   @if (loading()) {
     <div>Cargando propietarios...</div>
   } @else if (error()) {
@@ -30,8 +34,20 @@
             <td>{{ owner.dni }}</td>
             <td>{{ owner.phone }}</td>
             <td>{{ owner.email }}</td>
-            <td>
+            <td class="actions-cell">
               <a [routerLink]="['/owners', owner.externalId]" class="detail-link">Ver detalle</a>
+              <button
+                type="button"
+                class="delete-button"
+                [disabled]="deletingId() !== null"
+                (click)="deleteOwner(owner)"
+              >
+                @if (deletingId() === owner.externalId) {
+                  Eliminando...
+                } @else {
+                  Eliminar
+                }
+              </button>
             </td>
           </tr>
         }

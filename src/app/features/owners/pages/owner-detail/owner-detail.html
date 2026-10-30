@@ -5,10 +5,21 @@
       <div class="owner-detail-actions">
         @if (owner(); as owner) {
           <a [routerLink]="['/owners', owner.externalId, 'edit']" class="primary-button">Editar</a>
+          <button type="button" class="danger-button" [disabled]="deleting()" (click)="deleteOwner()">
+            @if (deleting()) {
+              Eliminando...
+            } @else {
+              Eliminar
+            }
+          </button>
         }
         <a routerLink="/owners" class="secondary-button">Volver al listado</a>
       </div>
     </div>
+
+    @if (deleteError()) {
+      <div class="error-message">{{ deleteError() }}</div>
+    }
 
     @if (loading()) {
       <div class="status-message">Cargando propietario...</div>

@@ -14,7 +14,7 @@ export class OwnerService {
   }
 
   getById(externalId: string): Observable<OwnerResponse> {
-    return this.http.get<OwnerResponse>(`${this.baseUrl}/api/owners/${encodeURIComponent(externalId)}`);
+    return this.http.get<OwnerResponse>(`${this.baseUrl}/api/owners/${encodeURIComponent(externalId)}`); // Codifica el parámetro para que los caracteres especiales no alteren la URL.
   }
 
   getByDni(dni: string): Observable<OwnerResponse> {
