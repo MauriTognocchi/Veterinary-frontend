@@ -1,5 +1,8 @@
 <section class="owner-list">
-  <h2>Propietarios</h2>
+  <div class="owner-list-header">
+    <h2>Propietarios</h2>
+    <a routerLink="/owners/new" class="new-owner-button">Nuevo propietario</a>
+  </div>
 
   @if (loading()) {
     <div>Cargando propietarios...</div>

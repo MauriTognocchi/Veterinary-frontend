@@ -1,10 +1,11 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { OwnerService } from '../../services/owner';
 import { OwnerResponse } from '../../models/owner.model';
 
 @Component({
   standalone: true,
-  imports: [],
+  imports: [RouterLink],
   selector: 'app-owner-list',
   styleUrl: './owner-list.css',
   templateUrl: './owner-list.html',
