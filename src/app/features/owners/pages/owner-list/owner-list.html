@@ -19,6 +19,7 @@
           <th>DNI</th>
           <th>Teléfono</th>
           <th>Email</th>
+          <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
@@ -29,6 +30,9 @@
             <td>{{ owner.dni }}</td>
             <td>{{ owner.phone }}</td>
             <td>{{ owner.email }}</td>
+            <td>
+              <a [routerLink]="['/owners', owner.externalId]" class="detail-link">Ver detalle</a>
+            </td>
           </tr>
         }
       </tbody>
