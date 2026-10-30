@@ -2,7 +2,12 @@
   <div class="owner-detail-card">
     <div class="owner-detail-header">
       <h2>Detalle del propietario</h2>
-      <a routerLink="/owners" class="secondary-button">Volver al listado</a>
+      <div class="owner-detail-actions">
+        @if (owner(); as owner) {
+          <a [routerLink]="['/owners', owner.externalId, 'edit']" class="primary-button">Editar</a>
+        }
+        <a routerLink="/owners" class="secondary-button">Volver al listado</a>
+      </div>
     </div>
 
     @if (loading()) {

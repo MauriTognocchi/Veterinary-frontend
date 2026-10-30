@@ -8,5 +8,6 @@ export const routes: Routes = [
   { path: 'login', component: Login },
   { path: 'owners', component: OwnerList },
   { path: 'owners/new', component: OwnerForm },
+  { path: 'owners/:externalId/edit', component: OwnerForm },
   { path: 'owners/:externalId', component: OwnerDetail },
 ];

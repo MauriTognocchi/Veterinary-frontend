@@ -1,8 +1,13 @@
 <section class="owner-form-container">
   <div class="owner-form-card">
-    <h2>Nuevo propietario</h2>
+    <h2>{{ editando() ? 'Editar propietario' : 'Nuevo propietario' }}</h2>
 
-    <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
+    @if (loading()) {
+      <div class="status-message">Cargando propietario...</div>
+    } @else if (loadError()) {
+      <div class="error-message">{{ loadError() }}</div>
+    } @else {
+      <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
       <div class="form-grid">
         <div class="form-group">
           <label for="firstName">Nombre</label>
@@ -115,15 +120,22 @@
       }
 
       <div class="actions">
-        <a routerLink="/owners" class="secondary-button">Cancelar</a>
+        <a
+          [routerLink]="editando() ? ['/owners', externalId()] : ['/owners']"
+          class="secondary-button"
+          >Cancelar</a
+        >
         <button type="submit" [disabled]="saving() || ownerForm.invalid">
           @if (saving()) {
             Guardando...
+          } @else if (editando()) {
+            Guardar cambios
           } @else {
             Crear propietario
           }
         </button>
       </div>
-    </form>
+      </form>
+    }
   </div>
 </section>

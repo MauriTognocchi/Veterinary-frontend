@@ -81,6 +81,12 @@ legend {
   text-align: center;
 }
 
+.owner-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
 .secondary-button {
   padding: 0.5rem 1rem;
   background-color: #ffffff;
@@ -94,6 +100,20 @@ legend {
 
 .secondary-button:hover {
   background-color: #f0f0f0;
+}
+
+.primary-button {
+  padding: 0.5rem 1rem;
+  background-color: #1976d2;
+  color: #ffffff;
+  border-radius: 4px;
+  text-decoration: none;
+  font-size: 0.875rem;
+  text-align: center;
+}
+
+.primary-button:hover {
+  background-color: #1565c0;
 }
 
 @media (max-width: 600px) {
