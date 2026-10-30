@@ -1,22 +1,28 @@
+:host {
+  display: block;
+}
+
 .owner-form-container {
   display: flex;
   justify-content: center;
-  padding: 2rem 1rem;
-  background-color: #f5f5f5;
+  padding: clamp(0.5rem, 2vw, 1rem) 0;
 }
 
 .owner-form-card {
   width: 100%;
-  max-width: 720px;
-  background: #ffffff;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 760px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-top: 4px solid var(--violet-600);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
 }
 
 .owner-form-card h2 {
-  margin: 0 0 1.5rem 0;
-  color: #333333;
+  margin-bottom: 1.5rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
 }
 
 .form-grid {
@@ -35,20 +41,31 @@
 }
 
 .form-group label {
-  margin-bottom: 0.5rem;
-  color: #333333;
-  font-weight: 500;
+  margin-bottom: 0.45rem;
+  color: var(--violet-900);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .form-group input {
-  padding: 0.75rem;
-  border: 1px solid #cccccc;
-  border-radius: 4px;
+  padding: 0.75rem 0.9rem;
+  color: var(--text);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
   font-size: 1rem;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: var(--violet-500);
+  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
+  outline: none;
 }
 
 .form-group input:disabled {
-  background-color: #f0f0f0;
+  background-color: var(--violet-50);
+  cursor: not-allowed;
 }
 
 .address-toggle {
@@ -56,45 +73,61 @@
 }
 
 .address-toggle label {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  color: #333333;
-  font-weight: 500;
+  gap: 0.55rem;
+  padding: 0.6rem 1rem;
+  color: var(--violet-900);
+  background-color: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.address-toggle input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--violet-600);
   cursor: pointer;
 }
 
 fieldset {
   margin: 0 0 1rem 0;
-  padding: 1rem;
-  border: 1px solid #e0e0e0;
-  border-radius: 6px;
+  padding: 1.25rem;
+  background-color: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: var(--radius-sm);
 }
 
 legend {
   padding: 0 0.5rem;
-  color: #555555;
-  font-weight: 500;
+  color: var(--violet-700);
+  font-size: 0.9rem;
+  font-weight: 700;
 }
 
 .error {
-  color: #d32f2f;
-  font-size: 0.875rem;
-  margin-top: 0.25rem;
+  margin-top: 0.3rem;
+  color: var(--danger);
+  font-size: 0.8rem;
 }
 
 .status-message {
-  padding: 0.75rem;
-  color: #555555;
+  padding: 1rem;
+  color: var(--muted);
   text-align: center;
 }
 
 .error-message {
-  color: #d32f2f;
-  background-color: #ffebee;
-  padding: 0.75rem;
-  border-radius: 4px;
   margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--danger);
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
   text-align: center;
 }
 
@@ -102,54 +135,58 @@ legend {
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
-  margin-top: 1rem;
+  margin-top: 1.5rem;
 }
 
 button,
 .secondary-button {
   padding: 0.75rem 1.5rem;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 999px;
+  font-size: 0.95rem;
+  font-weight: 600;
   text-decoration: none;
   text-align: center;
   cursor: pointer;
+  transition: filter 0.2s ease, background-color 0.2s ease;
 }
 
 button {
-  background-color: #1976d2;
   color: #ffffff;
+  background: linear-gradient(120deg, var(--violet-700), var(--violet-500));
   border: none;
 }
 
 button:hover:not(:disabled) {
-  background-color: #1565c0;
+  filter: brightness(1.07);
 }
 
 button:disabled {
-  background-color: #cccccc;
+  background: var(--violet-200);
+  color: var(--violet-700);
   cursor: not-allowed;
 }
 
 .secondary-button {
-  background-color: #ffffff;
-  color: #333333;
-  border: 1px solid #cccccc;
+  color: var(--violet-700);
+  background-color: var(--surface);
+  border: 1px solid var(--violet-300);
 }
 
 .secondary-button:hover {
-  background-color: #f0f0f0;
+  background-color: var(--violet-50);
 }
 
-@media (max-width: 600px) {
+@media (max-width: 700px) {
   .form-grid {
     grid-template-columns: 1fr;
   }
 
-  .owner-form-card {
-    padding: 1.5rem;
-  }
-
   .actions {
     flex-direction: column-reverse;
+  }
+
+  button,
+  .secondary-button {
+    width: 100%;
   }
 }

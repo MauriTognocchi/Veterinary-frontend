@@ -1,0 +1,38 @@
+:host {
+    display: block;
+}
+
+.site-footer {
+    padding: 1.25rem clamp(1rem, 4vw, 2.5rem);
+    background: linear-gradient(120deg, var(--violet-900), var(--violet-800));
+    border-top: 3px solid var(--violet-600);
+    color: var(--violet-100);
+}
+
+.footer-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    max-width: 1120px;
+    margin: 0 auto;
+}
+
+.footer-title {
+    color: #ffffff;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+}
+
+.footer-copy {
+    color: var(--violet-200);
+    font-size: 0.82rem;
+}
+
+@media (max-width: 600px) {
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+    }
+}
