@@ -17,7 +17,7 @@ export class Header {
     return !!this.tokenStorage.getAccessToken(); /// si existe lo devuelve, sino false
   }
 
-  logOut(): void{ ///metodo para cerrar sesion
+  logout(): void{ ///metodo para cerrar sesion
     this.authService.logout(); ///llama al logout() del authService (borra tokens yu redirige al login)
   }
 }

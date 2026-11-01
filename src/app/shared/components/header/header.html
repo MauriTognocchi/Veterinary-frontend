@@ -8,24 +8,20 @@
                 <path d="M12 10.2c-3.1 0-6 2.3-6 5 0 1.7 1.3 2.8 3 2.8 1 0 1.9-.4 3-.4s2 .4 3 .4c1.7 0 3-1.1 3-2.8 0-2.7-2.9-5-6-5z" />
             </svg>
         </span>
-
         <div class="brand-text">
             <h1>Sistema de gestión de turnos de veterinaria</h1>
             <span class="brand-subtitle">Cuidamos a quienes más querés</span>
         </div>
     </div>
-
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
         <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
-
-        @if (isLoggedIn()){
-            <button type="button" (click)="logOut()">Cerrar sesión</button>
-        }else{
+        @if (isLoggedIn()) {
+            <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
+        } @else {
             <a routerLink="/login" routerLinkActive="active">Iniciar sesion</a>
             <a routerLink="/register" routerLinkActive="active">Registrarse</a>
         }
-        
     </nav>
 </header>
