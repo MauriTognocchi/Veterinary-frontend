@@ -3,18 +3,20 @@
         <span class="brand-mark" aria-hidden="true">
             <span class="paw-icon">🐾</span>
         </span>
-
         <div class="brand-text">
             <h1>Sistema de gestión de turnos de veterinaria</h1>
             <span class="brand-subtitle">Cuidamos a quienes más querés</span>
         </div>
     </div>
-
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
         <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
-        <a routerLink="/login" routerLinkActive="active">Iniciar sesion</a>
-        <a routerLink="/register" routerLinkActive="active">Registrarse</a>
+        @if (isLoggedIn()) {
+            <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
+        } @else {
+            <a routerLink="/login" routerLinkActive="active">Iniciar sesion</a>
+            <a routerLink="/register" routerLinkActive="active">Registrarse</a>
+        }
     </nav>
 </header>
