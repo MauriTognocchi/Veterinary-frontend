@@ -1,6 +1,6 @@
 import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth';
 
 @Component({
@@ -14,6 +14,7 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
+  private route = inject (ActivatedRoute);
 
   loginForm: FormGroup = this.fb.group({
     username: [{ value: '', disabled: false }, [Validators.required]],
@@ -39,7 +40,13 @@ export class Login {
     this.authService.login({ username, password }).subscribe({
       next: () => {
         this.loading.set(false);
-        this.router.navigate(['/owners']);
+        const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
+
+        if(returnUrl && returnUrl.startsWith('/')){
+          this.router.navigateByUrl(returnUrl);
+        } else{
+          this.router.navigate(['/'])
+        }
       },
       error: (err) => {
         this.loading.set(false);
