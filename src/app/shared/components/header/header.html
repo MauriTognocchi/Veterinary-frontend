@@ -19,7 +19,13 @@
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
         <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
-        <a routerLink="/login" routerLinkActive="active">Iniciar sesion</a>
-        <a routerLink="/register" routerLinkActive="active">Registrarse</a>
+
+        @if (isLoggedIn()){
+            <button type="button" (click)="logOut()">Cerrar sesión</button>
+        }else{
+            <a routerLink="/login" routerLinkActive="active">Iniciar sesion</a>
+            <a routerLink="/register" routerLinkActive="active">Registrarse</a>
+        }
+        
     </nav>
 </header>
