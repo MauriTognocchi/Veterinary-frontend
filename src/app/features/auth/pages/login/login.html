@@ -5,6 +5,16 @@
       <p>Accedé al sistema de gestión de la clínica.</p>
     </div>
 
+    @if (logoutReason === 'timeout') {
+      <div class="info-message">
+        Tu sesión se cerró por inactividad.
+      </div>
+    } @else if (logoutReason === 'expired') {
+      <div class="info-message">
+        Tu sesión expiró. Iniciá sesión nuevamente.
+      </div>
+    }
+
     <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
       <div class="form-group">
         <label for="username">Usuario</label>
@@ -14,7 +24,10 @@
           formControlName="username"
           autocomplete="username"
         />
-        @if (loginForm.get('username')?.touched && loginForm.get('username')?.invalid) {
+        @if (
+          loginForm.get('username')?.touched &&
+          loginForm.get('username')?.invalid
+        ) {
           <small class="error">El usuario es obligatorio.</small>
         }
       </div>
@@ -27,7 +40,10 @@
           formControlName="password"
           autocomplete="current-password"
         />
-        @if (loginForm.get('password')?.touched && loginForm.get('password')?.invalid) {
+        @if (
+          loginForm.get('password')?.touched &&
+          loginForm.get('password')?.invalid
+        ) {
           <small class="error">La contraseña es obligatoria.</small>
         }
       </div>

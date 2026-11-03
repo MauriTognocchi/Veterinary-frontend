@@ -120,3 +120,14 @@ button:disabled {
     padding: 1rem 0;
   }
 }
+
+.info-message {
+  margin-bottom: 1rem;
+  padding: 0.75rem 0.9rem;
+  color: var(--violet-800);
+  background-color: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: var(--radius-sm);
+  font-size: 0.88rem;
+  text-align: center;
+}

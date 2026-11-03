@@ -1,0 +1,66 @@
+:host {
+  display: contents;
+}
+
+.session-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgba(30, 27, 58, 0.55);
+  backdrop-filter: blur(2px);
+}
+
+.session-dialog {
+  width: min(100%, 420px);
+  padding: 1.5rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.session-dialog h2 {
+  margin-bottom: 0.5rem;
+}
+
+.session-dialog p {
+  color: var(--muted);
+}
+
+.session-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.session-button {
+  padding: 0.65rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.session-button.primary {
+  background-color: var(--violet-600);
+  color: #ffffff;
+}
+
+.session-button.primary:hover {
+  background-color: var(--violet-700);
+}
+
+.session-button.secondary {
+  background-color: transparent;
+  border-color: var(--border);
+  color: var(--text);
+}
+
+.session-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

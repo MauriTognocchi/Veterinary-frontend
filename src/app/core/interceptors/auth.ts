@@ -1,29 +1,81 @@
-import { HttpInterceptorFn } from '@angular/common/http';
+import {
+  HttpContextToken,
+  HttpErrorResponse,
+  HttpInterceptorFn,
+} from '@angular/common/http';
 import { inject } from '@angular/core';
+import { catchError, switchMap, throwError } from 'rxjs';
+import { AuthService } from '../services/auth';
 import { TokenStorageService } from '../services/token-storage.service';
+
+/**
+ * Marca la petición que ya fue reintentada después de un refresh.
+ * Evita loops infinitos si el reintento también devuelve 401.
+ */
+const RETRIED_AFTER_REFRESH = new HttpContextToken<boolean>(() => false);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenStorage = inject(TokenStorageService);
+  const authService = inject(AuthService);
+
+  // Cubre login, refresh y cualquier endpoint de auth.
+  // A estos NO se les agrega Authorization.
+  const isAuthRequest = req.url.includes('/api/auth/');
+
+  if (isAuthRequest) {
+    return next(req);
+  }
+
   const accessToken = tokenStorage.getAccessToken();
 
-  if (req.headers.has('Authorization')) {
-    return next(req);
-  }
+  const requestWithToken = accessToken
+    ? req.clone({
+        setHeaders: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      })
+    : req;
 
-  const loginUrl = 'http://localhost:8080/api/auth/login';
-  const refreshUrl = 'http://localhost:8080/api/auth/refresh';
+  return next(requestWithToken).pipe(
+    catchError((error: unknown) => {
+      const is401 = error instanceof HttpErrorResponse && error.status === 401;
+      const alreadyRetried = req.context.get(RETRIED_AFTER_REFRESH);
 
-  const isAuthRequest = req.url === loginUrl || req.url === refreshUrl;
+      // Si no es 401, o ya reintentamos esta petición, no hacemos nada.
+      if (!is401 || alreadyRetried) {
+        return throwError(() => error);
+      }
 
-  if (!accessToken || isAuthRequest) {
-    return next(req);
-  }
+      return authService.refresh().pipe(
+        switchMap(() => {
+          const newToken = tokenStorage.getAccessToken();
 
-  const authReq = req.clone({
-    setHeaders: {
-      Authorization: `Bearer ${accessToken}`,
-    },
-  });
+          const retryReq = req.clone({
+            context: req.context.set(RETRIED_AFTER_REFRESH, true),
+            setHeaders: newToken
+              ? { Authorization: `Bearer ${newToken}` }
+              : {},
+          });
 
-  return next(authReq);
+          return next(retryReq);
+        }),
+        catchError((refreshError: unknown) => {
+          // Solo cerramos sesión si el backend rechazó el refresh token
+          // (401/403) o si ya no hay refresh token guardado. Un 5xx o un
+          // error de red es transitorio y no invalida la sesión.
+          const refreshRejected =
+            refreshError instanceof HttpErrorResponse &&
+            (refreshError.status === 401 || refreshError.status === 403);
+
+          const hasRefreshToken = tokenStorage.getRefreshToken() !== null;
+
+          if (refreshRejected || !hasRefreshToken) {
+            authService.logout('expired');
+          }
+
+          return throwError(() => refreshError);
+        }),
+      );
+    }),
+  );
 };

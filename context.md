@@ -101,7 +101,7 @@ De los 20 features que expone el backend, el frontend solo cubre **auth (login)*
 
 ### Autenticación avanzada
 - [ ] Registro (`POST /api/auth/register`)
-- [ ] Refresh token (`POST /api/auth/refresh-token`)
+- [ ] Refresh token (`POST /api/auth/refresh`)
 - [ ] Logout con UI / header
 - [ ] Decodificación de JWT (rol y permisos)
 - [ ] Guards reales aplicados a rutas
@@ -118,7 +118,7 @@ De los 20 features que expone el backend, el frontend solo cubre **auth (login)*
 4. **Guards no aplicados:** ninguna ruta usa `canActivate`.
 5. **Rutas incompletas:** sin ruta default, sin wildcard/404, sin layout, sin rutas de pets ni formularios/detalles.
 6. **URL base hardcodeada y duplicada** en `AuthService`, `OwnerService` e interceptor; debería estar en environments/config.
-7. **Mismatch de refresh:** el interceptor referencia `/api/auth/refresh`, el backend expone `/api/auth/refresh-token`, y no hay lógica de refresh.
+7. **Refresh resuelto:** el endpoint correcto del backend es `POST /api/auth/refresh` (confirmado en `/v3/api-docs`). Usar `/api/auth/refresh-token` devuelve 500.
 8. **Tokens en `sessionStorage`:** se pierden al cerrar pestaña (validar si es intencional).
 9. **Sin interceptor de errores global** ni manejo centralizado de 401/403/timeouts.
 10. **Sin estado de sesión compartido:** no hay signal observable de usuario autenticado.

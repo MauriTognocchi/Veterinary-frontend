@@ -1,7 +1,13 @@
 <div id="app-div">
-    <app-header id="header"></app-header>
+  <app-header id="header"></app-header>
 
-    <main> <router-outlet></router-outlet> </main>
+  <main>
+    <router-outlet></router-outlet>
+  </main>
 
-    <app-footer id="footer"></app-footer>
+  <app-footer id="footer"></app-footer>
+
+  @if (sessionTimeout.phase() === 'warning') {
+    <app-session-timeout-dialog />
+  }
 </div>

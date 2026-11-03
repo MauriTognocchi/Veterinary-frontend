@@ -1,0 +1,39 @@
+<div
+  class="session-overlay"
+  role="alertdialog"
+  aria-modal="true"
+  aria-labelledby="session-timeout-title"
+>
+  <div class="session-dialog">
+    <h2 id="session-timeout-title">¿Seguís ahí?</h2>
+
+    <p>
+      Tu sesión se cerrará por inactividad en
+      <strong>{{ secondsLeft() }} s</strong>.
+    </p>
+
+    <div class="session-actions">
+      <button
+        type="button"
+        class="session-button secondary"
+        (click)="logout()"
+        [disabled]="continuing()"
+      >
+        Cerrar sesión
+      </button>
+
+      <button
+        type="button"
+        class="session-button primary"
+        (click)="continueSession()"
+        [disabled]="continuing()"
+      >
+        @if (continuing()) {
+          Continuando...
+        } @else {
+          Continuar sesión
+        }
+      </button>
+    </div>
+  </div>
+</div>

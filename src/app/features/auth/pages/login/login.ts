@@ -1,5 +1,10 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth';
 
@@ -14,7 +19,9 @@ export class Login {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private router = inject(Router);
-  private route = inject (ActivatedRoute);
+  private route = inject(ActivatedRoute);
+
+  readonly logoutReason = this.route.snapshot.queryParamMap.get('reason');
 
   loginForm: FormGroup = this.fb.group({
     username: [{ value: '', disabled: false }, [Validators.required]],
@@ -32,7 +39,6 @@ export class Login {
 
     this.loading.set(true);
     this.error.set(null);
-
     this.loginForm.disable();
 
     const { username, password } = this.loginForm.getRawValue();
@@ -40,17 +46,19 @@ export class Login {
     this.authService.login({ username, password }).subscribe({
       next: () => {
         this.loading.set(false);
+
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
-        if(returnUrl && returnUrl.startsWith('/')){
+        if (returnUrl && returnUrl.startsWith('/')) {
           this.router.navigateByUrl(returnUrl);
-        } else{
-          this.router.navigate(['/'])
+        } else {
+          this.router.navigate(['/']);
         }
       },
       error: (err) => {
         this.loading.set(false);
         this.loginForm.enable();
+
         if (err?.status === 401 || err?.status === 403) {
           this.error.set('Credenciales incorrectas.');
         } else {
