@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OwnerService } from '../../services/owner';
@@ -16,6 +16,7 @@ export class OwnerForm implements OnInit {
   private ownerService = inject(OwnerService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private formHeading = viewChild<ElementRef<HTMLElement>>('formHeading');
 
   editando = signal<boolean>(false);
   externalId = signal<string | null>(null);
@@ -23,6 +24,8 @@ export class OwnerForm implements OnInit {
   loading = signal<boolean>(false);
   error = signal<string | null>(null);
   loadError = signal<string | null>(null);
+  loadErrorRetryable = signal<boolean>(false);
+  notFound = signal<boolean>(false);
   hasAddress = signal<boolean>(false);
 
   ownerForm: FormGroup = this.fb.group({
@@ -61,6 +64,8 @@ export class OwnerForm implements OnInit {
   loadOwner(externalId: string): void {
     this.loading.set(true);
     this.loadError.set(null);
+    this.loadErrorRetryable.set(false);
+    this.notFound.set(false);
 
     this.ownerService.getById(externalId).subscribe({
       next: (owner) => {
@@ -99,17 +104,42 @@ export class OwnerForm implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        if (err?.status === 404) {
-          this.loadError.set('No se encontró el propietario solicitado.');
-        } else if (err?.status === 401) {
-          this.loadError.set('No autorizado. Es necesario autenticarse para editar el propietario.');
-        } else if (err?.status === 403) {
-          this.loadError.set('Acceso denegado. No tiene permisos para editar el propietario.');
+
+        const status = err?.status;
+        const retryable =
+          status === 0 || status === 408 || status === 429 || status >= 500;
+        this.loadErrorRetryable.set(retryable);
+
+        if (status === 404) {
+          this.notFound.set(true);
+        } else if (status === 401) {
+          this.loadError.set(
+            'No tenés autorización para editar este propietario. Iniciá sesión nuevamente.',
+          );
+        } else if (status === 403) {
+          this.loadError.set('No tenés permisos para editar este propietario.');
+        } else if (status === 0) {
+          this.loadError.set(
+            'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
+          );
+        } else if (status >= 500 || status === 408 || status === 429) {
+          this.loadError.set(
+            'No pudimos cargar los datos del propietario. Intentá nuevamente en unos minutos.',
+          );
         } else {
-          this.loadError.set('Error al cargar el propietario.');
+          this.loadError.set('No pudimos cargar los datos del propietario.');
         }
       },
     });
+  }
+
+  retryLoad(): void {
+    const externalId = this.externalId();
+
+    if (externalId) {
+      this.loadOwner(externalId);
+      this.formHeading()?.nativeElement.focus();
+    }
   }
 
   toggleAddress(event: Event): void {
@@ -180,13 +210,23 @@ export class OwnerForm implements OnInit {
         if (err?.status === 404) {
           this.error.set('El propietario ya no existe.');
         } else if (err?.status === 409) {
-          this.error.set(err?.error?.message ?? 'Ya existe un propietario con ese DNI o email.');
+          this.error.set('Ya existe un propietario con ese DNI o email.');
         } else if (err?.status === 400) {
-          this.error.set(err?.error?.message ?? 'Datos inválidos. Revise los campos.');
-        } else if (err?.status === 401 || err?.status === 403) {
-          this.error.set(`No tiene permisos para ${action} propietarios.`);
+          this.error.set('Datos inválidos. Revisá los campos.');
+        } else if (err?.status === 401) {
+          this.error.set('Tu sesión no está autorizada. Iniciá sesión nuevamente.');
+        } else if (err?.status === 403) {
+          this.error.set(`No tenés permisos para ${action} propietarios.`);
+        } else if (err?.status === 0) {
+          this.error.set(
+            'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
+          );
+        } else if (err?.status >= 500 || err?.status === 408 || err?.status === 429) {
+          this.error.set(
+            `No pudimos ${action} el propietario. Intentá nuevamente en unos minutos.`,
+          );
         } else {
-          this.error.set(`Error al ${action} el propietario. Intente nuevamente.`);
+          this.error.set(`No pudimos ${action} el propietario. Intentá nuevamente.`);
         }
       },
     });

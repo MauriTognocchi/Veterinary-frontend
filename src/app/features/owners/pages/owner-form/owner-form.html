@@ -1,13 +1,27 @@
 <section class="owner-form-container">
   <div class="card card-accent owner-form-card">
-    <h2>{{ editando() ? 'Editar propietario' : 'Nuevo propietario' }}</h2>
+    <h2 #formHeading tabindex="-1">{{ editando() ? 'Editar propietario' : 'Nuevo propietario' }}</h2>
 
     @if (loading()) {
       <div class="state-message is-loading" role="status" aria-live="polite">
         Cargando propietario...
       </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">No encontramos el propietario solicitado.</div>
+      <div class="state-actions">
+        <a routerLink="/owners" class="btn btn-secondary btn-sm">Volver al listado</a>
+      </div>
     } @else if (loadError()) {
-      <div class="alert alert-error" role="alert">{{ loadError() }}</div>
+      <div class="alert alert-error" role="alert">
+        <p>{{ loadError() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
     } @else {
       <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
       <div class="form-grid">
