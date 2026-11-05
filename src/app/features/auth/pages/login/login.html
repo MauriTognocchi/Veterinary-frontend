@@ -15,7 +15,11 @@
       </div>
     }
 
-    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+    @if (loading()) {
+      <span class="visually-hidden" role="status" aria-live="polite">Iniciando sesión...</span>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" [attr.aria-busy]="loading()">
       <div class="form-group">
         <label for="username">Usuario</label>
         <input
@@ -56,6 +60,7 @@
         type="submit"
         class="btn btn-primary btn-lg btn-block"
         [disabled]="loading() || loginForm.invalid"
+        [attr.aria-busy]="loading()"
       >
         @if (loading()) {
           Iniciando sesión...

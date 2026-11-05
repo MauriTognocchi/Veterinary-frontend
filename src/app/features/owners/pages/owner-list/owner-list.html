@@ -1,6 +1,6 @@
 <section class="owner-list">
   <div class="owner-list-header">
-    <h2>Propietarios</h2>
+    <h2 #listHeading tabindex="-1">Propietarios</h2>
     <a routerLink="/owners/new" class="btn btn-primary">Nuevo propietario</a>
   </div>
 
@@ -13,7 +13,16 @@
       Cargando propietarios...
     </div>
   } @else if (error()) {
-    <div class="alert alert-error" role="alert">{{ error() }}</div>
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
   } @else if (owners().length === 0) {
     <div class="state-message" role="status">No hay propietarios registrados.</div>
   } @else {

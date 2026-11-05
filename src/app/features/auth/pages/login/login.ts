@@ -59,10 +59,18 @@ export class Login {
         this.loading.set(false);
         this.loginForm.enable();
 
-        if (err?.status === 401 || err?.status === 403) {
+        if (err?.status === 401) {
           this.error.set('Credenciales incorrectas.');
+        } else if (err?.status === 403) {
+          this.error.set('No tenés permisos para acceder.');
+        } else if (err?.status === 0) {
+          this.error.set(
+            'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
+          );
+        } else if (err?.status >= 500 || err?.status === 408 || err?.status === 429) {
+          this.error.set('No pudimos iniciar sesión. Intentá nuevamente en unos minutos.');
         } else {
-          this.error.set('Error al iniciar sesión. Intente nuevamente.');
+          this.error.set('No pudimos iniciar sesión. Intentá nuevamente.');
         }
       },
     });

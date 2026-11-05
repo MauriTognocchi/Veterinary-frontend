@@ -1,7 +1,7 @@
 <section class="owner-detail-container">
   <div class="card card-accent owner-detail-card">
     <div class="owner-detail-header">
-      <h2>Detalle del propietario</h2>
+      <h2 #detailHeading tabindex="-1">Detalle del propietario</h2>
       <div class="owner-detail-actions">
         @if (owner(); as owner) {
           <a [routerLink]="['/owners', owner.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
@@ -26,9 +26,18 @@
         Cargando propietario...
       </div>
     } @else if (error()) {
-      <div class="alert alert-error" role="alert">{{ error() }}</div>
+      <div class="alert alert-error" role="alert">
+        <p>{{ error() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
     } @else if (notFound()) {
-      <div class="state-message" role="status">No se encontró el propietario solicitado.</div>
+      <div class="state-message" role="status">No encontramos el propietario solicitado.</div>
     } @else if (owner(); as owner) {
       <dl class="detail-list">
         <div class="detail-row">

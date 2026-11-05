@@ -1,4 +1,4 @@
-import { Component, OnInit, inject, signal } from '@angular/core';
+import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { OwnerService } from '../../services/owner';
 import { OwnerResponse } from '../../models/owner.model';
@@ -14,10 +14,12 @@ export class OwnerDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private ownerService = inject(OwnerService);
+  private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
 
   owner = signal<OwnerResponse | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
+  loadErrorRetryable = signal<boolean>(false);
   notFound = signal<boolean>(false);
   deleting = signal<boolean>(false);
   deleteError = signal<string | null>(null);
@@ -37,6 +39,7 @@ export class OwnerDetail implements OnInit {
   loadOwner(externalId: string): void {
     this.loading.set(true);
     this.error.set(null);
+    this.loadErrorRetryable.set(false);
     this.notFound.set(false);
     this.owner.set(null);
 
@@ -47,17 +50,36 @@ export class OwnerDetail implements OnInit {
       },
       error: (err) => {
         this.loading.set(false);
-        if (err?.status === 404) {
+
+        const status = err?.status;
+        const retryable =
+          status === 0 || status === 408 || status === 429 || status >= 500;
+        this.loadErrorRetryable.set(retryable);
+
+        if (status === 404) {
           this.notFound.set(true);
-        } else if (err?.status === 401) {
-          this.error.set('No autorizado. Es necesario autenticarse para ver el propietario.');
-        } else if (err?.status === 403) {
-          this.error.set('Acceso denegado. No tiene el permiso VIEW_OWNERS para ver el propietario.');
+        } else if (status === 401) {
+          this.error.set('No tenés autorización para ver este propietario. Iniciá sesión nuevamente.');
+        } else if (status === 403) {
+          this.error.set('No tenés permisos para ver este propietario.');
+        } else if (status === 0) {
+          this.error.set('No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.');
+        } else if (status >= 500 || status === 408 || status === 429) {
+          this.error.set('No pudimos cargar el propietario. Intentá nuevamente en unos minutos.');
         } else {
-          this.error.set('Error al cargar el propietario.');
+          this.error.set('No pudimos cargar el propietario.');
         }
       },
     });
+  }
+
+  retryLoad(): void {
+    const externalId = this.route.snapshot.paramMap.get('externalId');
+
+    if (externalId) {
+      this.loadOwner(externalId);
+      this.detailHeading()?.nativeElement.focus();
+    }
   }
 
   deleteOwner(): void {
@@ -89,12 +111,12 @@ export class OwnerDetail implements OnInit {
           this.deleteError.set('El propietario ya no existe.');
         } else if (err?.status === 401) {
           this.deleteError.set(
-            'No autorizado. Es necesario autenticarse para eliminar propietarios.',
+            'No tenés autorización para eliminar propietarios. Iniciá sesión nuevamente.',
           );
         } else if (err?.status === 403) {
-          this.deleteError.set('Acceso denegado. No tiene permisos para eliminar propietarios.');
+          this.deleteError.set('No tenés permisos para eliminar propietarios.');
         } else {
-          this.deleteError.set('Error al eliminar el propietario. Intente nuevamente.');
+          this.deleteError.set('No pudimos eliminar el propietario. Intentá nuevamente.');
         }
       },
     });
