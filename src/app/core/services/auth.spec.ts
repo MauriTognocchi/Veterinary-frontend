@@ -1,15 +1,233 @@
+import { provideHttpClient } from '@angular/common/http';
+import {
+  HttpTestingController,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { Auth } from './auth';
+import { Router } from '@angular/router';
+import { firstValueFrom } from 'rxjs';
+import { AuthService } from './auth';
+import { TokenStorageService } from './token-storage.service';
 
-describe('Auth', () => {
-  let service: Auth;
+function encodePart(value: Record<string, unknown>): string {
+  return btoa(JSON.stringify(value))
+    .replace(/\+/g, '-')
+    .replace(/\//g, '_')
+    .replace(/=+$/, '');
+}
+
+function createAccessToken(roles: string[]): string {
+  return `${encodePart({ alg: 'HS256', typ: 'JWT' })}.${encodePart({ roles })}.signature`;
+}
+
+describe('AuthService', () => {
+  let http: HttpTestingController;
+  let storage: TokenStorageService;
+  let router: { navigate: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Auth);
+    sessionStorage.clear();
+    router = { navigate: vi.fn().mockResolvedValue(true) };
+
+    TestBed.configureTestingModule({
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: Router, useValue: router },
+      ],
+    });
+
+    http = TestBed.inject(HttpTestingController);
+    storage = TestBed.inject(TokenStorageService);
   });
 
-  it('should be created', () => {
-    expect(service).toBeTruthy();
+  afterEach(() => {
+    http.verify();
+    sessionStorage.clear();
+  });
+
+  it('recupera roles y permisos del access token guardado', () => {
+    storage.setTokens(
+      createAccessToken(['ROLE_ADMIN', 'VIEW_OWNERS', 'CREATE_OWNERS']),
+      'refresh-token',
+    );
+
+    const service = TestBed.inject(AuthService);
+
+    expect(service.roles()).toEqual(['ROLE_ADMIN']);
+    expect(service.permissions()).toEqual(['VIEW_OWNERS', 'CREATE_OWNERS']);
+    expect(service.isAuthenticated()).toBe(true);
+  });
+
+  it('separa roles y permisos e ignora roles desconocidos', () => {
+    storage.setTokens(
+      createAccessToken(['ROLE_CLIENT', 'ROLE_UNKNOWN', 'VIEW_PETS']),
+      'refresh-token',
+    );
+
+    const service = TestBed.inject(AuthService);
+
+    expect(service.roles()).toEqual(['ROLE_CLIENT']);
+    expect(service.permissions()).toEqual(['VIEW_PETS']);
+    expect(service.hasRole('ROLE_CLIENT')).toBe(true);
+    expect(service.hasPermission('VIEW_PETS')).toBe(true);
+    expect(service.hasAnyRole(['ROLE_ADMIN', 'ROLE_CLIENT'])).toBe(true);
+    expect(service.hasAnyPermission(['VIEW_OWNERS', 'VIEW_PETS'])).toBe(true);
+  });
+
+  it('deja roles y permisos vacíos si el token es inválido', () => {
+    storage.setTokens('token-invalido', 'refresh-token');
+
+    const service = TestBed.inject(AuthService);
+
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+  });
+
+  it('actualiza roles y permisos al iniciar sesión', () => {
+    const service = TestBed.inject(AuthService);
+    const accessToken = createAccessToken([
+      'ROLE_RECEPTIONIST',
+      'VIEW_OWNERS',
+      'CREATE_OWNERS',
+    ]);
+
+    service.login({ username: 'recepcion', password: 'secreto' }).subscribe();
+
+    const request = http.expectOne('http://localhost:8080/api/auth/login');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({
+      username: 'recepcion',
+      password: 'secreto',
+    });
+
+    request.flush({ accessToken, refreshToken: 'refresh-token' });
+
+    expect(service.roles()).toEqual(['ROLE_RECEPTIONIST']);
+    expect(service.permissions()).toEqual(['VIEW_OWNERS', 'CREATE_OWNERS']);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(storage.getAccessToken()).toBe(accessToken);
+    expect(storage.getRefreshToken()).toBe('refresh-token');
+  });
+
+  it('actualiza roles y permisos al renovar el token', () => {
+    storage.setTokens(createAccessToken(['ROLE_CLIENT']), 'refresh-token');
+    const service = TestBed.inject(AuthService);
+    const renewedAccessToken = createAccessToken([
+      'ROLE_VETERINARIAN',
+      'VIEW_OWNERS',
+    ]);
+
+    service.refresh().subscribe();
+
+    const request = http.expectOne('http://localhost:8080/api/auth/refresh');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ refreshToken: 'refresh-token' });
+
+    request.flush({ accessToken: renewedAccessToken });
+
+    expect(service.roles()).toEqual(['ROLE_VETERINARIAN']);
+    expect(service.permissions()).toEqual(['VIEW_OWNERS']);
+    expect(storage.getAccessToken()).toBe(renewedAccessToken);
+    expect(storage.getRefreshToken()).toBe('refresh-token');
+  });
+
+  it('no renueva si el access token es decodificable', async () => {
+    storage.setTokens(createAccessToken(['ROLE_ADMIN']), 'refresh-token');
+    const service = TestBed.inject(AuthService);
+
+    await expect(firstValueFrom(service.ensureSession())).resolves.toBe(true);
+
+    http.expectNone('http://localhost:8080/api/auth/refresh');
+  });
+
+  it('renueva cuando el access token es inválido y hay refresh token', async () => {
+    storage.setTokens('token-invalido', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+    const renewedAccessToken = createAccessToken([
+      'ROLE_ADMIN',
+      'VIEW_OWNERS',
+    ]);
+
+    const resultPromise = firstValueFrom(service.ensureSession());
+
+    const request = http.expectOne('http://localhost:8080/api/auth/refresh');
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ refreshToken: 'refresh-token' });
+    request.flush({
+      accessToken: renewedAccessToken,
+      refreshToken: 'nuevo-refresh-token',
+    });
+
+    await expect(resultPromise).resolves.toBe(true);
+    expect(service.roles()).toEqual(['ROLE_ADMIN']);
+    expect(service.permissions()).toEqual(['VIEW_OWNERS']);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(storage.getAccessToken()).toBe(renewedAccessToken);
+    expect(storage.getRefreshToken()).toBe('nuevo-refresh-token');
+  });
+
+  it('renueva cuando falta el access token pero hay refresh token', async () => {
+    sessionStorage.setItem('refreshToken', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+    const renewedAccessToken = createAccessToken(['ROLE_RECEPTIONIST']);
+
+    const resultPromise = firstValueFrom(service.ensureSession());
+
+    const request = http.expectOne('http://localhost:8080/api/auth/refresh');
+    request.flush({ accessToken: renewedAccessToken });
+
+    await expect(resultPromise).resolves.toBe(true);
+    expect(service.roles()).toEqual(['ROLE_RECEPTIONIST']);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(storage.getAccessToken()).toBe(renewedAccessToken);
+  });
+
+  it('limpia la sesión cuando el refresh falla', async () => {
+    storage.setTokens('token-invalido', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+
+    const resultPromise = firstValueFrom(service.ensureSession());
+
+    const request = http.expectOne('http://localhost:8080/api/auth/refresh');
+    request.flush(
+      {},
+      { status: 401, statusText: 'Unauthorized' },
+    );
+
+    await expect(resultPromise).resolves.toBe(false);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(storage.getRefreshToken()).toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('no intenta renovar cuando no hay tokens', async () => {
+    const service = TestBed.inject(AuthService);
+
+    await expect(firstValueFrom(service.ensureSession())).resolves.toBe(false);
+
+    http.expectNone('http://localhost:8080/api/auth/refresh');
+  });
+
+  it('limpia roles y permisos al cerrar sesión', () => {
+    storage.setTokens(
+      createAccessToken(['ROLE_ADMIN', 'VIEW_OWNERS']),
+      'refresh-token',
+    );
+    const service = TestBed.inject(AuthService);
+
+    service.logout();
+
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(storage.getRefreshToken()).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: {},
+    });
   });
 });

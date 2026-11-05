@@ -1,0 +1,31 @@
+:host {
+  display: block;
+}
+
+.forbidden-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 0;
+}
+
+.forbidden-card {
+  width: 100%;
+  max-width: 520px;
+  text-align: center;
+}
+
+.forbidden-code {
+  margin-bottom: 0.5rem;
+  color: var(--violet-600);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.forbidden-card h2 {
+  margin-bottom: 1rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
