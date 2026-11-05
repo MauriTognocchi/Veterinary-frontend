@@ -9,14 +9,7 @@
 }
 
 .owner-detail-card {
-  width: 100%;
   max-width: 760px;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 4px solid var(--violet-600);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
 }
 
 .owner-detail-header {
@@ -40,118 +33,14 @@
   gap: 0.6rem;
 }
 
-.owner-details {
-  margin: 0;
-}
-
-.detail-row {
-  display: flex;
-  gap: 1rem;
-  padding: 0.65rem 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.detail-row:last-child {
-  border-bottom: none;
-}
-
-.detail-row dt {
-  flex: 0 0 120px;
-  color: var(--muted);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.detail-row dd {
-  margin: 0;
-  color: var(--text);
-}
-
-fieldset {
+.owner-detail-card .form-fieldset {
   margin: 1.5rem 0 0 0;
-  padding: 1.25rem;
-  background-color: var(--violet-50);
-  border: 1px solid var(--violet-200);
-  border-radius: var(--radius-sm);
-}
-
-legend {
-  padding: 0 0.5rem;
-  color: var(--violet-700);
-  font-size: 0.9rem;
-  font-weight: 700;
 }
 
 .no-address {
   margin-top: 1.5rem;
   color: var(--muted);
   font-style: italic;
-}
-
-.status-message {
-  padding: 1rem;
-  color: var(--muted);
-  text-align: center;
-}
-
-.error-message {
-  margin-bottom: 1rem;
-  padding: 0.75rem 0.9rem;
-  color: var(--danger);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  text-align: center;
-}
-
-.secondary-button,
-.primary-button,
-.danger-button {
-  padding: 0.5rem 1.1rem;
-  border-radius: 999px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
-  transition: filter 0.2s ease, background-color 0.2s ease;
-}
-
-.secondary-button {
-  color: var(--violet-700);
-  background-color: var(--surface);
-  border: 1px solid var(--violet-300);
-}
-
-.secondary-button:hover {
-  background-color: var(--violet-50);
-}
-
-.primary-button {
-  color: #ffffff;
-  background: linear-gradient(120deg, var(--violet-700), var(--violet-500));
-  border: none;
-}
-
-.primary-button:hover {
-  filter: brightness(1.07);
-}
-
-.danger-button {
-  color: #ffffff;
-  background-color: var(--danger);
-  border: none;
-}
-
-.danger-button:hover:not(:disabled) {
-  filter: brightness(0.92);
-}
-
-.danger-button:disabled {
-  background-color: var(--violet-200);
-  color: var(--violet-700);
-  cursor: not-allowed;
 }
 
 @media (max-width: 640px) {
@@ -164,18 +53,7 @@ legend {
     width: 100%;
   }
 
-  .secondary-button,
-  .primary-button,
-  .danger-button {
+  .owner-detail-actions .btn {
     flex: 1;
-  }
-
-  .detail-row {
-    flex-direction: column;
-    gap: 0.2rem;
-  }
-
-  .detail-row dt {
-    flex: none;
   }
 }

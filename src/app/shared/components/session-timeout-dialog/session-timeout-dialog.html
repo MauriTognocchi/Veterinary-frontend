@@ -4,7 +4,7 @@
   aria-modal="true"
   aria-labelledby="session-timeout-title"
 >
-  <div class="session-dialog">
+  <div class="card session-dialog">
     <h2 id="session-timeout-title">¿Seguís ahí?</h2>
 
     <p>
@@ -15,7 +15,7 @@
     <div class="session-actions">
       <button
         type="button"
-        class="session-button secondary"
+        class="btn btn-secondary btn-sm"
         (click)="logout()"
         [disabled]="continuing()"
       >
@@ -24,7 +24,7 @@
 
       <button
         type="button"
-        class="session-button primary"
+        class="btn btn-primary btn-sm"
         (click)="continueSession()"
         [disabled]="continuing()"
       >

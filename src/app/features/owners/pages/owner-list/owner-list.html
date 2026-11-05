@@ -1,19 +1,21 @@
 <section class="owner-list">
   <div class="owner-list-header">
     <h2>Propietarios</h2>
-    <a routerLink="/owners/new" class="new-owner-button">Nuevo propietario</a>
+    <a routerLink="/owners/new" class="btn btn-primary">Nuevo propietario</a>
   </div>
 
   @if (deleteError()) {
-    <div class="error-message">{{ deleteError() }}</div>
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
   }
 
   @if (loading()) {
-    <div class="state-message">Cargando propietarios...</div>
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando propietarios...
+    </div>
   } @else if (error()) {
-    <div class="error-message">{{ error() }}</div>
+    <div class="alert alert-error" role="alert">{{ error() }}</div>
   } @else if (owners().length === 0) {
-    <div class="state-message">No hay propietarios registrados.</div>
+    <div class="state-message" role="status">No hay propietarios registrados.</div>
   } @else {
     <table>
       <thead>
@@ -38,7 +40,7 @@
               <a [routerLink]="['/owners', owner.externalId]" class="detail-link">Ver detalle</a>
               <button
                 type="button"
-                class="delete-button"
+                class="btn btn-danger btn-sm"
                 [disabled]="deletingId() !== null"
                 (click)="deleteOwner(owner)"
               >
