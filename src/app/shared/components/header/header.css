@@ -1,16 +1,16 @@
 :host {
     display: block;
-}
-
-.site-header {
     position: sticky;
     top: 0;
     z-index: 50;
+}
+
+.site-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
-    padding: 1rem clamp(1rem, 4vw, 2.5rem);
+    padding: 1rem var(--layout-gutter);
     background: linear-gradient(120deg, var(--violet-800), var(--violet-600) 55%, var(--violet-500));
     border-bottom: 3px solid var(--violet-300);
     box-shadow: var(--shadow-md);
@@ -90,8 +90,11 @@
 }
 
 @media (max-width: 860px) {
-    .site-header {
+    :host {
         position: static;
+    }
+
+    .site-header {
         flex-direction: column;
         align-items: flex-start;
         gap: 0.9rem;
