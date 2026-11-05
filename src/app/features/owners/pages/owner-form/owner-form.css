@@ -9,63 +9,13 @@
 }
 
 .owner-form-card {
-  width: 100%;
   max-width: 760px;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-top: 4px solid var(--violet-600);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow-md);
 }
 
 .owner-form-card h2 {
   margin-bottom: 1.5rem;
   color: var(--violet-900);
   font-size: clamp(1.4rem, 3vw, 1.75rem);
-}
-
-.form-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 1rem;
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-.form-group.full-width {
-  grid-column: 1 / -1;
-}
-
-.form-group label {
-  margin-bottom: 0.45rem;
-  color: var(--violet-900);
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.form-group input {
-  padding: 0.75rem 0.9rem;
-  color: var(--text);
-  background-color: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  font-size: 1rem;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-}
-
-.form-group input:focus {
-  border-color: var(--violet-500);
-  box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.15);
-  outline: none;
-}
-
-.form-group input:disabled {
-  background-color: var(--violet-50);
-  cursor: not-allowed;
 }
 
 .address-toggle {
@@ -93,44 +43,6 @@
   cursor: pointer;
 }
 
-fieldset {
-  margin: 0 0 1rem 0;
-  padding: 1.25rem;
-  background-color: var(--violet-50);
-  border: 1px solid var(--violet-200);
-  border-radius: var(--radius-sm);
-}
-
-legend {
-  padding: 0 0.5rem;
-  color: var(--violet-700);
-  font-size: 0.9rem;
-  font-weight: 700;
-}
-
-.error {
-  margin-top: 0.3rem;
-  color: var(--danger);
-  font-size: 0.8rem;
-}
-
-.status-message {
-  padding: 1rem;
-  color: var(--muted);
-  text-align: center;
-}
-
-.error-message {
-  margin-bottom: 1rem;
-  padding: 0.75rem 0.9rem;
-  color: var(--danger);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  text-align: center;
-}
-
 .actions {
   display: flex;
   justify-content: flex-end;
@@ -138,55 +50,12 @@ legend {
   margin-top: 1.5rem;
 }
 
-button,
-.secondary-button {
-  padding: 0.75rem 1.5rem;
-  border-radius: 999px;
-  font-size: 0.95rem;
-  font-weight: 600;
-  text-decoration: none;
-  text-align: center;
-  cursor: pointer;
-  transition: filter 0.2s ease, background-color 0.2s ease;
-}
-
-button {
-  color: #ffffff;
-  background: linear-gradient(120deg, var(--violet-700), var(--violet-500));
-  border: none;
-}
-
-button:hover:not(:disabled) {
-  filter: brightness(1.07);
-}
-
-button:disabled {
-  background: var(--violet-200);
-  color: var(--violet-700);
-  cursor: not-allowed;
-}
-
-.secondary-button {
-  color: var(--violet-700);
-  background-color: var(--surface);
-  border: 1px solid var(--violet-300);
-}
-
-.secondary-button:hover {
-  background-color: var(--violet-50);
-}
-
 @media (max-width: 700px) {
-  .form-grid {
-    grid-template-columns: 1fr;
-  }
-
   .actions {
     flex-direction: column-reverse;
   }
 
-  button,
-  .secondary-button {
+  .actions .btn {
     width: 100%;
   }
 }

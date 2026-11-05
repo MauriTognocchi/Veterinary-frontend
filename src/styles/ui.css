@@ -1,0 +1,294 @@
+/* ==========================================================================
+   Shared UI primitives - KAN-63
+   Capa global de clases reutilizables. No reemplaza la encapsulacion de los
+   componentes: cada componente conserva su layout propio.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   Buttons
+   -------------------------------------------------------------------------- */
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    padding: 0.7rem 1.3rem;
+    font: inherit;
+    font-size: 0.9rem;
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    text-decoration: none;
+    white-space: nowrap;
+    color: inherit;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: filter var(--transition-fast), background-color var(--transition-fast),
+        transform 0.1s ease;
+}
+
+.btn:focus-visible {
+    outline: 3px solid rgba(139, 92, 246, 0.45);
+    outline-offset: 2px;
+}
+
+.btn:active:not(:disabled):not([aria-disabled="true"]) {
+    transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+    cursor: not-allowed;
+}
+
+.btn-primary {
+    color: #ffffff;
+    background: linear-gradient(120deg, var(--violet-700), var(--violet-500));
+    border-color: transparent;
+    box-shadow: var(--shadow-sm);
+}
+
+.btn-primary:hover:not(:disabled):not([aria-disabled="true"]) {
+    filter: brightness(1.07);
+}
+
+.btn-primary:disabled,
+.btn-primary[aria-disabled="true"] {
+    color: var(--violet-700);
+    background: var(--violet-200);
+    box-shadow: none;
+}
+
+.btn-secondary {
+    color: var(--violet-700);
+    background-color: var(--surface);
+    border-color: var(--violet-300);
+}
+
+.btn-secondary:hover:not(:disabled):not([aria-disabled="true"]) {
+    background-color: var(--violet-50);
+}
+
+.btn-secondary:disabled,
+.btn-secondary[aria-disabled="true"] {
+    color: var(--muted);
+    background-color: var(--surface);
+    border-color: var(--border);
+}
+
+.btn-danger {
+    color: #ffffff;
+    background-color: var(--danger);
+    border-color: transparent;
+}
+
+.btn-danger:hover:not(:disabled):not([aria-disabled="true"]) {
+    filter: brightness(0.92);
+}
+
+.btn-danger:disabled,
+.btn-danger[aria-disabled="true"] {
+    color: var(--violet-700);
+    background-color: var(--violet-200);
+}
+
+.btn-sm {
+    padding: 0.5rem 1.1rem;
+    font-size: 0.85rem;
+}
+
+.btn-lg {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+}
+
+.btn-block {
+    width: 100%;
+}
+
+/* --------------------------------------------------------------------------
+   Forms
+   -------------------------------------------------------------------------- */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+}
+
+.form-group > label {
+    color: var(--violet-900);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-md);
+}
+
+.form-grid > .full-width {
+    grid-column: 1 / -1;
+}
+
+.field-error {
+    color: var(--danger);
+    font-size: 0.8rem;
+}
+
+.form-fieldset {
+    margin: 0 0 var(--space-md) 0;
+    padding: 1.25rem;
+    background-color: var(--violet-50);
+    border: 1px solid var(--violet-200);
+    border-radius: var(--radius-sm);
+}
+
+.form-fieldset > legend {
+    padding: 0 0.5rem;
+    color: var(--violet-700);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+/* --------------------------------------------------------------------------
+   Cards
+   -------------------------------------------------------------------------- */
+.card {
+    width: 100%;
+    padding: clamp(1.5rem, 4vw, 2.5rem);
+    background-color: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-md);
+}
+
+.card-accent {
+    border-top: 4px solid var(--violet-600);
+}
+
+/* --------------------------------------------------------------------------
+   Alerts (general messages, not field validation)
+   -------------------------------------------------------------------------- */
+.alert {
+    margin-bottom: var(--space-md);
+    padding: 0.75rem 0.9rem;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    text-align: center;
+}
+
+.alert-error {
+    color: var(--danger);
+    background-color: #fef2f2;
+    border-color: #fecaca;
+}
+
+.alert-info {
+    color: var(--violet-800);
+    background-color: var(--violet-50);
+    border-color: var(--violet-200);
+}
+
+.alert-success {
+    color: var(--success);
+    background-color: var(--success-bg);
+    border-color: var(--success-border);
+}
+
+/* --------------------------------------------------------------------------
+   Empty and loading states
+   -------------------------------------------------------------------------- */
+.state-message {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    padding: 1.5rem 1rem;
+    color: var(--muted);
+    background-color: var(--surface);
+    border: 1px dashed var(--violet-300);
+    border-radius: var(--radius);
+    text-align: center;
+}
+
+.state-message.is-loading {
+    border-style: solid;
+    border-color: var(--border);
+}
+
+.state-message.is-loading::before {
+    content: "";
+    flex-shrink: 0;
+    width: 1rem;
+    height: 1rem;
+    border: 2px solid var(--violet-200);
+    border-top-color: var(--violet-600);
+    border-radius: 50%;
+    animation: state-spin 0.8s linear infinite;
+}
+
+@keyframes state-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .state-message.is-loading::before {
+        animation: none;
+    }
+}
+
+/* --------------------------------------------------------------------------
+   Detail lists (definition lists)
+   -------------------------------------------------------------------------- */
+.detail-list {
+    margin: 0;
+}
+
+.detail-row {
+    display: flex;
+    gap: var(--space-md);
+    padding: 0.65rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.detail-row:last-child {
+    border-bottom: none;
+}
+
+.detail-row dt {
+    flex: 0 0 120px;
+    color: var(--muted);
+    font-size: 0.88rem;
+    font-weight: 600;
+}
+
+.detail-row dd {
+    margin: 0;
+    color: var(--text);
+}
+
+/* --------------------------------------------------------------------------
+   Responsive
+   -------------------------------------------------------------------------- */
+@media (max-width: 700px) {
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 640px) {
+    .detail-row {
+        flex-direction: column;
+        gap: 0.2rem;
+    }
+
+    .detail-row dt {
+        flex: none;
+    }
+}

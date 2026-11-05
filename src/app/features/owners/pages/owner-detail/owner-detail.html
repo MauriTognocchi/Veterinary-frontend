@@ -1,11 +1,11 @@
 <section class="owner-detail-container">
-  <div class="owner-detail-card">
+  <div class="card card-accent owner-detail-card">
     <div class="owner-detail-header">
       <h2>Detalle del propietario</h2>
       <div class="owner-detail-actions">
         @if (owner(); as owner) {
-          <a [routerLink]="['/owners', owner.externalId, 'edit']" class="primary-button">Editar</a>
-          <button type="button" class="danger-button" [disabled]="deleting()" (click)="deleteOwner()">
+          <a [routerLink]="['/owners', owner.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
+          <button type="button" class="btn btn-danger btn-sm" [disabled]="deleting()" (click)="deleteOwner()">
             @if (deleting()) {
               Eliminando...
             } @else {
@@ -13,22 +13,24 @@
             }
           </button>
         }
-        <a routerLink="/owners" class="secondary-button">Volver al listado</a>
+        <a routerLink="/owners" class="btn btn-secondary btn-sm">Volver al listado</a>
       </div>
     </div>
 
     @if (deleteError()) {
-      <div class="error-message">{{ deleteError() }}</div>
+      <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
     }
 
     @if (loading()) {
-      <div class="status-message">Cargando propietario...</div>
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando propietario...
+      </div>
     } @else if (error()) {
-      <div class="error-message">{{ error() }}</div>
+      <div class="alert alert-error" role="alert">{{ error() }}</div>
     } @else if (notFound()) {
-      <div class="status-message">No se encontró el propietario solicitado.</div>
+      <div class="state-message" role="status">No se encontró el propietario solicitado.</div>
     } @else if (owner(); as owner) {
-      <dl class="owner-details">
+      <dl class="detail-list">
         <div class="detail-row">
           <dt>Nombre</dt>
           <dd>{{ owner.firstName }}</dd>
@@ -52,9 +54,9 @@
       </dl>
 
       @if (owner.address; as address) {
-        <fieldset>
+        <fieldset class="form-fieldset">
           <legend>Dirección</legend>
-          <dl class="owner-details">
+          <dl class="detail-list">
             <div class="detail-row">
               <dt>Calle</dt>
               <dd>{{ address.street }}</dd>

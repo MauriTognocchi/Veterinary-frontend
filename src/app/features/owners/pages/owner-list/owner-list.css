@@ -4,6 +4,10 @@
   gap: 1.25rem;
 }
 
+.owner-list > .alert {
+  margin-bottom: 0;
+}
+
 .owner-list-header {
   display: flex;
   align-items: center;
@@ -14,27 +18,6 @@
 
 .owner-list-header h2 {
   font-size: clamp(1.4rem, 3vw, 1.75rem);
-}
-
-.new-owner-button {
-  padding: 0.65rem 1.25rem;
-  color: #ffffff;
-  background: linear-gradient(120deg, var(--violet-700), var(--violet-500));
-  border-radius: 999px;
-  font-size: 0.9rem;
-  font-weight: 600;
-  text-decoration: none;
-  white-space: nowrap;
-  box-shadow: var(--shadow-sm);
-  transition: filter 0.2s ease, transform 0.1s ease;
-}
-
-.new-owner-button:hover {
-  filter: brightness(1.07);
-}
-
-.new-owner-button:active {
-  transform: translateY(1px);
 }
 
 .detail-link {
@@ -54,54 +37,9 @@
   gap: 0.75rem;
 }
 
-.delete-button {
-  padding: 0.35rem 0.85rem;
-  color: #ffffff;
-  background-color: var(--danger);
-  border: none;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: filter 0.2s ease;
-}
-
-.delete-button:hover:not(:disabled) {
-  filter: brightness(0.92);
-}
-
-.delete-button:disabled {
-  background-color: var(--violet-200);
-  color: var(--violet-700);
-  cursor: not-allowed;
-}
-
-.state-message {
-  padding: 1.5rem 1rem;
-  color: var(--muted);
-  background-color: var(--surface);
-  border: 1px dashed var(--violet-300);
-  border-radius: var(--radius);
-  text-align: center;
-}
-
-.error-message {
-  padding: 0.75rem 0.9rem;
-  color: var(--danger);
-  background-color: #fef2f2;
-  border: 1px solid #fecaca;
-  border-radius: var(--radius-sm);
-  font-size: 0.88rem;
-  text-align: center;
-}
-
 @media (max-width: 640px) {
   .owner-list-header {
     flex-direction: column;
     align-items: stretch;
-  }
-
-  .new-owner-button {
-    text-align: center;
   }
 }

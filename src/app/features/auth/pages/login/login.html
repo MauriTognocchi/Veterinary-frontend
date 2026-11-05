@@ -1,16 +1,16 @@
 <section class="login-container">
-  <div class="login-card">
+  <div class="card card-accent login-card">
     <div class="login-header">
       <h2>Iniciar sesión</h2>
       <p>Accedé al sistema de gestión de la clínica.</p>
     </div>
 
     @if (logoutReason === 'timeout') {
-      <div class="info-message">
+      <div class="alert alert-info" role="status">
         Tu sesión se cerró por inactividad.
       </div>
     } @else if (logoutReason === 'expired') {
-      <div class="info-message">
+      <div class="alert alert-info" role="status">
         Tu sesión expiró. Iniciá sesión nuevamente.
       </div>
     }
@@ -28,7 +28,7 @@
           loginForm.get('username')?.touched &&
           loginForm.get('username')?.invalid
         ) {
-          <small class="error">El usuario es obligatorio.</small>
+          <small class="field-error">El usuario es obligatorio.</small>
         }
       </div>
 
@@ -44,15 +44,19 @@
           loginForm.get('password')?.touched &&
           loginForm.get('password')?.invalid
         ) {
-          <small class="error">La contraseña es obligatoria.</small>
+          <small class="field-error">La contraseña es obligatoria.</small>
         }
       </div>
 
       @if (error()) {
-        <div class="error-message">{{ error() }}</div>
+        <div class="alert alert-error" role="alert">{{ error() }}</div>
       }
 
-      <button type="submit" [disabled]="loading() || loginForm.invalid">
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg btn-block"
+        [disabled]="loading() || loginForm.invalid"
+      >
         @if (loading()) {
           Iniciando sesión...
         } @else {

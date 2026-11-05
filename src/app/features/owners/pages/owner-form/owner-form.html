@@ -1,11 +1,13 @@
 <section class="owner-form-container">
-  <div class="owner-form-card">
+  <div class="card card-accent owner-form-card">
     <h2>{{ editando() ? 'Editar propietario' : 'Nuevo propietario' }}</h2>
 
     @if (loading()) {
-      <div class="status-message">Cargando propietario...</div>
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando propietario...
+      </div>
     } @else if (loadError()) {
-      <div class="error-message">{{ loadError() }}</div>
+      <div class="alert alert-error" role="alert">{{ loadError() }}</div>
     } @else {
       <form [formGroup]="ownerForm" (ngSubmit)="onSubmit()">
       <div class="form-grid">
@@ -18,7 +20,7 @@
             autocomplete="given-name"
           />
           @if (ownerForm.get('firstName')?.touched && ownerForm.get('firstName')?.invalid) {
-            <small class="error">El nombre es obligatorio (2 a 30 caracteres).</small>
+            <small class="field-error">El nombre es obligatorio (2 a 30 caracteres).</small>
           }
         </div>
 
@@ -31,7 +33,7 @@
             autocomplete="family-name"
           />
           @if (ownerForm.get('lastName')?.touched && ownerForm.get('lastName')?.invalid) {
-            <small class="error">El apellido es obligatorio (2 a 30 caracteres).</small>
+            <small class="field-error">El apellido es obligatorio (2 a 30 caracteres).</small>
           }
         </div>
 
@@ -39,7 +41,7 @@
           <label for="dni">DNI</label>
           <input id="dni" type="text" formControlName="dni" />
           @if (ownerForm.get('dni')?.touched && ownerForm.get('dni')?.invalid) {
-            <small class="error">El DNI es obligatorio (7 a 15 caracteres).</small>
+            <small class="field-error">El DNI es obligatorio (7 a 15 caracteres).</small>
           }
         </div>
 
@@ -47,7 +49,7 @@
           <label for="phone">Teléfono</label>
           <input id="phone" type="tel" formControlName="phone" autocomplete="tel" />
           @if (ownerForm.get('phone')?.touched && ownerForm.get('phone')?.invalid) {
-            <small class="error">El teléfono es obligatorio (8 a 20 caracteres).</small>
+            <small class="field-error">El teléfono es obligatorio (8 a 20 caracteres).</small>
           }
         </div>
 
@@ -55,7 +57,7 @@
           <label for="email">Email</label>
           <input id="email" type="email" formControlName="email" autocomplete="email" />
           @if (ownerForm.get('email')?.touched && ownerForm.get('email')?.invalid) {
-            <small class="error">Ingrese un email válido (máximo 100 caracteres).</small>
+            <small class="field-error">Ingrese un email válido (máximo 100 caracteres).</small>
           }
         </div>
       </div>
@@ -68,7 +70,7 @@
       </div>
 
       @if (hasAddress()) {
-        <fieldset formGroupName="address">
+        <fieldset class="form-fieldset" formGroupName="address">
           <legend>Dirección</legend>
 
           <div class="form-grid">
@@ -76,7 +78,7 @@
               <label for="street">Calle</label>
               <input id="street" type="text" formControlName="street" />
               @if (addressGroup.get('street')?.touched && addressGroup.get('street')?.invalid) {
-                <small class="error">La calle es obligatoria (máximo 100 caracteres).</small>
+                <small class="field-error">La calle es obligatoria (máximo 100 caracteres).</small>
               }
             </div>
 
@@ -84,7 +86,7 @@
               <label for="number">Número</label>
               <input id="number" type="text" formControlName="number" />
               @if (addressGroup.get('number')?.touched && addressGroup.get('number')?.invalid) {
-                <small class="error">El número es obligatorio (máximo 50 caracteres).</small>
+                <small class="field-error">El número es obligatorio (máximo 50 caracteres).</small>
               }
             </div>
 
@@ -92,7 +94,7 @@
               <label for="city">Ciudad</label>
               <input id="city" type="text" formControlName="city" />
               @if (addressGroup.get('city')?.touched && addressGroup.get('city')?.invalid) {
-                <small class="error">La ciudad es obligatoria (máximo 50 caracteres).</small>
+                <small class="field-error">La ciudad es obligatoria (máximo 50 caracteres).</small>
               }
             </div>
 
@@ -100,7 +102,7 @@
               <label for="province">Provincia</label>
               <input id="province" type="text" formControlName="province" />
               @if (addressGroup.get('province')?.touched && addressGroup.get('province')?.invalid) {
-                <small class="error">La provincia es obligatoria (máximo 50 caracteres).</small>
+                <small class="field-error">La provincia es obligatoria (máximo 50 caracteres).</small>
               }
             </div>
 
@@ -108,7 +110,7 @@
               <label for="country">País</label>
               <input id="country" type="text" formControlName="country" />
               @if (addressGroup.get('country')?.touched && addressGroup.get('country')?.invalid) {
-                <small class="error">El país es obligatorio (máximo 50 caracteres).</small>
+                <small class="field-error">El país es obligatorio (máximo 50 caracteres).</small>
               }
             </div>
           </div>
@@ -116,16 +118,20 @@
       }
 
       @if (error()) {
-        <div class="error-message">{{ error() }}</div>
+        <div class="alert alert-error" role="alert">{{ error() }}</div>
       }
 
       <div class="actions">
         <a
           [routerLink]="editando() ? ['/owners', externalId()] : ['/owners']"
-          class="secondary-button"
+          class="btn btn-secondary"
           >Cancelar</a
         >
-        <button type="submit" [disabled]="saving() || ownerForm.invalid">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="saving() || ownerForm.invalid"
+        >
           @if (saving()) {
             Guardando...
           } @else if (editando()) {
