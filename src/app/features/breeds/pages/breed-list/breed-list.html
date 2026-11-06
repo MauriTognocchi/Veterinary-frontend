@@ -1,0 +1,79 @@
+ <section class="breed-list">
+      <div class="breed-list-header">
+        <h2 #listHeading tabindex="-1">Razas</h2>
+        @if (isAdmin()) {
+          <a routerLink="/breeds/new" class="btn btn-primary">
+            Nueva raza
+          </a>
+        }
+      </div>
+    
+      @if (deleteError()) {
+        <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+      }
+    
+      @if (loading()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando razas...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ error() }}</p>
+          @if (loadErrorRetryable()) {
+            <div class="state-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="retryLoad()"
+              >
+                Reintentar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (breeds().length === 0) {
+        <div class="state-message" role="status">
+          No hay razas registradas.
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              @if (isAdmin()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (breed of breeds(); track breed.externalId) {
+              <tr>
+                <td>{{ breed.name }}</td>
+                @if (isAdmin()) {
+                  <td class="actions-cell">
+                    <a
+                      [routerLink]="['/breeds', breed.externalId, 'edit']"
+                      class="edit-link"
+                    >
+                      Editar
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="deletingId() !== null"
+                      (click)="deleteBreed(breed)"
+                    >
+                      @if (deletingId() === breed.externalId) {
+                        Eliminando...
+                      } @else {
+                        Eliminar
+                      }
+                    </button>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
