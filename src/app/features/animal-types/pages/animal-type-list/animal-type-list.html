@@ -1,0 +1,83 @@
+<section class="animal-type-list">
+  <div class="animal-type-list-header">
+    <h2 #listHeading tabindex="-1">Tipos de animales</h2>
+    @if (isAdmin()) {
+      <a routerLink="/animal-types/new" class="btn btn-primary">
+        Nuevo tipo de animal
+      </a>
+    }
+  </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+  }
+
+  @if (loading()) {
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando tipos de animales...
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button
+            type="button"
+            class="btn btn-secondary btn-sm"
+            (click)="retryLoad()"
+          >
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (animalTypes().length === 0) {
+    <div class="state-message" role="status">
+      No hay tipos de animales registrados.
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          @if (isAdmin()) {
+            <th>Acciones</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (animalType of animalTypes(); track animalType.externalId) {
+          <tr>
+            <td>{{ animalType.name }}</td>
+            @if (isAdmin()) {
+              <td class="actions-cell">
+                <a
+                  [routerLink]="[
+                    '/animal-types',
+                    animalType.externalId,
+                    'edit',
+                  ]"
+                  class="edit-link"
+                >
+                  Editar
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  [disabled]="deletingId() !== null"
+                  (click)="deleteAnimalType(animalType)"
+                >
+                  @if (deletingId() === animalType.externalId) {
+                    Eliminando...
+                  } @else {
+                    Eliminar
+                  }
+                </button>
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

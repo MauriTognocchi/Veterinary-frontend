@@ -11,6 +11,9 @@
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
+        @if (isAdmin()) {
+            <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>
+        }
         <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
         @if (isLoggedIn()) {
             <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
