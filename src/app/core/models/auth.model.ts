@@ -22,6 +22,19 @@ export const OWNER_WRITE_ROLES: readonly UserRole[] = [
 export const ANIMAL_TYPE_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 export const BREED_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 
+export const PET_VIEW_ROLES: readonly UserRole[] = [
+      'ROLE_ADMIN',
+      'ROLE_VETERINARIAN',
+      'ROLE_RECEPTIONIST',
+      'ROLE_CLIENT',
+    ];
+
+    export const PET_WRITE_ROLES: readonly UserRole[] = [
+      'ROLE_ADMIN',
+      'ROLE_RECEPTIONIST',
+      'ROLE_CLIENT',
+    ];
+
 export interface LoginRequest {
   username: string;
   password: string;

@@ -14,9 +14,13 @@ import {
   OWNER_VIEW_ROLES,
   OWNER_WRITE_ROLES,
 } from './core/models/auth.model';
- import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
-    import { BreedList } from './features/breeds/pages/breed-list/breed-list';
-    import { BREED_ADMIN_ROLES } from './core/models/auth.model';
+import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
+import { BreedList } from './features/breeds/pages/breed-list/breed-list';
+import { BREED_ADMIN_ROLES } from './core/models/auth.model';
+import { PetList } from './features/pets/pages/pet-list/pet-list';
+import { PetForm } from './features/pets/pages/pet-form/pet-form';
+import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
+import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -65,21 +69,45 @@ export const routes: Routes = [
     data: { roles: OWNER_VIEW_ROLES },
   },
   {
-        path: 'breeds',
-        component: BreedList,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: BREED_ADMIN_ROLES },
-      },
-      {
-        path: 'breeds/new',
-        component: BreedForm,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: BREED_ADMIN_ROLES },
-      },
-      {
-        path: 'breeds/:externalId/edit',
-        component: BreedForm,
-        canActivate: [authGuard, roleGuard],
-        data: { roles: BREED_ADMIN_ROLES },
-      },
+    path: 'breeds',
+    component: BreedList,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: BREED_ADMIN_ROLES },
+  },
+  {
+    path: 'breeds/new',
+    component: BreedForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: BREED_ADMIN_ROLES },
+  },
+  {
+    path: 'breeds/:externalId/edit',
+    component: BreedForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: BREED_ADMIN_ROLES },
+  },
+  {
+    path: 'pets',
+    component: PetList,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: PET_VIEW_ROLES },
+  },
+  {
+    path: 'pets/new',
+    component: PetForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: PET_WRITE_ROLES },
+  },
+  {
+    path: 'pets/:externalId/edit',
+    component: PetForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: PET_WRITE_ROLES },
+  },
+  {
+    path: 'pets/:externalId',
+    component: PetDetail,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: PET_VIEW_ROLES },
+  },
 ];

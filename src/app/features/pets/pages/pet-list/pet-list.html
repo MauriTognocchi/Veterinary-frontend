@@ -1,1 +1,85 @@
-<p>pet-list works!</p>
+ <section class="pet-list">
+      <div class="pet-list-header">
+        <h2 #listHeading tabindex="-1">Mascotas</h2>
+        @if (canWrite()) {
+          <a routerLink="/pets/new" class="btn btn-primary">
+            Nueva mascota
+          </a>
+        }
+      </div>
+
+      @if (deleteError()) {
+        <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+      }
+
+      @if (loading()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando mascotas...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ error() }}</p>
+          @if (loadErrorRetryable()) {
+            <div class="state-actions">
+              <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+                Reintentar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (pets().length === 0) {
+        <div class="state-message" role="status">
+          No hay mascotas registradas.
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Tipo</th>
+              <th>Raza</th>
+              <th>Color</th>
+              <th>Nacimiento</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (pet of pets(); track pet.externalId) {
+              <tr>
+                <td>
+                  <a [routerLink]="['/pets', pet.externalId]" class="pet-name-link">
+                    {{ pet.name }}
+                  </a>
+                </td>
+                <td>{{ pet.animalType?.name || 'N/A' }}</td>
+                <td>{{ pet.breed?.name || 'N/A' }}</td>
+                <td>{{ pet.color }}</td>
+                <td>{{ pet.birthDate || 'No registrada' }}</td>
+                <td class="actions-cell">
+                  <a [routerLink]="['/pets', pet.externalId]" class="btn btn-secondary btn-sm">
+                    Ver
+                  </a>
+                  @if (canWrite()) {
+                    <a [routerLink]="['/pets', pet.externalId, 'edit']" class="edit-link">
+                      Editar
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="deletingId() !== null"
+                      (click)="deletePet(pet)"
+                    >
+                      @if (deletingId() === pet.externalId) {
+                        Eliminando...
+                      } @else {
+                        Eliminar
+                      }
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>

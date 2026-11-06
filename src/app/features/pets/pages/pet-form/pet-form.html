@@ -1,1 +1,93 @@
-<p>pet-form works!</p>
+ <section class="pet-form-container">
+      <div class="card card-accent pet-form-card">
+        <h2 #formHeading tabindex="-1">
+          {{ editando() ? 'Editar mascota' : 'Nueva mascota' }}
+        </h2>
+
+        @if (loading()) {
+          <div class="state-message is-loading" role="status" aria-live="polite">
+            Cargando datos de la mascota...
+          </div>
+        } @else if (notFound()) {
+          <div class="state-message" role="status">
+            No encontramos la mascota solicitada.
+          </div>
+          <div class="state-actions">
+            <a routerLink="/pets" class="btn btn-secondary btn-sm">Volver al listado</a>
+          </div>
+        } @else {
+          <form [formGroup]="petForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="name">Nombre</label>
+              <input id="name" type="text" formControlName="name" maxlength="50" autocomplete="off" />
+              @if (petForm.get('name')?.touched && petForm.get('name')?.invalid) {
+                <small class="field-error">El nombre es obligatorio.</small>
+              }
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="animalTypeName">Tipo de animal</label>
+                <select id="animalTypeName" formControlName="animalTypeName">
+                  <option value="">Seleccionar tipo...</option>
+                  @for (type of animalTypes(); track type.externalId) {
+                    <option [value]="type.name">{{ type.name }}</option>
+                  }
+                </select>
+                @if (petForm.get('animalTypeName')?.touched && petForm.get('animalTypeName')?.invalid) {
+                  <small class="field-error">Seleccioná un tipo de animal.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="breedName">Raza</label>
+                <select id="breedName" formControlName="breedName">
+                  <option value="">Seleccionar raza...</option>
+                  @for (b of breeds(); track b.externalId) {
+                    <option [value]="b.name">{{ b.name }}</option>
+                  }
+                </select>
+                @if (petForm.get('breedName')?.touched && petForm.get('breedName')?.invalid) {
+                  <small class="field-error">Seleccioná una raza.</small>
+                }
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="color">Color</label>
+                <input id="color" type="text" formControlName="color" maxlength="30" />
+                @if (petForm.get('color')?.touched && petForm.get('color')?.invalid) {
+                  <small class="field-error">El color es obligatorio.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="birthDate">Fecha de Nacimiento</label>
+                <input id="birthDate" type="date" formControlName="birthDate" />
+                @if (petForm.get('birthDate')?.touched && petForm.get('birthDate')?.invalid) {
+                  <small class="field-error">Ingresá una fecha válida.</small>
+                }
+              </div>
+            </div>
+
+            @if (error()) {
+              <div class="alert alert-error" role="alert">{{ error() }}</div>
+            }
+
+            <div class="actions">
+              <a routerLink="/pets" class="btn btn-secondary">Cancelar</a>
+              <button type="submit" class="btn btn-primary" [disabled]="saving() || petForm.invalid">
+                @if (saving()) {
+                  Guardando...
+                } @else if (editando()) {
+                  Guardar cambios
+                } @else {
+                  Crear mascota
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </section>

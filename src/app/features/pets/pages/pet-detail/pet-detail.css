@@ -1,0 +1,76 @@
+:host {
+      display: block;
+    }
+    
+    .pet-detail-container {
+      display: flex;
+      justify-content: center;
+      padding: clamp(0.5rem, 2vw, 1rem) 0;
+    }
+    
+    .pet-detail-card {
+      max-width: 650px;
+      width: 100%;
+    }
+    
+    .detail-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      border-bottom: 1px solid var(--violet-200);
+      padding-bottom: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .detail-header h2 {
+      font-size: clamp(1.4rem, 3vw, 1.75rem);
+      color: var(--violet-900);
+      margin-bottom: 0.25rem;
+    }
+    
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      background-color: var(--violet-100);
+      color: var(--violet-800);
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+    
+    .detail-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+    }
+    
+    .data-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    
+    .data-item .label {
+      font-size: 0.85rem;
+      color: var(--color-text-muted);
+      font-weight: 600;
+    }
+    
+    .data-item .value {
+      font-size: 1.05rem;
+      color: var(--violet-950);
+    }
+    
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    @media (max-width: 600px) {
+      .detail-body {
+        grid-template-columns: 1fr;
+      }
+    }
