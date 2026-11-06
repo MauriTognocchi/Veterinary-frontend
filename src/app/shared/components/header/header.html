@@ -11,6 +11,7 @@
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
         <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
+        <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
         @if (isAdmin()) {
             <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>
             <a routerLink="/breeds" routerLinkActive="active">Razas</a>

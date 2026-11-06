@@ -1,1 +1,57 @@
-<p>pet-detail works!</p>
+ <section class="pet-detail-container">
+      @if (loading()) {
+        <div class="state-message is-loading" role="status">Cargando mascota...</div>
+      } @else if (notFound()) {
+        <div class="state-message" role="status">No encontramos la mascota solicitada.</div>
+        <div class="state-actions">
+          <a routerLink="/pets" class="btn btn-secondary">Volver al listado</a>
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">{{ error() }}</div>
+      } @else if (pet(); as p) {
+        <div class="card card-accent pet-detail-card">
+          <div class="detail-header">
+            <div>
+              <h2 #detailHeading tabindex="-1">{{ p.name }}</h2>
+              <span class="badge">{{ p.animalType?.name || 'Mascota' }}</span>
+            </div>
+            <div class="actions">
+              <a routerLink="/pets" class="btn btn-secondary btn-sm">Volver</a>
+              @if (canWrite()) {
+                <a [routerLink]="['/pets', p.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
+                <button type="button" class="btn btn-danger btn-sm" [disabled]="deleting()" (click)="deletePet()">
+                  {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
+                </button>
+              }
+            </div>
+          </div>
+    
+          @if (deleteError()) {
+            <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+          }
+    
+          <div class="detail-body">
+            <div class="data-item">
+              <span class="label">Raza:</span>
+              <span class="value">{{ p.breed?.name || 'No especificada' }}</span>
+            </div>
+            <div class="data-item">
+              <span class="label">Color:</span>
+              <span class="value">{{ p.color }}</span>
+            </div>
+            <div class="data-item">
+              <span class="label">Fecha de Nacimiento:</span>
+              <span class="value">{{ p.birthDate || 'No registrada' }}</span>
+            </div>
+            <div class="data-item">
+              <span class="label">Total de visitas clínicas:</span>
+              <span class="value">{{ p.visitsCount ?? 0 }}</span>
+            </div>
+            <div class="data-item">
+              <span class="label">Turnos activos:</span>
+              <span class="value">{{ p.activeAppointments ?? 0 }}</span>
+            </div>
+          </div>
+        </div>
+      }
+    </section>
