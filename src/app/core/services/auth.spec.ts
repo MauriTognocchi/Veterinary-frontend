@@ -230,4 +230,64 @@ describe('AuthService', () => {
       queryParams: {},
     });
   });
+
+  it('no restaura la sesión si se cierra sesión con un refresh en curso', () => {
+    storage.setTokens('token-invalido', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+
+    service.refresh().subscribe();
+
+    const request = http.expectOne('http://localhost:8080/api/auth/refresh');
+    service.logout();
+
+    request.flush({
+      accessToken: createAccessToken(['ROLE_ADMIN']),
+      refreshToken: 'refresh-token',
+    });
+
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(storage.getRefreshToken()).toBeNull();
+    expect(router.navigate).toHaveBeenCalledTimes(1);
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+      queryParams: {},
+    });
+  });
+
+  it('no sobrescribe la sesión nueva si un refresh anterior responde después del login', () => {
+    storage.setTokens('token-invalido', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+
+    service.refresh().subscribe();
+
+    const refreshRequest = http.expectOne(
+      'http://localhost:8080/api/auth/refresh',
+    );
+    const loginAccessToken = createAccessToken([
+      'ROLE_ADMIN',
+      'VIEW_OWNERS',
+    ]);
+
+    service.login({ username: 'admin', password: 'secreto' }).subscribe();
+
+    const loginRequest = http.expectOne('http://localhost:8080/api/auth/login');
+    loginRequest.flush({
+      accessToken: loginAccessToken,
+      refreshToken: 'login-refresh-token',
+    });
+
+    refreshRequest.flush({
+      accessToken: createAccessToken(['ROLE_CLIENT']),
+      refreshToken: 'viejo-refresh-token',
+    });
+
+    expect(storage.getAccessToken()).toBe(loginAccessToken);
+    expect(storage.getRefreshToken()).toBe('login-refresh-token');
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.roles()).toEqual(['ROLE_ADMIN']);
+    expect(service.permissions()).toEqual(['VIEW_OWNERS']);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
 });

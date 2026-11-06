@@ -134,4 +134,65 @@ describe('roleGuard', () => {
     expect(authService.hasAnyRole).not.toHaveBeenCalled();
     expect(authService.hasAnyPermission).not.toHaveBeenCalled();
   });
+
+  it('exige rol y permiso simultáneamente cuando la ruta declara ambos', async () => {
+    authService.ensureSession.mockReturnValue(of(true));
+    authService.hasAnyRole.mockReturnValue(true);
+    authService.hasAnyPermission.mockReturnValue(true);
+
+    const route = {
+      data: {
+        roles: ['ROLE_ADMIN'],
+        permissions: ['VIEW_OWNERS'],
+      },
+    } as unknown as ActivatedRouteSnapshot;
+
+    await expect(executeGuard(route)).resolves.toBe(true);
+    expect(authService.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN']);
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_OWNERS']);
+  });
+
+  it('redirige a 403 cuando tiene el rol pero no el permiso requerido', async () => {
+    authService.ensureSession.mockReturnValue(of(true));
+    authService.hasAnyRole.mockReturnValue(true);
+    authService.hasAnyPermission.mockReturnValue(false);
+
+    const route = {
+      data: {
+        roles: ['ROLE_ADMIN'],
+        permissions: ['VIEW_OWNERS'],
+      },
+    } as unknown as ActivatedRouteSnapshot;
+
+    const result = await executeGuard(route);
+
+    expect(authService.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN']);
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_OWNERS']);
+    expect(result).toEqual({
+      commands: ['/forbidden'],
+      extras: { queryParams: { returnUrl: '/owners/new' } },
+    });
+  });
+
+  it('redirige a 403 cuando tiene el permiso pero no el rol requerido', async () => {
+    authService.ensureSession.mockReturnValue(of(true));
+    authService.hasAnyRole.mockReturnValue(false);
+    authService.hasAnyPermission.mockReturnValue(true);
+
+    const route = {
+      data: {
+        roles: ['ROLE_ADMIN'],
+        permissions: ['VIEW_OWNERS'],
+      },
+    } as unknown as ActivatedRouteSnapshot;
+
+    const result = await executeGuard(route);
+
+    expect(authService.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN']);
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_OWNERS']);
+    expect(result).toEqual({
+      commands: ['/forbidden'],
+      extras: { queryParams: { returnUrl: '/owners/new' } },
+    });
+  });
 });
