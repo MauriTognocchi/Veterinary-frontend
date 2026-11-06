@@ -1,0 +1,79 @@
+<section class="animal-type-form-container">
+  <div class="card card-accent animal-type-form-card">
+    <h2 #formHeading tabindex="-1">
+      {{ editando() ? 'Editar tipo de animal' : 'Nuevo tipo de animal' }}
+    </h2>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando tipo de animal...
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">
+        No encontramos el tipo de animal solicitado.
+      </div>
+      <div class="state-actions">
+        <a routerLink="/animal-types" class="btn btn-secondary btn-sm">
+          Volver al listado
+        </a>
+      </div>
+    } @else if (loadError()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ loadError() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoad()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <form [formGroup]="animalTypeForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            maxlength="50"
+            autocomplete="off"
+          />
+          @if (
+            animalTypeForm.get('name')?.touched &&
+            animalTypeForm.get('name')?.invalid
+          ) {
+            <small class="field-error">
+              El nombre es obligatorio (máximo 50 caracteres).
+            </small>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-error" role="alert">{{ error() }}</div>
+        }
+
+        <div class="actions">
+          <a routerLink="/animal-types" class="btn btn-secondary">Cancelar</a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="saving() || animalTypeForm.invalid"
+          >
+            @if (saving()) {
+              Guardando...
+            } @else if (editando()) {
+              Guardar cambios
+            } @else {
+              Crear tipo de animal
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</section>

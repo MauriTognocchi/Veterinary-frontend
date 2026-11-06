@@ -19,6 +19,8 @@ export const OWNER_WRITE_ROLES: readonly UserRole[] = [
   'ROLE_RECEPTIONIST',
 ];
 
+export const ANIMAL_TYPE_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
+
 export interface LoginRequest {
   username: string;
   password: string;

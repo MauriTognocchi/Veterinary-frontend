@@ -1,0 +1,45 @@
+.animal-type-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.animal-type-list > .alert {
+  margin-bottom: 0;
+}
+
+.animal-type-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.animal-type-list-header h2 {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.edit-link {
+  color: var(--violet-700);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .animal-type-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
