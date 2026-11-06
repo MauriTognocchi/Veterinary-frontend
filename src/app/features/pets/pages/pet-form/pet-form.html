@@ -1,9 +1,9 @@
- <section class="pet-form-container">
+<section class="pet-form-container">
       <div class="card card-accent pet-form-card">
         <h2 #formHeading tabindex="-1">
           {{ editando() ? 'Editar mascota' : 'Nueva mascota' }}
         </h2>
-
+    
         @if (loading()) {
           <div class="state-message is-loading" role="status" aria-live="polite">
             Cargando datos de la mascota...
@@ -24,7 +24,7 @@
                 <small class="field-error">El nombre es obligatorio.</small>
               }
             </div>
-
+    
             <div class="form-row">
               <div class="form-group">
                 <label for="animalTypeName">Tipo de animal</label>
@@ -38,7 +38,7 @@
                   <small class="field-error">Seleccioná un tipo de animal.</small>
                 }
               </div>
-
+    
               <div class="form-group">
                 <label for="breedName">Raza</label>
                 <select id="breedName" formControlName="breedName">
@@ -52,7 +52,7 @@
                 }
               </div>
             </div>
-
+    
             <div class="form-row">
               <div class="form-group">
                 <label for="color">Color</label>
@@ -61,7 +61,7 @@
                   <small class="field-error">El color es obligatorio.</small>
                 }
               </div>
-
+    
               <div class="form-group">
                 <label for="birthDate">Fecha de Nacimiento</label>
                 <input id="birthDate" type="date" formControlName="birthDate" />
@@ -70,11 +70,23 @@
                 }
               </div>
             </div>
-
+    
+            <div class="form-group">
+              <label for="ownerExternalId">Propietario / Dueño (opcional)</label>
+              <select id="ownerExternalId" formControlName="ownerExternalId">
+                <option value="">Sin propietario asignado</option>
+                @for (owner of owners(); track owner.externalId) {
+                  <option [value]="owner.externalId">
+                    {{ owner.lastName }}, {{ owner.firstName }} (DNI: {{ owner.dni }})
+                  </option>
+                }
+              </select>
+            </div>
+    
             @if (error()) {
               <div class="alert alert-error" role="alert">{{ error() }}</div>
             }
-
+    
             <div class="actions">
               <a routerLink="/pets" class="btn btn-secondary">Cancelar</a>
               <button type="submit" class="btn btn-primary" [disabled]="saving() || petForm.invalid">
