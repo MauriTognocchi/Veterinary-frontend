@@ -14,6 +14,9 @@ import {
   OWNER_VIEW_ROLES,
   OWNER_WRITE_ROLES,
 } from './core/models/auth.model';
+ import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
+    import { BreedList } from './features/breeds/pages/breed-list/breed-list';
+    import { BREED_ADMIN_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -61,4 +64,22 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: OWNER_VIEW_ROLES },
   },
+  {
+        path: 'breeds',
+        component: BreedList,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: BREED_ADMIN_ROLES },
+      },
+      {
+        path: 'breeds/new',
+        component: BreedForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: BREED_ADMIN_ROLES },
+      },
+      {
+        path: 'breeds/:externalId/edit',
+        component: BreedForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: BREED_ADMIN_ROLES },
+      },
 ];
