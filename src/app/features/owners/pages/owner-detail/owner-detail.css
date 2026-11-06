@@ -57,3 +57,47 @@
     flex: 1;
   }
 }
+
+.owner-pets-section {
+      margin-top: 2rem;
+      border-top: 2px solid var(--violet-200);
+      padding-top: 1.5rem;
+    }
+
+    .pets-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .pets-section-header h3 {
+      font-size: 1.25rem;
+      color: var(--violet-900);
+    }
+
+    .no-pets-message {
+      color: var(--color-text-muted);
+      font-style: italic;
+      padding: 0.5rem 0;
+    }
+
+    .pets-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .pets-table th,
+    .pets-table td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid var(--violet-100);
+      text-align: left;
+    }
+
+    .pets-table th {
+      background-color: var(--violet-50);
+      font-weight: 600;
+      color: var(--violet-900);
+    }

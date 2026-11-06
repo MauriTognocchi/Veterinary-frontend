@@ -74,3 +74,46 @@
         grid-template-columns: 1fr;
       }
     }
+    .owner-box {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      border-radius: 8px;
+      background-color: var(--violet-50);
+      border: 1px solid var(--violet-200);
+    }
+
+    .owner-box-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .owner-box-title {
+      font-size: 0.85rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: var(--violet-800);
+    }
+
+    .owner-full-name {
+      font-size: 1.2rem;
+      color: var(--violet-950);
+      margin-bottom: 0.5rem;
+    }
+
+    .owner-contact-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.25rem;
+      font-size: 0.95rem;
+      color: var(--violet-900);
+    }
+
+    .no-owner-text {
+      color: var(--color-text-muted);
+      font-style: italic;
+      margin: 0;
+    }

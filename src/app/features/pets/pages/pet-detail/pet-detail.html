@@ -1,4 +1,4 @@
- <section class="pet-detail-container">
+<section class="pet-detail-container">
       @if (loading()) {
         <div class="state-message is-loading" role="status">Cargando mascota...</div>
       } @else if (notFound()) {
@@ -25,11 +25,11 @@
               }
             </div>
           </div>
-    
+
           @if (deleteError()) {
             <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
           }
-    
+
           <div class="detail-body">
             <div class="data-item">
               <span class="label">Raza:</span>
@@ -51,6 +51,31 @@
               <span class="label">Turnos activos:</span>
               <span class="value">{{ p.activeAppointments ?? 0 }}</span>
             </div>
+          </div>
+
+          <!-- TARJETA DESTACADA DEL PROPIETARIO CON BOTÓN DIRECTO -->
+          <div class="owner-box">
+            <div class="owner-box-header">
+              <span class="owner-box-title">👤 Propietario / Dueño</span>
+              @if (owner(); as o) {
+                <a [routerLink]="['/owners', o.externalId]" class="btn btn-secondary btn-sm">
+                  Ver perfil completo del dueño →
+                </a>
+              }
+            </div>
+
+            @if (owner(); as o) {
+              <div class="owner-box-content">
+                <h4 class="owner-full-name">{{ o.firstName }} {{ o.lastName }}</h4>
+                <div class="owner-contact-grid">
+                  <div><strong>DNI:</strong> {{ o.dni }}</div>
+                  <div><strong>Teléfono:</strong> {{ o.phone }}</div>
+                  <div><strong>Email:</strong> {{ o.email }}</div>
+                </div>
+              </div>
+            } @else {
+              <p class="no-owner-text">Esta mascota no tiene un propietario asignado aún.</p>
+            }
           </div>
         </div>
       }

@@ -46,9 +46,14 @@
         this.loadErrorRetryable.set(false);
         this.pets.set([]);
 
-        this.petService.getAll().subscribe({
+        // Si es un cliente (dueño), consulta sus mascotas. Si es admin/vet/recepcionista, consulta todas.
+        const isClient = this.authService.hasRole('ROLE_CLIENT');
+        const request$ = isClient
+          ? this.petService.getMyPets()
+          : this.petService.getAll();
+
+        request$.subscribe({
           next: (pets) => {
-            // Filtramos para mostrar únicamente las activas
             this.pets.set(pets.filter((p) => p.active !== false));
             this.loading.set(false);
           },
