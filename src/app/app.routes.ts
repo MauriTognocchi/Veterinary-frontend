@@ -21,6 +21,7 @@ import { PetList } from './features/pets/pages/pet-list/pet-list';
 import { PetForm } from './features/pets/pages/pet-form/pet-form';
 import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
 import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
+import { BranchList } from './features/branches/pages/branch-list/branch-list';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -85,6 +86,12 @@ export const routes: Routes = [
     component: BreedForm,
     canActivate: [authGuard, roleGuard],
     data: { roles: BREED_ADMIN_ROLES },
+  },
+  {
+    path: 'branches',
+    component: BranchList,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['VIEW_BRANCHES'] },
   },
   {
     path: 'pets',

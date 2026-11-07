@@ -1,0 +1,27 @@
+.branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.branch-list > .alert {
+  margin-bottom: 0;
+}
+
+.branch-list-header h2 {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+tbody tr.is-selected {
+  background-color: var(--violet-50);
+}
+
+tbody tr.is-selected td {
+  font-weight: 600;
+}
