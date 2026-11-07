@@ -1,0 +1,74 @@
+<section class="branch-list">
+  <div class="branch-list-header">
+    <h2 #listHeading tabindex="-1">Sucursales</h2>
+  </div>
+
+  @if (loading()) {
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando sucursales...
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (branches().length === 0) {
+    <div class="state-message" role="status">No hay sucursales registradas.</div>
+  } @else {
+    <table>
+      <caption>
+        Sucursales registradas con dirección, teléfono y horario de atención
+      </caption>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Teléfono</th>
+          <th>Horario</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (branch of branches(); track branch.externalId) {
+          <tr [class.is-selected]="selectedBranchId() === branch.externalId">
+            <td>{{ branch.name }}</td>
+            <td>{{ formatAddress(branch) }}</td>
+            <td>{{ branch.phone }}</td>
+            <td>
+              {{ formatTime(branch.openingTime) }} -
+              {{ formatTime(branch.closingTime) }}
+            </td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn btn-sm"
+                [class.btn-primary]="selectedBranchId() === branch.externalId"
+                [class.btn-secondary]="selectedBranchId() !== branch.externalId"
+                [attr.aria-pressed]="selectedBranchId() === branch.externalId"
+                (click)="selectBranch(branch)"
+              >
+                @if (selectedBranchId() === branch.externalId) {
+                  Seleccionada
+                } @else {
+                  Seleccionar
+                }
+              </button>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+
+    @if (selectedBranch(); as branch) {
+      <div class="alert alert-info" role="status" aria-live="polite">
+        Sucursal seleccionada: <strong>{{ branch.name }}</strong>
+      </div>
+    }
+  }
+</section>
