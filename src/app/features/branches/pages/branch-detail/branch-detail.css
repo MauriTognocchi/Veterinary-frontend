@@ -1,0 +1,59 @@
+:host {
+  display: block;
+}
+
+.branch-detail-container {
+  display: flex;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vw, 1rem) 0;
+}
+
+.branch-detail-card {
+  max-width: 760px;
+}
+
+.branch-detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.branch-detail-header h2 {
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.branch-detail-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.branch-detail-card .form-fieldset {
+  margin: 1.5rem 0 0 0;
+}
+
+.no-address {
+  margin-top: 1.5rem;
+  color: var(--muted);
+  font-style: italic;
+}
+
+@media (max-width: 640px) {
+  .branch-detail-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .branch-detail-actions {
+    width: 100%;
+  }
+
+  .branch-detail-actions .btn {
+    flex: 1;
+  }
+}

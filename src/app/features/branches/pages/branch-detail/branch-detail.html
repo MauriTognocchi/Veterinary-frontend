@@ -1,0 +1,101 @@
+<section class="branch-detail-container">
+  <div class="card card-accent branch-detail-card">
+    <div class="branch-detail-header">
+      <h2 #detailHeading tabindex="-1">Detalle de la sucursal</h2>
+      <div class="branch-detail-actions">
+        @if (branch(); as branch) {
+          @if (isAdmin()) {
+            <a [routerLink]="['/branches', branch.externalId, 'edit']" class="btn btn-primary btn-sm">
+              Editar
+            </a>
+            <button
+              type="button"
+              class="btn btn-danger btn-sm"
+              [disabled]="deleting()"
+              (click)="deleteBranch()"
+            >
+              @if (deleting()) {
+                Eliminando...
+              } @else {
+                Eliminar
+              }
+            </button>
+          }
+        }
+        <a routerLink="/branches" class="btn btn-secondary btn-sm">Volver al listado</a>
+      </div>
+    </div>
+
+    @if (deleteError()) {
+      <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+    }
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando sucursal...
+      </div>
+    } @else if (error()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ error() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">No encontramos la sucursal solicitada.</div>
+    } @else if (branch(); as branch) {
+      <dl class="detail-list">
+        <div class="detail-row">
+          <dt>Nombre</dt>
+          <dd>{{ branch.name }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Teléfono</dt>
+          <dd>{{ branch.phone }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Email</dt>
+          <dd>{{ branch.email }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Horario</dt>
+          <dd>{{ formatTime(branch.openingTime) }} - {{ formatTime(branch.closingTime) }}</dd>
+        </div>
+      </dl>
+
+      @if (branch.address; as address) {
+        <fieldset class="form-fieldset">
+          <legend>Dirección</legend>
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt>Calle</dt>
+              <dd>{{ address.street }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Número</dt>
+              <dd>{{ address.number }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Ciudad</dt>
+              <dd>{{ address.city }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Provincia</dt>
+              <dd>{{ address.province }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>País</dt>
+              <dd>{{ address.country }}</dd>
+            </div>
+          </dl>
+        </fieldset>
+      } @else {
+        <p class="no-address">Esta sucursal no tiene dirección registrada.</p>
+      }
+    }
+  </div>
+</section>

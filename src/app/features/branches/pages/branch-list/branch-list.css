@@ -8,13 +8,43 @@
   margin-bottom: 0;
 }
 
+.branch-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .branch-list-header h2 {
   font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.detail-link {
+  color: var(--violet-900);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.edit-link {
+  color: var(--violet-700);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
 }
 
 .actions-cell {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.75rem;
 }
 
@@ -24,4 +54,11 @@ tbody tr.is-selected {
 
 tbody tr.is-selected td {
   font-weight: 600;
+}
+
+@media (max-width: 640px) {
+  .branch-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
 }

@@ -21,6 +21,7 @@ export const OWNER_WRITE_ROLES: readonly UserRole[] = [
 
 export const ANIMAL_TYPE_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 export const BREED_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
+export const BRANCH_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 
 export const PET_VIEW_ROLES: readonly UserRole[] = [
       'ROLE_ADMIN',
