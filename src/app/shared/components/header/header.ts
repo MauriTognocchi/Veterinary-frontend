@@ -19,6 +19,9 @@ export class Header {
   readonly canCreateOwner = computed(() =>
     this.authService.hasAnyPermission(['CREATE_OWNERS']),
   );
+  readonly canViewUsers = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_USERS']),
+  );
 
   logout(): void {
     this.authService.logout('manual');

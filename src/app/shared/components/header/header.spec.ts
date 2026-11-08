@@ -92,4 +92,19 @@ describe('Header', () => {
     expect(findNavLink('Mascotas')).toBeDefined();
     expect(findNavLink('Sucursales')).toBeDefined();
   });
+
+  it('muestra Usuarios con el permiso VIEW_USERS', () => {
+    authService.hasAnyPermission.mockReturnValue(true);
+
+    createComponent();
+
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_USERS']);
+    expect(findNavLink('Usuarios')?.getAttribute('href')).toBe('/users');
+  });
+
+  it('oculta Usuarios sin el permiso VIEW_USERS', () => {
+    createComponent();
+
+    expect(findNavLink('Usuarios')).toBeUndefined();
+  });
 });

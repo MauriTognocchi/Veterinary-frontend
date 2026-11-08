@@ -26,6 +26,8 @@ import { BranchForm } from './features/branches/pages/branch-form/branch-form';
 import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
 import { BRANCH_ADMIN_ROLES } from './core/models/auth.model';
 import { UserRegister } from './features/users/pages/user-register/user-register';
+import { UserList } from './features/users/pages/user-list/user-list';
+import { UserDetail } from './features/users/pages/user-detail/user-detail';
 import { USER_ADMIN_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
@@ -142,9 +144,21 @@ export const routes: Routes = [
     data: { roles: PET_VIEW_ROLES },
   },
   {
+    path: 'users',
+    component: UserList,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['VIEW_USERS'] },
+  },
+  {
     path: 'users/new',
     component: UserRegister,
     canActivate: [authGuard, roleGuard],
     data: { roles: USER_ADMIN_ROLES },
+  },
+  {
+    path: 'users/:externalId',
+    component: UserDetail,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['VIEW_USERS'] },
   },
 ];

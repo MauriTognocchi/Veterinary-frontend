@@ -8,6 +8,8 @@ import { AnimalTypeList } from './features/animal-types/pages/animal-type-list/a
 import { OwnerForm } from './features/owners/pages/owner-form/owner-form';
 import { Register } from './features/auth/pages/register/register';
 import { UserRegister } from './features/users/pages/user-register/user-register';
+import { UserList } from './features/users/pages/user-list/user-list';
+import { UserDetail } from './features/users/pages/user-detail/user-detail';
 
 const ANIMAL_TYPE_ROUTES = [
   {
@@ -68,5 +70,32 @@ describe('rutas de registro', () => {
     expect(route?.component).toBe(OwnerForm);
     expect(route?.canActivate).toEqual([authGuard, roleGuard]);
     expect(route?.data?.['permissions']).toEqual(['UPDATE_OWNERS']);
+  });
+});
+
+describe('rutas de administración de usuarios', () => {
+  it('protege el listado con sesión y VIEW_USERS', () => {
+    const route = routes.find((item) => item.path === 'users');
+
+    expect(route?.component).toBe(UserList);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['permissions']).toEqual(['VIEW_USERS']);
+  });
+
+  it('protege el detalle con sesión y VIEW_USERS', () => {
+    const route = routes.find((item) => item.path === 'users/:externalId');
+
+    expect(route?.component).toBe(UserDetail);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['permissions']).toEqual(['VIEW_USERS']);
+  });
+
+  it('mantiene el registro de usuarios exclusivo de ADMIN', () => {
+    const route = routes.find((item) => item.path === 'users/new');
+
+    expect(route?.component).toBe(UserRegister);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(USER_ADMIN_ROLES);
+    expect(route?.data?.['permissions']).toBeUndefined();
   });
 });
