@@ -10,6 +10,7 @@ describe('Header', () => {
   let authService: {
     isAuthenticated: WritableSignal<boolean>;
     hasAnyRole: ReturnType<typeof vi.fn>;
+    hasAnyPermission: ReturnType<typeof vi.fn>;
     logout: ReturnType<typeof vi.fn>;
   };
 
@@ -19,21 +20,24 @@ describe('Header', () => {
     fixture.detectChanges();
   }
 
-  function findAnimalTypesLink(): HTMLAnchorElement | undefined {
+  function findNavLink(label: string): HTMLAnchorElement | undefined {
     const element = fixture.nativeElement as HTMLElement;
     const links = Array.from(
       element.querySelectorAll<HTMLAnchorElement>('.main-nav a'),
     );
 
-    return links.find(
-      (link) => link.textContent?.trim() === 'Tipos de animales',
-    );
+    return links.find((link) => link.textContent?.trim() === label);
+  }
+
+  function findAnimalTypesLink(): HTMLAnchorElement | undefined {
+    return findNavLink('Tipos de animales');
   }
 
   beforeEach(async () => {
     authService = {
       isAuthenticated: signal(false),
       hasAnyRole: vi.fn().mockReturnValue(false),
+      hasAnyPermission: vi.fn().mockReturnValue(false),
       logout: vi.fn(),
     };
 
@@ -64,5 +68,28 @@ describe('Header', () => {
     createComponent();
 
     expect(findAnimalTypesLink()).toBeUndefined();
+  });
+
+  it('muestra Propietarios y Agregar Propietario con CREATE_OWNERS', () => {
+    authService.hasAnyPermission.mockReturnValue(true);
+
+    createComponent();
+
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith([
+      'CREATE_OWNERS',
+    ]);
+    expect(findNavLink('Propietarios')?.getAttribute('href')).toBe('/owners');
+    expect(findNavLink('Agregar Propietario')?.getAttribute('href')).toBe(
+      '/owners/new',
+    );
+  });
+
+  it('oculta Propietarios sin el permiso CREATE_OWNERS', () => {
+    createComponent();
+
+    expect(findNavLink('Propietarios')).toBeUndefined();
+    expect(findNavLink('Agregar Propietario')).toBeUndefined();
+    expect(findNavLink('Mascotas')).toBeDefined();
+    expect(findNavLink('Sucursales')).toBeDefined();
   });
 });

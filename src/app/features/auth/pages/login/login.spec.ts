@@ -160,4 +160,18 @@ describe('Login', () => {
     expect(component.logoutReason).toBe(reason);
     expect(alert?.textContent).toContain(message);
   });
+
+  it('muestra el mensaje de cuenta creada al volver del registro', () => {
+    queryParams['registered'] = '1';
+    createComponent();
+
+    const alert = fixture.nativeElement.querySelector(
+      '.alert-success',
+    ) as HTMLElement | null;
+
+    expect(component.registered).toBe(true);
+    expect(alert?.textContent).toContain(
+      'Tu cuenta se creó correctamente. Iniciá sesión para continuar.',
+    );
+  });
 });

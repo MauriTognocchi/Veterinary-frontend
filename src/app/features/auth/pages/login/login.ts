@@ -22,6 +22,8 @@ export class Login {
   private route = inject(ActivatedRoute);
 
   readonly logoutReason = this.route.snapshot.queryParamMap.get('reason');
+  readonly registered =
+    this.route.snapshot.queryParamMap.get('registered') === '1';
 
   loginForm: FormGroup = this.fb.group({
     username: [{ value: '', disabled: false }, [Validators.required]],
