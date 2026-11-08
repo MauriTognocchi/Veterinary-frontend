@@ -1,0 +1,53 @@
+<section class="user-detail-container">
+  <div class="card card-accent user-detail-card">
+    <div class="user-detail-header">
+      <h2 #detailHeading tabindex="-1">Detalle del usuario</h2>
+      <a routerLink="/users" class="btn btn-secondary btn-sm">Volver al listado</a>
+    </div>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando usuario...
+      </div>
+    } @else if (error()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ error() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">No encontramos el usuario solicitado.</div>
+    } @else if (user(); as user) {
+      <dl class="detail-list">
+        <div class="detail-row">
+          <dt>Nombre</dt>
+          <dd>{{ user.firstName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Apellido</dt>
+          <dd>{{ user.lastName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Email</dt>
+          <dd>{{ user.email }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Estado</dt>
+          <dd>
+            <span
+              class="state-badge"
+              [class.is-inactive]="user.userState === 'INACTIVE'"
+            >
+              {{ user.userState }}
+            </span>
+          </dd>
+        </div>
+      </dl>
+    }
+  </div>
+</section>

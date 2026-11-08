@@ -14,6 +14,9 @@
             <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
         }
         <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
+        @if (canViewUsers()) {
+            <a routerLink="/users" routerLinkActive="active">Usuarios</a>
+        }
         <a routerLink="/branches" routerLinkActive="active">Sucursales</a>
         @if (isAdmin()) {
             <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>
