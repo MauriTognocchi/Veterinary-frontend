@@ -5,6 +5,7 @@ import { OwnerList } from './features/owners/pages/owner-list/owner-list';
 import { OwnerForm } from './features/owners/pages/owner-form/owner-form';
 import { OwnerDetail } from './features/owners/pages/owner-detail/owner-detail';
 import { Login } from './features/auth/pages/login/login';
+import { Register } from './features/auth/pages/register/register';
 import { Forbidden } from './features/auth/pages/forbidden/forbidden';
 import { Home } from './home/pages/home/home';
 import { authGuard } from './core/guards/auth-guard';
@@ -12,7 +13,6 @@ import { roleGuard } from './core/guards/role-guard';
 import {
   ANIMAL_TYPE_ADMIN_ROLES,
   OWNER_VIEW_ROLES,
-  OWNER_WRITE_ROLES,
 } from './core/models/auth.model';
 import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
 import { BreedList } from './features/breeds/pages/breed-list/breed-list';
@@ -25,10 +25,13 @@ import { BranchList } from './features/branches/pages/branch-list/branch-list';
 import { BranchForm } from './features/branches/pages/branch-form/branch-form';
 import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
 import { BRANCH_ADMIN_ROLES } from './core/models/auth.model';
+import { UserRegister } from './features/users/pages/user-register/user-register';
+import { USER_ADMIN_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
   { path: 'login', component: Login },
+  { path: 'register', component: Register },
   { path: 'forbidden', component: Forbidden },
   {
     path: 'animal-types',
@@ -58,13 +61,13 @@ export const routes: Routes = [
     path: 'owners/new',
     component: OwnerForm,
     canActivate: [authGuard, roleGuard],
-    data: { roles: OWNER_WRITE_ROLES },
+    data: { permissions: ['CREATE_OWNERS'] },
   },
   {
     path: 'owners/:externalId/edit',
     component: OwnerForm,
     canActivate: [authGuard, roleGuard],
-    data: { roles: OWNER_WRITE_ROLES },
+    data: { permissions: ['UPDATE_OWNERS'] },
   },
   {
     path: 'owners/:externalId',
@@ -137,5 +140,11 @@ export const routes: Routes = [
     component: PetDetail,
     canActivate: [authGuard, roleGuard],
     data: { roles: PET_VIEW_ROLES },
+  },
+  {
+    path: 'users/new',
+    component: UserRegister,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: USER_ADMIN_ROLES },
   },
 ];

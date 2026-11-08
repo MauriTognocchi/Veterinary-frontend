@@ -5,6 +5,12 @@
       <p>Accedé al sistema de gestión de la clínica.</p>
     </div>
 
+    @if (registered) {
+      <div class="alert alert-success" role="status">
+        Tu cuenta se creó correctamente. Iniciá sesión para continuar.
+      </div>
+    }
+
     @if (logoutReason === 'timeout') {
       <div class="alert alert-info" role="status">
         Tu sesión se cerró por inactividad.

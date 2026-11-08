@@ -10,14 +10,19 @@
     </div>
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-        <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
+        @if (canCreateOwner()) {
+            <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
+        }
         <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
         <a routerLink="/branches" routerLinkActive="active">Sucursales</a>
         @if (isAdmin()) {
             <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>
             <a routerLink="/breeds" routerLinkActive="active">Razas</a>
+            <a routerLink="/users/new" routerLinkActive="active">Registrar usuario</a>
         }
-        <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
+        @if (canCreateOwner()) {
+            <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
+        }
         @if (isLoggedIn()) {
             <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
         } @else {

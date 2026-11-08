@@ -14,6 +14,7 @@ import {
   LoginRequest,
   LoginResponse,
   RefreshResponse,
+  RegisterRequest,
   USER_ROLES,
   UserPermission,
   UserRole,
@@ -159,6 +160,12 @@ export class AuthService {
         return of(false);
       }),
     );
+  }
+
+  register(request: RegisterRequest): Observable<string> {
+    return this.http.post(`${this.baseUrl}/api/auth/register`, request, {
+      responseType: 'text',
+    });
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {

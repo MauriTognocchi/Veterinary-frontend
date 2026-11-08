@@ -1,0 +1,73 @@
+:host {
+  display: block;
+}
+
+.user-register-container {
+  display: flex;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vw, 1rem) 0;
+}
+
+.user-register-card {
+  max-width: 760px;
+}
+
+.user-register-card h2 {
+  margin-bottom: 0.4rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.intro {
+  margin-bottom: 1.5rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.form-group .field-hint {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.group-label {
+  color: var(--violet-900);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.days-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 0.5rem;
+}
+
+.day-option {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.day-option input {
+  width: auto;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+}
