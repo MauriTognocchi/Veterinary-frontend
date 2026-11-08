@@ -1,7 +1,14 @@
 <section class="branch-list">
   <div class="branch-list-header">
     <h2 #listHeading tabindex="-1">Sucursales</h2>
+    @if (isAdmin()) {
+      <a routerLink="/branches/new" class="btn btn-primary">Nueva sucursal</a>
+    }
   </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+  }
 
   @if (loading()) {
     <div class="state-message is-loading" role="status" aria-live="polite">
@@ -37,7 +44,11 @@
       <tbody>
         @for (branch of branches(); track branch.externalId) {
           <tr [class.is-selected]="selectedBranchId() === branch.externalId">
-            <td>{{ branch.name }}</td>
+            <td>
+              <a [routerLink]="['/branches', branch.externalId]" class="detail-link">
+                {{ branch.name }}
+              </a>
+            </td>
             <td>{{ formatAddress(branch) }}</td>
             <td>{{ branch.phone }}</td>
             <td>
@@ -59,6 +70,26 @@
                   Seleccionar
                 }
               </button>
+              @if (isAdmin()) {
+                <a
+                  [routerLink]="['/branches', branch.externalId, 'edit']"
+                  class="edit-link"
+                >
+                  Editar
+                </a>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  [disabled]="deletingId() !== null"
+                  (click)="deleteBranch(branch)"
+                >
+                  @if (deletingId() === branch.externalId) {
+                    Eliminando...
+                  } @else {
+                    Eliminar
+                  }
+                </button>
+              }
             </td>
           </tr>
         }

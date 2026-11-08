@@ -22,6 +22,9 @@ import { PetForm } from './features/pets/pages/pet-form/pet-form';
 import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
 import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
 import { BranchList } from './features/branches/pages/branch-list/branch-list';
+import { BranchForm } from './features/branches/pages/branch-form/branch-form';
+import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
+import { BRANCH_ADMIN_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -90,6 +93,24 @@ export const routes: Routes = [
   {
     path: 'branches',
     component: BranchList,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['VIEW_BRANCHES'] },
+  },
+  {
+    path: 'branches/new',
+    component: BranchForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: BRANCH_ADMIN_ROLES },
+  },
+  {
+    path: 'branches/:externalId/edit',
+    component: BranchForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: BRANCH_ADMIN_ROLES },
+  },
+  {
+    path: 'branches/:externalId',
+    component: BranchDetail,
     canActivate: [authGuard, roleGuard],
     data: { permissions: ['VIEW_BRANCHES'] },
   },
