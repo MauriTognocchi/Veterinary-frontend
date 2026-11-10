@@ -18,7 +18,10 @@
             <a routerLink="/users" routerLinkActive="active">Usuarios</a>
         }
         <a routerLink="/branches" routerLinkActive="active">Sucursales</a>
-        <a routerLink="/veterinarians" routerLinkActive="active">Veterinarios</a>
+<a routerLink="/veterinarians" routerLinkActive="active">Veterinarios</a>
+@if (canViewConditions()) {
+    <a routerLink="/conditions" routerLinkActive="active">Condiciones</a>
+}
         @if (isAdmin()) {
             <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>
             <a routerLink="/breeds" routerLinkActive="active">Razas</a>

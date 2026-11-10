@@ -33,6 +33,9 @@ import { VeterinarianList } from './features/veterinarians/pages/veterinarian-li
 import { VeterinarianDetail } from './features/veterinarians/pages/veterinarian-detail/veterinarian-detail';
 import { VETERINARIAN_VIEW_ROLES } from './core/models/auth.model';
 
+import { ConditionList } from './features/conditions/pages/condition-list/condition-list';
+import { ConditionForm } from './features/conditions/pages/condition-form/condition-form';
+
 export const routes: Routes = [
   { path: '', component: Home },
   { path: 'login', component: Login },
@@ -175,5 +178,23 @@ export const routes: Routes = [
     component: VeterinarianDetail,
     canActivate: [authGuard, roleGuard],
     data: { roles: VETERINARIAN_VIEW_ROLES },
+  },
+  {
+    path: 'conditions',
+    component: ConditionList,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['VIEW_CLINICAL_RECORDS'] },
+  },
+  {
+    path: 'conditions/new',
+    component: ConditionForm,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['CREATE_CLINICAL_RECORDS'] },
+  },
+  {
+    path: 'conditions/:externalId/edit',
+    component: ConditionForm,
+    canActivate: [authGuard, roleGuard],
+    data: { permissions: ['UPDATE_CLINICAL_RECORDS'] },
   },
 ];
