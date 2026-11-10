@@ -1,0 +1,86 @@
+<section class="veterinarian-detail-container">
+  <div class="card card-accent veterinarian-detail-card">
+    <div class="veterinarian-detail-header">
+      <h2 #detailHeading tabindex="-1">Detalle del veterinario</h2>
+      <div class="veterinarian-detail-actions">
+        <a routerLink="/veterinarians" class="btn btn-secondary btn-sm">
+          Volver al listado
+        </a>
+      </div>
+    </div>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando veterinario...
+      </div>
+    } @else if (error()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ error() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoad()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">
+        No encontramos el veterinario solicitado.
+      </div>
+    } @else if (veterinarian(); as veterinarian) {
+      <dl class="detail-list">
+        <div class="detail-row">
+          <dt>Nombre</dt>
+          <dd>{{ veterinarian.firstName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Apellido</dt>
+          <dd>{{ veterinarian.lastName }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Matrícula</dt>
+          <dd>{{ veterinarian.licenseNumber }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Teléfono</dt>
+          <dd>{{ veterinarian.phone }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Email</dt>
+          <dd>{{ veterinarian.email }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Horario laboral</dt>
+          <dd>
+            {{ formatTime(veterinarian.workStartTime) }} -
+            {{ formatTime(veterinarian.workEndTime) }}
+          </dd>
+        </div>
+        <div class="detail-row">
+          <dt>Días de trabajo</dt>
+          <dd>{{ formatWorkDays(veterinarian.workDays) }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Sucursal</dt>
+          <dd>{{ veterinarian.branch?.name ?? 'Sin sucursal asignada' }}</dd>
+        </div>
+        <div class="detail-row">
+          <dt>Estado</dt>
+          <dd>
+            <span
+              class="status-badge"
+              [class.is-inactive]="!veterinarian.active"
+            >
+              {{ veterinarian.active ? 'Activo' : 'Inactivo' }}
+            </span>
+          </dd>
+        </div>
+      </dl>
+    }
+  </div>
+</section>
