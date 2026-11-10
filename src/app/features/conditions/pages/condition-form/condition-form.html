@@ -1,0 +1,97 @@
+<section class="condition-form-container">
+      <div class="card card-accent condition-form-card">
+        <h2 #formHeading tabindex="-1">
+          {{ editando() ? 'Editar condición médica' : 'Nueva condición médica' }}
+        </h2>
+    
+        @if (loading()) {
+          <div class="state-message is-loading" role="status" aria-live="polite">
+            Cargando condición médica...
+          </div>
+        } @else if (notFound()) {
+          <div class="state-message" role="status">
+            No encontramos la condición médica solicitada.
+          </div>
+          <div class="state-actions">
+            <a routerLink="/conditions" class="btn btn-secondary btn-sm">
+              Volver al listado
+            </a>
+          </div>
+        } @else if (loadError()) {
+          <div class="alert alert-error" role="alert">
+            <p>{{ loadError() }}</p>
+            @if (loadErrorRetryable()) {
+              <div class="state-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="retryLoad()"
+                >
+                  Reintentar
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <form [formGroup]="conditionForm" (ngSubmit)="onSubmit()">
+            <div class="form-group">
+              <label for="name">Nombre</label>
+              <input
+                id="name"
+                type="text"
+                formControlName="name"
+                maxlength="50"
+                autocomplete="off"
+              />
+              @if (
+                conditionForm.get('name')?.touched &&
+                conditionForm.get('name')?.invalid
+              ) {
+                <small class="field-error">
+                  El nombre es obligatorio (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+    
+            <div class="form-group">
+              <label for="description">Descripción</label>
+              <textarea
+                id="description"
+                formControlName="description"
+                rows="4"
+                maxlength="255"
+              ></textarea>
+              @if (
+                conditionForm.get('description')?.touched &&
+                conditionForm.get('description')?.invalid
+              ) {
+                <small class="field-error">
+                  La descripción es obligatoria (máximo 255 caracteres).
+                </small>
+              }
+            </div>
+    
+            @if (error()) {
+              <div class="alert alert-error" role="alert">{{ error() }}</div>
+            }
+    
+            <div class="actions">
+              <a routerLink="/conditions" class="btn btn-secondary">Cancelar</a>
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="saving() || conditionForm.invalid"
+              >
+                @if (saving()) {
+                  Guardando...
+                } @else if (editando()) {
+                  Guardar cambios
+                } @else {
+                  Crear condición
+                }
+              </button>
+            </div>
+          </form>
+        }
+      </div>
+    </section>
