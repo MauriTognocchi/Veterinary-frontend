@@ -1,0 +1,83 @@
+ <section class="medication-list">
+      <div class="medication-list-header">
+        <h2 #listHeading tabindex="-1">Catálogo de Medicamentos</h2>
+        @if (isAdmin()) {
+          <a routerLink="/medications/new" class="btn btn-primary">
+            + Nuevo medicamento
+          </a>
+        }
+      </div>
+    
+      @if (deleteError()) {
+        <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+      }
+    
+      @if (loading()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando medicamentos...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ error() }}</p>
+          @if (loadErrorRetryable()) {
+            <div class="state-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="retryLoad()"
+              >
+                Reintentar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (medications().length === 0) {
+        <div class="state-message" role="status">
+          No hay medicamentos registrados en el catálogo.
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Dosis</th>
+              <th>Unidad</th>
+              @if (isAdmin()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (medication of medications(); track medication.externalId) {
+              <tr>
+                <td><strong>{{ medication.name }}</strong></td>
+                <td>{{ medication.dosage }}</td>
+                <td><span class="badge">{{ medication.dosageUnit }}</span></td>
+                @if (isAdmin()) {
+                  <td class="actions-cell">
+                    <a
+                      [routerLink]="['/medications', medication.externalId, 'edit']"
+                      class="edit-link"
+                    >
+                      Editar
+                    </a>
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-sm"
+                      [disabled]="deletingId() !== null"
+                      (click)="deleteMedication(medication)"
+                    >
+                      @if (deletingId() === medication.externalId) {
+                        Eliminando...
+                      } @else {
+                        Eliminar
+                      }
+                    </button>
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
