@@ -29,6 +29,9 @@ import { UserRegister } from './features/users/pages/user-register/user-register
 import { UserList } from './features/users/pages/user-list/user-list';
 import { UserDetail } from './features/users/pages/user-detail/user-detail';
 import { USER_ADMIN_ROLES } from './core/models/auth.model';
+import { VeterinarianList } from './features/veterinarians/pages/veterinarian-list/veterinarian-list';
+import { VeterinarianDetail } from './features/veterinarians/pages/veterinarian-detail/veterinarian-detail';
+import { VETERINARIAN_VIEW_ROLES } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -160,5 +163,17 @@ export const routes: Routes = [
     component: UserDetail,
     canActivate: [authGuard, roleGuard],
     data: { permissions: ['VIEW_USERS'] },
+  },
+  {
+    path: 'veterinarians',
+    component: VeterinarianList,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: VETERINARIAN_VIEW_ROLES },
+  },
+  {
+    path: 'veterinarians/:externalId',
+    component: VeterinarianDetail,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: VETERINARIAN_VIEW_ROLES },
   },
 ];

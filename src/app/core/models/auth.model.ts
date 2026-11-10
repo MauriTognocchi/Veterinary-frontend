@@ -26,6 +26,13 @@ export const BREED_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 export const BRANCH_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 export const USER_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
 
+export const VETERINARIAN_VIEW_ROLES: readonly UserRole[] = [
+  'ROLE_ADMIN',
+  'ROLE_VETERINARIAN',
+  'ROLE_RECEPTIONIST',
+  'ROLE_CLIENT',
+];
+
 export const PET_VIEW_ROLES: readonly UserRole[] = [
       'ROLE_ADMIN',
       'ROLE_VETERINARIAN',
