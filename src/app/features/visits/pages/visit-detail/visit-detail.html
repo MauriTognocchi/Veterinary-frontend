@@ -1,0 +1,89 @@
+<div class="page-container">
+      @if (loading()) {
+        <p class="loading-text">Cargando visita...</p>
+      } @else if (error()) {
+        <p class="error-text">{{ error() }}</p>
+      } @else if (visit(); as v) {
+        <div class="page-header">
+          <div class="header-left">
+            <a routerLink="/visits" class="back-link">← Volver al listado</a>
+            <h1>Detalle de visita</h1>
+          </div>
+          @if (canEdit) {
+            <a [routerLink]="['/visits', v.externalId, 'edit']" class="btn btn-primary">
+              Editar
+            </a>
+          }
+        </div>
+
+        <div class="detail-grid">
+
+          <section class="card">
+            <h2 class="card-title">Información general</h2>
+            <dl class="info-list">
+              <dt>Fecha</dt>
+              <dd>{{ formatDate(v.visitDate) }}</dd>
+
+              <dt>Tipo</dt>
+              <dd>
+                @if (isWalkIn()) {
+                  <span class="badge badge-walkin">Walk-in</span>
+                } @else {
+                  <span class="badge badge-scheduled">Programada</span>
+                }
+              </dd>
+
+              <dt>Observaciones</dt>
+              <dd class="observations">{{ v.observations || '—' }}</dd>
+            </dl>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title">Mascota</h2>
+            <dl class="info-list">
+              <dt>Nombre</dt>
+              <dd>
+                <a [routerLink]="['/pets', v.pet.externalId]" class="detail-link">
+                  {{ v.pet.name }}
+                </a>
+              </dd>
+              <dt>Especie</dt>
+              <dd>{{ v.pet.animalType.name }}</dd>
+              <dt>Raza</dt>
+              <dd>{{ v.pet.breed.name }}</dd>
+              <dt>Color</dt>
+              <dd>{{ v.pet.color }}</dd>
+            </dl>
+          </section>
+
+          <section class="card">
+            <h2 class="card-title">Veterinario</h2>
+            <dl class="info-list">
+              <dt>Nombre</dt>
+              <dd>{{ v.veterinarian.firstName }} {{ v.veterinarian.lastName }}</dd>
+              <dt>Matrícula</dt>
+              <dd>{{ v.veterinarian.licenseNumber }}</dd>
+              <dt>Sucursal</dt>
+              <dd>{{ v.veterinarian.branch?.name ?? '—' }}</dd>
+            </dl>
+          </section>
+
+          @if (!isWalkIn() && v.appointment) {
+            <section class="card">
+              <h2 class="card-title">Turno asociado</h2>
+              <dl class="info-list">
+                <dt>Fecha del turno</dt>
+                <dd>{{ formatDate(v.appointment.appointmentDate) }}</dd>
+                <dt>Motivo</dt>
+                <dd>{{ v.appointment.reason }}</dd>
+                <dt>Estado</dt>
+                <dd>{{ v.appointment.status }}</dd>
+                <dt>Duración</dt>
+                <dd>{{ v.appointment.durationMinutes }} min</dd>
+              </dl>
+            </section>
+          }
+
+        </div>
+      }
+    </div>

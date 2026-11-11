@@ -1,0 +1,86 @@
+<div class="page-container">
+      <div class="page-header">
+        <h1>Visitas</h1>
+        @if (canCreate) {
+          <div class="header-actions">
+            <a routerLink="/visits/new" class="btn btn-primary">+ Visita programada</a>
+            <a routerLink="/visits/walk-in" class="btn btn-secondary">+ Walk-in</a>
+          </div>
+        }
+      </div>
+
+      <div class="filters-bar">
+        <input
+          type="text"
+          placeholder="Mascota"
+          [(ngModel)]="filters.petName"
+          class="filter-input"
+        />
+        <input
+          type="text"
+          placeholder="Veterinario"
+          [(ngModel)]="filters.veterinarianName"
+          class="filter-input"
+        />
+        <select [(ngModel)]="walkInFilter" class="filter-select">
+          <option value="">Todos los tipos</option>
+          <option value="false">Programadas</option>
+          <option value="true">Walk-in</option>
+        </select>
+        <button class="btn btn-primary" (click)="load()">Buscar</button>
+        <button class="btn btn-outline" (click)="clearFilters()">Limpiar</button>
+      </div>
+
+      @if (loading()) {
+        <p class="loading-text">Cargando visitas...</p>
+      } @else if (error()) {
+        <p class="error-text">{{ error() }}</p>
+      } @else if (visits().length === 0) {
+        <p class="empty-text">No se encontraron visitas.</p>
+      } @else {
+        <div class="table-wrapper">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Mascota</th>
+                <th>Veterinario</th>
+                <th>Tipo</th>
+                <th>Observaciones</th>
+                <th>Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (visit of visits(); track visit.externalId) {
+                <tr>
+                  <td>{{ formatDate(visit.visitDate) }}</td>
+                  <td>{{ visit.pet.name }}</td>
+                  <td>{{ visit.veterinarian.firstName }} {{ visit.veterinarian.lastName }}</td>
+                  <td>
+                    @if (isWalkIn(visit)) {
+                      <span class="badge badge-walkin">Walk-in</span>
+                    } @else {
+                      <span class="badge badge-scheduled">Programada</span>
+                    }
+                  </td>
+                  <td class="observations-cell">{{ visit.observations }}</td>
+                  <td class="actions-cell">
+                    <a [routerLink]="['/visits', visit.externalId]" class="btn btn-sm btn-outline">
+                      Ver
+                    </a>
+                    @if (canEdit) {
+                      <a
+                        [routerLink]="['/visits', visit.externalId, 'edit']"
+                        class="btn btn-sm btn-primary"
+                      >
+                        Editar
+                      </a>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    </div>
