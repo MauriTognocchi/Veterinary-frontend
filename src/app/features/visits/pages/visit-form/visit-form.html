@@ -1,0 +1,97 @@
+<div class="page-container">
+      <div class="page-header">
+        <a routerLink="/visits" class="back-link">← Volver al listado</a>
+        <h1>{{ title }}</h1>
+      </div>
+
+      @if (loadingData()) {
+        <p class="loading-text">Cargando datos...</p>
+      } @else {
+
+        @if (isEdit && existingVisit(); as v) {
+          <div class="readonly-info card">
+            <h2 class="card-title">Información no editable</h2>
+            <dl class="info-list">
+              <dt>Mascota</dt>
+              <dd>{{ v.pet.name }}</dd>
+              @if (v.appointment) {
+                <dt>Turno</dt>
+                <dd>{{ formatAppointmentLabel(v.appointment) }}</dd>
+              } @else {
+                <dt>Tipo</dt>
+                <dd><span class="badge badge-walkin">Walk-in</span></dd>
+              }
+            </dl>
+          </div>
+        }
+
+        <form [formGroup]="form" (ngSubmit)="onSubmit()" class="card form-card">
+
+          @if (isScheduled) {
+            <div class="form-group">
+              <label for="appointmentExternalId">Turno confirmado *</label>
+              <select id="appointmentExternalId" formControlName="appointmentExternalId"
+                [class.invalid]="isInvalid('appointmentExternalId')">
+                <option value="">Seleccioná un turno</option>
+                @for (appt of appointments(); track appt.externalId) {
+                  <option [value]="appt.externalId">{{ formatAppointmentLabel(appt) }}</option>
+                }
+              </select>
+              @if (isInvalid('appointmentExternalId')) {
+                <span class="field-error">El turno es obligatorio.</span>
+              }
+            </div>
+          }
+
+          @if (isWalkIn) {
+            <div class="form-group">
+              <label for="petExternalId">Mascota *</label>
+              <select id="petExternalId" formControlName="petExternalId"
+                [class.invalid]="isInvalid('petExternalId')">
+                <option value="">Seleccioná una mascota</option>
+                @for (pet of pets(); track pet.externalId) {
+                  <option [value]="pet.externalId">{{ pet.name }} ({{ pet.animalType.name }})</option>
+                }
+              </select>
+              @if (isInvalid('petExternalId')) {
+                <span class="field-error">La mascota es obligatoria.</span>
+              }
+            </div>
+          }
+
+          <div class="form-group">
+            <label for="veterinarianExternalId">Veterinario *</label>
+            <select id="veterinarianExternalId" formControlName="veterinarianExternalId"
+              [class.invalid]="isInvalid('veterinarianExternalId')">
+              <option value="">Seleccioná un veterinario</option>
+              @for (vet of veterinarians(); track vet.externalId) {
+                <option [value]="vet.externalId">
+                  {{ vet.firstName }} {{ vet.lastName }} — Mat. {{ vet.licenseNumber }}
+                </option>
+              }
+            </select>
+            @if (isInvalid('veterinarianExternalId')) {
+              <span class="field-error">El veterinario es obligatorio.</span>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="observations">Observaciones</label>
+            <textarea id="observations" formControlName="observations"
+              rows="5" placeholder="Ingresá las observaciones de la visita..."></textarea>
+          </div>
+
+          @if (error()) {
+            <p class="error-text">{{ error() }}</p>
+          }
+
+          <div class="form-actions">
+            <a routerLink="/visits" class="btn btn-outline">Cancelar</a>
+            <button type="submit" class="btn btn-primary" [disabled]="submitting()">
+              {{ submitting() ? 'Guardando...' : 'Guardar' }}
+            </button>
+          </div>
+
+        </form>
+      }
+    </div>
