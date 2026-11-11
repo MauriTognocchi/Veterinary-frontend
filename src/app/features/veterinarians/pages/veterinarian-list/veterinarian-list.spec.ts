@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth';
 import { BranchService } from '../../../branches/services/branch';
 import { VeterinarianResponse } from '../../models/veterinarian.model';
 import { VeterinarianService } from '../../services/veterinarian';
@@ -9,8 +10,12 @@ import { VeterinarianList } from './veterinarian-list';
 describe('VeterinarianList', () => {
   let fixture: ComponentFixture<VeterinarianList>;
   let component: VeterinarianList;
-  let vetService: { getAll: ReturnType<typeof vi.fn> };
+  let vetService: {
+    getAll: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
   let branchService: { getAll: ReturnType<typeof vi.fn> };
+  let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
 
   const veterinarian: VeterinarianResponse = {
     externalId: 'vet-1',
@@ -41,8 +46,9 @@ describe('VeterinarianList', () => {
   }
 
   beforeEach(async () => {
-    vetService = { getAll: vi.fn() };
+    vetService = { getAll: vi.fn(), delete: vi.fn() };
     branchService = { getAll: vi.fn() };
+    authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
 
     await TestBed.configureTestingModule({
       imports: [VeterinarianList],
@@ -57,6 +63,7 @@ describe('VeterinarianList', () => {
         },
         { provide: VeterinarianService, useValue: vetService },
         { provide: BranchService, useValue: branchService },
+        { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
   });
@@ -194,5 +201,93 @@ describe('VeterinarianList', () => {
       'No pudimos cargar las sucursales para el filtro.',
     );
     expect(component.veterinarians()).toEqual([veterinarian]);
+  });
+
+  it('muestra las acciones administrativas solo para ADMIN', () => {
+    vetService.getAll.mockReturnValue(of([veterinarian]));
+    branchService.getAll.mockReturnValue(of([]));
+    authService.hasAnyRole.mockReturnValue(true);
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Registrar veterinario');
+    expect(text).toContain('Editar');
+    expect(text).toContain('Eliminar');
+  });
+
+  it('oculta las acciones administrativas para otros roles', () => {
+    vetService.getAll.mockReturnValue(of([veterinarian]));
+    branchService.getAll.mockReturnValue(of([]));
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).not.toContain('Registrar veterinario');
+    expect(text).not.toContain('Editar');
+    expect(text).not.toContain('Eliminar');
+    expect(text).toContain('Ver detalle');
+  });
+
+  it('no ofrece eliminar a un veterinario ya inactivo', () => {
+    vetService.getAll.mockReturnValue(
+      of([{ ...veterinarian, active: false }]),
+    );
+    branchService.getAll.mockReturnValue(of([]));
+    authService.hasAnyRole.mockReturnValue(true);
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Editar');
+    expect(text).not.toContain('Eliminar');
+  });
+
+  it('pide confirmación y recarga el listado tras dar de baja', () => {
+    vetService.getAll.mockReturnValue(of([veterinarian]));
+    branchService.getAll.mockReturnValue(of([]));
+    vetService.delete.mockReturnValue(of(undefined));
+    authService.hasAnyRole.mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+    vetService.getAll.mockClear();
+
+    component.deleteVeterinarian(veterinarian);
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(vetService.delete).toHaveBeenCalledWith('vet-1');
+    expect(vetService.getAll).toHaveBeenCalled();
+    expect(component.deletingId()).toBeNull();
+  });
+
+  it('no elimina si se cancela la confirmación', () => {
+    vetService.getAll.mockReturnValue(of([veterinarian]));
+    branchService.getAll.mockReturnValue(of([]));
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    createComponent();
+
+    component.deleteVeterinarian(veterinarian);
+
+    expect(vetService.delete).not.toHaveBeenCalled();
+  });
+
+  it('muestra el error cuando el veterinario ya está inactivo', () => {
+    vetService.getAll.mockReturnValue(of([veterinarian]));
+    branchService.getAll.mockReturnValue(of([]));
+    vetService.delete.mockReturnValue(throwError(() => ({ status: 409 })));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    component.deleteVeterinarian(veterinarian);
+    fixture.detectChanges();
+
+    expect(component.deleteError()).toBe('El veterinario ya está inactivo.');
+    expect(fixture.nativeElement.textContent).toContain(
+      'El veterinario ya está inactivo.',
+    );
+    expect(component.deletingId()).toBeNull();
   });
 });
