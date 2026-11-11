@@ -1,0 +1,211 @@
+<section class="appointment-form-container">
+      <div class="card card-accent appointment-form-card">
+        <h2 #formHeading tabindex="-1">
+          {{ isEditMode() ? 'Editar turno' : 'Nuevo turno' }}
+        </h2>
+
+        @if (loading()) {
+          <div class="state-message is-loading" role="status"
+          aria-live="polite">
+            Cargando turno...
+          </div>
+        } @else if (notFound()) {
+          <div class="state-message" role="status">
+            No encontramos el turno solicitado.
+          </div>
+          <div class="state-actions">
+            <a routerLink="/appointments" class="btn btn-secondary
+            btn-sm">
+              Volver a turnos
+            </a>
+          </div>
+        } @else {
+          @if (error()) {
+            <div class="alert alert-error" role="alert">{{ error()
+            }}</div>
+          }
+
+          <form [formGroup]="appointmentForm" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="branchExternalId">Sucursal *</label>
+                <select
+                  id="branchExternalId"
+                  formControlName="branchExternalId"
+                  (change)="onAvailabilityCriteriaChanged()"
+                >
+                  <option value="">Seleccionar sucursal</option>
+                  @for (branch of branches(); track branch.externalId)
+                  {
+                    <option [value]="branch.externalId">{{ branch.name
+                    }}</option>
+                  }
+                </select>
+                @if (
+                  appointmentForm.get('branchExternalId')?.touched &&
+                  appointmentForm.get('branchExternalId')?.invalid
+                ) {
+                  <small class="field-error">La sucursal es
+                  obligatoria.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="veterinarianExternalId">Veterinario
+                *</label>
+                <select
+                  id="veterinarianExternalId"
+                  formControlName="veterinarianExternalId"
+                  (change)="onAvailabilityCriteriaChanged()"
+                >
+                  <option value="">Seleccionar veterinario</option>
+                  @for (vet of veterinarians(); track vet.externalId) {
+                    <option [value]="vet.externalId">
+                      {{ veterinarianLabel(vet) }}
+                    </option>
+                  }
+                </select>
+                @if (
+                  appointmentForm.get('veterinarianExternalId')?.touched && appointmentForm.get('veterinarianExternalId')?.invalid
+                ) {
+                  <small class="field-error">El profesional es
+                  obligatorio.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="date">Fecha *</label>
+                <input
+                  id="date"
+                  type="date"
+                  [min]="minDate"
+                  formControlName="date"
+                  (change)="onAvailabilityCriteriaChanged()"
+                />
+                @if (
+                  appointmentForm.get('date')?.touched &&
+                  appointmentForm.get('date')?.invalid
+                ) {
+                  <small class="field-error">La fecha es
+                  obligatoria.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="petExternalId">Mascota *</label>
+                <select id="petExternalId"
+                formControlName="petExternalId">
+                  <option value="">Seleccionar mascota</option>
+                  @for (pet of pets(); track pet.externalId) {
+                    <option [value]="pet.externalId">{{ petLabel(pet)
+                    }}</option>
+                  }
+                </select>
+                @if (
+                  appointmentForm.get('petExternalId')?.touched &&
+                  appointmentForm.get('petExternalId')?.invalid
+                ) {
+                  <small class="field-error">La mascota es
+                  obligatoria.</small>
+                }
+              </div>
+
+              <div class="form-group full-width">
+                <label>Horarios disponibles *</label>
+                @if (loadingSlots()) {
+                  <div class="state-message is-loading-sm">
+                    Buscando disponibilidad...
+                  </div>
+                } @else if (slotsError()) {
+                  <p class="filters-warning">{{ slotsError() }}</p>
+                } @else if (availableSlots().length > 0) {
+                  <div class="slots-container">
+                    @for (slot of availableSlots(); track slot) {
+                      <button
+                        type="button"
+                        class="slot-chip"
+                        [class.is-selected]="appointmentForm.get('time'
+                        )?.value === slot"
+                        (click)="selectSlot(slot)"
+                      >
+                        {{ slot }}
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <p class="slots-empty-note">
+                    Seleccioná sucursal, veterinario y fecha para
+                    consultar los turnos disponibles.
+                  </p>
+                }
+                @if (
+                  appointmentForm.get('time')?.touched &&
+                  appointmentForm.get('time')?.invalid
+                ) {
+                  <small class="field-error">Debés seleccionar un
+                  horario.</small>
+                }
+              </div>
+
+              <div class="form-group">
+                <label for="durationMinutes">Duración (minutos)
+                *</label>
+                <select id="durationMinutes"
+                formControlName="durationMinutes">
+                  <option [value]="15">15 minutos</option>
+                  <option [value]="30">30 minutos</option>
+                  <option [value]="45">45 minutos</option>
+                  <option [value]="60">60 minutos</option>
+                </select>
+              </div>
+
+              @if (isEditMode()) {
+                <div class="form-group">
+                  <label for="status">Estado del turno *</label>
+                  <select id="status" formControlName="status">
+                    <option value="PENDING">Pendiente</option>
+                    <option value="CONFIRMED">Confirmado</option>
+                  </select>
+                </div>
+              }
+
+              <div class="form-group full-width">
+                <label for="reason">Motivo de la consulta *</label>
+                <textarea
+                  id="reason"
+                  rows="3"
+                  formControlName="reason"
+                  placeholder="Describí brevemente el motivo del
+                  turno..."
+                ></textarea>
+                @if (
+                  appointmentForm.get('reason')?.touched &&
+                  appointmentForm.get('reason')?.invalid
+                ) {
+                  <small class="field-error">El motivo es
+                  obligatorio.</small>
+                }
+              </div>
+            </div>
+
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="saving() || appointmentForm.invalid"
+              >
+                @if (saving()) {
+                  Guardando...
+                } @else {
+                  {{ isEditMode() ? 'Actualizar turno' : 'Confirmar
+                  turno' }}
+                }
+              </button>
+              <a routerLink="/appointments" class="btn btn-secondary">
+                Cancelar
+              </a>
+            </div>
+          </form>
+        }
+      </div>
+    </section>
