@@ -3,11 +3,39 @@
     <div class="veterinarian-detail-header">
       <h2 #detailHeading tabindex="-1">Detalle del veterinario</h2>
       <div class="veterinarian-detail-actions">
+        @if (veterinarian(); as veterinarian) {
+          @if (isAdmin()) {
+            <a
+              [routerLink]="['/veterinarians', veterinarian.externalId, 'edit']"
+              class="btn btn-primary btn-sm"
+            >
+              Editar
+            </a>
+            @if (veterinarian.active) {
+              <button
+                type="button"
+                class="btn btn-danger btn-sm"
+                [disabled]="deleting()"
+                (click)="deleteVeterinarian()"
+              >
+                @if (deleting()) {
+                  Eliminando...
+                } @else {
+                  Eliminar
+                }
+              </button>
+            }
+          }
+        }
         <a routerLink="/veterinarians" class="btn btn-secondary btn-sm">
           Volver al listado
         </a>
       </div>
     </div>
+
+    @if (deleteError()) {
+      <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+    }
 
     @if (loading()) {
       <div class="state-message is-loading" role="status" aria-live="polite">

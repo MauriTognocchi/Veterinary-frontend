@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
+import { AuthService } from '../../../../core/services/auth';
 import { VeterinarianResponse } from '../../models/veterinarian.model';
 import { VeterinarianService } from '../../services/veterinarian';
 import { VeterinarianDetail } from './veterinarian-detail';
@@ -8,7 +9,12 @@ import { VeterinarianDetail } from './veterinarian-detail';
 describe('VeterinarianDetail', () => {
   let fixture: ComponentFixture<VeterinarianDetail>;
   let component: VeterinarianDetail;
-  let service: { getById: ReturnType<typeof vi.fn> };
+  let service: {
+    getById: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
+  let router: { navigate: ReturnType<typeof vi.fn> };
 
   const veterinarian: VeterinarianResponse = {
     externalId: 'vet-1',
@@ -39,7 +45,9 @@ describe('VeterinarianDetail', () => {
   }
 
   beforeEach(async () => {
-    service = { getById: vi.fn() };
+    service = { getById: vi.fn(), delete: vi.fn() };
+    authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
+    router = { navigate: vi.fn().mockResolvedValue(true) };
 
     const route = {
       snapshot: {
@@ -52,9 +60,10 @@ describe('VeterinarianDetail', () => {
     await TestBed.configureTestingModule({
       imports: [VeterinarianDetail],
       providers: [
-        { provide: Router, useValue: { navigate: vi.fn().mockResolvedValue(true) } },
+        { provide: Router, useValue: router },
         { provide: ActivatedRoute, useValue: route },
         { provide: VeterinarianService, useValue: service },
+        { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
   });
@@ -135,5 +144,87 @@ describe('VeterinarianDetail', () => {
 
     expect(service.getById).toHaveBeenCalledTimes(2);
     expect(component.veterinarian()).toEqual(veterinarian);
+  });
+
+  it('muestra las acciones administrativas solo para ADMIN', () => {
+    service.getById.mockReturnValue(of(veterinarian));
+    authService.hasAnyRole.mockReturnValue(true);
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Editar');
+    expect(text).toContain('Eliminar');
+  });
+
+  it('oculta las acciones administrativas para otros roles', () => {
+    service.getById.mockReturnValue(of(veterinarian));
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).not.toContain('Editar');
+    expect(text).not.toContain('Eliminar');
+    expect(text).toContain('Volver al listado');
+  });
+
+  it('no ofrece eliminar a un veterinario ya inactivo', () => {
+    service.getById.mockReturnValue(
+      of({ ...veterinarian, active: false }),
+    );
+    authService.hasAnyRole.mockReturnValue(true);
+
+    createComponent();
+
+    const text = fixture.nativeElement.textContent;
+    expect(text).toContain('Editar');
+    expect(text).not.toContain('Eliminar');
+  });
+
+  it('pide confirmación y vuelve al listado tras dar de baja', () => {
+    service.getById.mockReturnValue(of(veterinarian));
+    service.delete.mockReturnValue(of(undefined));
+    authService.hasAnyRole.mockReturnValue(true);
+    const confirmSpy = vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    component.deleteVeterinarian();
+
+    expect(confirmSpy).toHaveBeenCalled();
+    expect(service.delete).toHaveBeenCalledWith('vet-1');
+    expect(router.navigate).toHaveBeenCalledWith(['/veterinarians']);
+    expect(component.deleting()).toBe(false);
+  });
+
+  it('no elimina si se cancela la confirmación', () => {
+    service.getById.mockReturnValue(of(veterinarian));
+    authService.hasAnyRole.mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(false);
+
+    createComponent();
+
+    component.deleteVeterinarian();
+
+    expect(service.delete).not.toHaveBeenCalled();
+  });
+
+  it('muestra el error cuando el veterinario ya está inactivo', () => {
+    service.getById.mockReturnValue(of(veterinarian));
+    service.delete.mockReturnValue(throwError(() => ({ status: 409 })));
+    authService.hasAnyRole.mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    component.deleteVeterinarian();
+    fixture.detectChanges();
+
+    expect(component.deleteError()).toBe('El veterinario ya está inactivo.');
+    expect(fixture.nativeElement.textContent).toContain(
+      'El veterinario ya está inactivo.',
+    );
+    expect(component.deleting()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });
