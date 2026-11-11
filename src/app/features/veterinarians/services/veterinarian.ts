@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   VeterinarianFilters,
   VeterinarianResponse,
+  VeterinarianUpdateRequest,
 } from '../models/veterinarian.model';
 
 @Injectable({ providedIn: 'root' })
@@ -42,6 +43,22 @@ export class VeterinarianService {
 
   getById(externalId: string): Observable<VeterinarianResponse> {
     return this.http.get<VeterinarianResponse>(
+      `${this.baseUrl}/api/veterinarians/${encodeURIComponent(externalId)}`,
+    );
+  }
+
+  update(
+    externalId: string,
+    veterinarian: VeterinarianUpdateRequest,
+  ): Observable<VeterinarianResponse> {
+    return this.http.put<VeterinarianResponse>(
+      `${this.baseUrl}/api/veterinarians/${encodeURIComponent(externalId)}`,
+      veterinarian,
+    );
+  }
+
+  delete(externalId: string): Observable<void> {
+    return this.http.delete<void>(
       `${this.baseUrl}/api/veterinarians/${encodeURIComponent(externalId)}`,
     );
   }

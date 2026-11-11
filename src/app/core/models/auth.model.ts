@@ -33,6 +33,8 @@ export const VETERINARIAN_VIEW_ROLES: readonly UserRole[] = [
   'ROLE_CLIENT',
 ];
 
+export const VETERINARIAN_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
+
 export const PET_VIEW_ROLES: readonly UserRole[] = [
       'ROLE_ADMIN',
       'ROLE_VETERINARIAN',
