@@ -48,6 +48,15 @@ export const PET_VIEW_ROLES: readonly UserRole[] = [
       'ROLE_CLIENT',
     ];
 
+    export const RECEPTIONIST_VIEW_ROLES: readonly UserRole[] = [
+      'ROLE_ADMIN',
+      'ROLE_VETERINARIAN',
+      'ROLE_RECEPTIONIST',
+      'ROLE_CLIENT',
+    ];
+    
+    export const RECEPTIONIST_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
+
 export interface LoginRequest {
   username: string;
   password: string;

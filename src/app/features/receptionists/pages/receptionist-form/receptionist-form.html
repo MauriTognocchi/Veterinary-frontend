@@ -1,0 +1,142 @@
+<section class="receptionist-form-container">
+      <div class="card card-accent receptionist-form-card">
+        <h2 #formHeading tabindex="-1">Editar recepcionista</h2>
+    
+        @if (loading()) {
+          <div class="state-message is-loading" role="status" aria-live="polite">
+            Cargando recepcionista...
+          </div>
+        } @else if (notFound()) {
+          <div class="state-message" role="status">
+            No encontramos el recepcionista solicitado.
+          </div>
+          <div class="state-actions">
+            <a routerLink="/receptionists" class="btn btn-secondary btn-sm">
+              Volver al listado
+            </a>
+          </div>
+        } @else if (loadError()) {
+          <div class="alert alert-error" role="alert">
+            <p>{{ loadError() }}</p>
+            @if (loadErrorRetryable()) {
+              <div class="state-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="retryLoad()"
+                >
+                  Reintentar
+                </button>
+              </div>
+            }
+          </div>
+        } @else {
+          <form [formGroup]="receptionistForm" (ngSubmit)="onSubmit()">
+            <div class="form-grid">
+              <div class="form-group">
+                <label for="firstName">Nombre</label>
+                <input
+                  id="firstName"
+                  type="text"
+                  formControlName="firstName"
+                  autocomplete="given-name"
+                />
+                @if (
+                  receptionistForm.get('firstName')?.touched &&
+                  receptionistForm.get('firstName')?.invalid
+                ) {
+                  <small class="field-error">El nombre es obligatorio.</small>
+                }
+              </div>
+    
+              <div class="form-group">
+                <label for="lastName">Apellido</label>
+                <input
+                  id="lastName"
+                  type="text"
+                  formControlName="lastName"
+                  autocomplete="family-name"
+                />
+                @if (
+                  receptionistForm.get('lastName')?.touched &&
+                  receptionistForm.get('lastName')?.invalid
+                ) {
+                  <small class="field-error">El apellido es obligatorio.</small>
+                }
+              </div>
+    
+              <div class="form-group">
+                <label for="phone">Teléfono</label>
+                <input
+                  id="phone"
+                  type="tel"
+                  formControlName="phone"
+                  autocomplete="tel"
+                />
+                @if (
+                  receptionistForm.get('phone')?.touched &&
+                  receptionistForm.get('phone')?.invalid
+                ) {
+                  <small class="field-error">El teléfono es obligatorio.</small>
+                }
+              </div>
+    
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input
+                  id="email"
+                  type="email"
+                  formControlName="email"
+                  autocomplete="email"
+                />
+                @if (
+                  receptionistForm.get('email')?.touched &&
+                  receptionistForm.get('email')?.invalid
+                ) {
+                  <small class="field-error">Ingresá un email válido.</small>
+                }
+              </div>
+    
+              <div class="form-group full-width">
+                <label for="branchExternalId">Sucursal</label>
+                <select id="branchExternalId" formControlName="branchExternalId">
+                  <option value="">Sin sucursal</option>
+                  @for (branch of branches(); track branch.externalId) {
+                    <option [value]="branch.externalId">{{ branch.name }}</option>
+                  }
+                </select>
+                @if (branchesLoadError()) {
+                  <small class="filters-warning">
+                    No pudimos cargar las sucursales disponibles.
+                  </small>
+                }
+              </div>
+            </div>
+    
+            @if (error()) {
+              <div class="alert alert-error" role="alert">{{ error() }}</div>
+            }
+    
+            <div class="form-actions">
+              <button
+                type="submit"
+                class="btn btn-primary"
+                [disabled]="saving() || receptionistForm.invalid"
+              >
+                @if (saving()) {
+                  Guardando cambios...
+                } @else {
+                  Guardar cambios
+                }
+              </button>
+              <a
+                [routerLink]="['/receptionists', externalId()]"
+                class="btn btn-secondary"
+              >
+                Cancelar
+              </a>
+            </div>
+          </form>
+        }
+      </div>
+    </section>
