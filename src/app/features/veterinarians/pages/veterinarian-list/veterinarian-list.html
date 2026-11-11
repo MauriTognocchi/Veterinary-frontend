@@ -1,7 +1,16 @@
 <section class="veterinarian-list">
   <div class="veterinarian-list-header">
     <h2 #listHeading tabindex="-1">Veterinarios</h2>
+    @if (isAdmin()) {
+      <a routerLink="/users/new" class="btn btn-primary btn-sm">
+        Registrar veterinario
+      </a>
+    }
   </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+  }
 
   <form class="card filters-card" [formGroup]="filtersForm" (ngSubmit)="loadVeterinarians()">
     <div class="form-grid">
@@ -127,6 +136,28 @@
               >
                 Ver detalle
               </a>
+              @if (isAdmin()) {
+                <a
+                  [routerLink]="['/veterinarians', veterinarian.externalId, 'edit']"
+                  class="edit-link"
+                >
+                  Editar
+                </a>
+                @if (veterinarian.active) {
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    [disabled]="deletingId() !== null"
+                    (click)="deleteVeterinarian(veterinarian)"
+                  >
+                    @if (deletingId() === veterinarian.externalId) {
+                      Eliminando...
+                    } @else {
+                      Eliminar
+                    }
+                  </button>
+                }
+              }
             </td>
           </tr>
         }

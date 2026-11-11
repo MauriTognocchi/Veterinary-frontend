@@ -2,11 +2,14 @@ import {
   Component,
   ElementRef,
   OnInit,
+  computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
-import { ActivatedRoute, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { VETERINARIAN_ADMIN_ROLES } from '../../../../core/models/auth.model';
+import { AuthService } from '../../../../core/services/auth';
 import {
   VeterinarianResponse,
   VeterinarianWorkDay,
@@ -42,14 +45,22 @@ const DAY_LABELS: Record<VeterinarianWorkDay, string> = {
 })
 export class VeterinarianDetail implements OnInit {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private veterinarianService = inject(VeterinarianService);
+  private authService = inject(AuthService);
   private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
+
+  readonly isAdmin = computed(() =>
+    this.authService.hasAnyRole(VETERINARIAN_ADMIN_ROLES),
+  );
 
   veterinarian = signal<VeterinarianResponse | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
   loadErrorRetryable = signal<boolean>(false);
   notFound = signal<boolean>(false);
+  deleting = signal<boolean>(false);
+  deleteError = signal<string | null>(null);
 
   ngOnInit(): void {
     const externalId = this.route.snapshot.paramMap.get('externalId');
@@ -119,6 +130,51 @@ export class VeterinarianDetail implements OnInit {
 
   formatTime(time: string): string {
     return time ? time.slice(0, 5) : '—';
+  }
+
+  deleteVeterinarian(): void {
+    const currentVeterinarian = this.veterinarian();
+
+    if (!currentVeterinarian || this.deleting()) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Dar de baja al veterinario "${currentVeterinarian.firstName} ${currentVeterinarian.lastName}"? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deleting.set(true);
+    this.deleteError.set(null);
+
+    this.veterinarianService.delete(currentVeterinarian.externalId).subscribe({
+      next: () => {
+        this.deleting.set(false);
+        this.router.navigate(['/veterinarians']);
+      },
+      error: (err) => {
+        this.deleting.set(false);
+
+        if (err?.status === 404) {
+          this.deleteError.set('El veterinario ya no existe.');
+        } else if (err?.status === 409) {
+          this.deleteError.set('El veterinario ya está inactivo.');
+        } else if (err?.status === 401) {
+          this.deleteError.set(
+            'No tenés autorización para dar de baja veterinarios. Iniciá sesión nuevamente.',
+          );
+        } else if (err?.status === 403) {
+          this.deleteError.set('No tenés permisos para dar de baja veterinarios.');
+        } else {
+          this.deleteError.set(
+            'No pudimos dar de baja al veterinario. Intentá nuevamente.',
+          );
+        }
+      },
+    });
   }
 
   formatWorkDays(days: VeterinarianWorkDay[] | null): string {

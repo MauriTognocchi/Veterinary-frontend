@@ -54,6 +54,17 @@
   text-decoration: underline;
 }
 
+.edit-link {
+  color: var(--violet-700);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.edit-link:hover {
+  text-decoration: underline;
+}
+
 .actions-cell {
   display: flex;
   align-items: center;

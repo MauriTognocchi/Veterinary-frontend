@@ -2,12 +2,15 @@ import {
   Component,
   ElementRef,
   OnInit,
+  computed,
   inject,
   signal,
   viewChild,
 } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { VETERINARIAN_ADMIN_ROLES } from '../../../../core/models/auth.model';
+import { AuthService } from '../../../../core/services/auth';
 import { BranchResponse } from '../../../branches/models/branch.model';
 import { BranchService } from '../../../branches/services/branch';
 import {
@@ -27,7 +30,12 @@ export class VeterinarianList implements OnInit {
   private fb = inject(FormBuilder);
   private veterinarianService = inject(VeterinarianService);
   private branchService = inject(BranchService);
+  private authService = inject(AuthService);
   private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
+
+  readonly isAdmin = computed(() =>
+    this.authService.hasAnyRole(VETERINARIAN_ADMIN_ROLES),
+  );
 
   veterinarians = signal<VeterinarianResponse[]>([]);
   branches = signal<BranchResponse[]>([]);
@@ -36,6 +44,8 @@ export class VeterinarianList implements OnInit {
   loadErrorRetryable = signal<boolean>(false);
   appliedFilters = signal<boolean>(false);
   branchesLoadError = signal<boolean>(false);
+  deletingId = signal<string | null>(null);
+  deleteError = signal<string | null>(null);
 
   filtersForm = this.fb.nonNullable.group({
     firstName: [''],
@@ -136,5 +146,48 @@ export class VeterinarianList implements OnInit {
   retryLoad(): void {
     this.loadVeterinarians();
     this.listHeading()?.nativeElement.focus();
+  }
+
+  deleteVeterinarian(veterinarian: VeterinarianResponse): void {
+    if (this.deletingId() !== null) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Dar de baja al veterinario "${veterinarian.firstName} ${veterinarian.lastName}"? Esta acción no se puede deshacer.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.deletingId.set(veterinarian.externalId);
+    this.deleteError.set(null);
+
+    this.veterinarianService.delete(veterinarian.externalId).subscribe({
+      next: () => {
+        this.deletingId.set(null);
+        this.loadVeterinarians();
+      },
+      error: (err) => {
+        this.deletingId.set(null);
+
+        if (err?.status === 404) {
+          this.deleteError.set('El veterinario ya no existe.');
+        } else if (err?.status === 409) {
+          this.deleteError.set('El veterinario ya está inactivo.');
+        } else if (err?.status === 401) {
+          this.deleteError.set(
+            'No tenés autorización para dar de baja veterinarios. Iniciá sesión nuevamente.',
+          );
+        } else if (err?.status === 403) {
+          this.deleteError.set('No tenés permisos para dar de baja veterinarios.');
+        } else {
+          this.deleteError.set(
+            'No pudimos dar de baja al veterinario. Intentá nuevamente.',
+          );
+        }
+      },
+    });
   }
 }

@@ -30,8 +30,12 @@ import { UserList } from './features/users/pages/user-list/user-list';
 import { UserDetail } from './features/users/pages/user-detail/user-detail';
 import { USER_ADMIN_ROLES } from './core/models/auth.model';
 import { VeterinarianList } from './features/veterinarians/pages/veterinarian-list/veterinarian-list';
+import { VeterinarianForm } from './features/veterinarians/pages/veterinarian-form/veterinarian-form';
 import { VeterinarianDetail } from './features/veterinarians/pages/veterinarian-detail/veterinarian-detail';
-import { VETERINARIAN_VIEW_ROLES } from './core/models/auth.model';
+import {
+  VETERINARIAN_ADMIN_ROLES,
+  VETERINARIAN_VIEW_ROLES,
+} from './core/models/auth.model';
 
 import { ConditionList } from './features/conditions/pages/condition-list/condition-list';
 import { ConditionForm } from './features/conditions/pages/condition-form/condition-form';
@@ -172,6 +176,12 @@ export const routes: Routes = [
     component: VeterinarianList,
     canActivate: [authGuard, roleGuard],
     data: { roles: VETERINARIAN_VIEW_ROLES },
+  },
+  {
+    path: 'veterinarians/:externalId/edit',
+    component: VeterinarianForm,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: VETERINARIAN_ADMIN_ROLES },
   },
   {
     path: 'veterinarians/:externalId',

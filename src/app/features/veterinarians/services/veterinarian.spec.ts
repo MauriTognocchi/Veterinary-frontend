@@ -1,7 +1,10 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { VeterinarianResponse } from '../models/veterinarian.model';
+import {
+  VeterinarianResponse,
+  VeterinarianUpdateRequest,
+} from '../models/veterinarian.model';
 import { VeterinarianService } from './veterinarian';
 
 describe('VeterinarianService', () => {
@@ -113,5 +116,64 @@ describe('VeterinarianService', () => {
     httpRequest.flush(veterinarian);
 
     expect(response).toEqual(veterinarian);
+  });
+
+  it('actualiza un veterinario con PUT', () => {
+    const updateRequest: VeterinarianUpdateRequest = {
+      firstName: 'Juan',
+      lastName: 'Pérez',
+      licenseNumber: 'MN-1234',
+      phone: '11 5555-6789',
+      email: 'jperez@veterinaria.com',
+      workStartTime: '09:00',
+      workEndTime: '17:00',
+      workDays: ['MONDAY', 'WEDNESDAY'],
+      branchExternalId: 'branch-1',
+    };
+    let response: VeterinarianResponse | undefined;
+
+    service.update('vet-1', updateRequest).subscribe((value) => {
+      response = value;
+    });
+
+    const httpRequest = http.expectOne(`${baseUrl}/vet-1`);
+    expect(httpRequest.request.method).toBe('PUT');
+    expect(httpRequest.request.body).toEqual(updateRequest);
+
+    httpRequest.flush(veterinarian);
+
+    expect(response).toEqual(veterinarian);
+  });
+
+  it('elimina un veterinario con DELETE', () => {
+    let completed = false;
+
+    service.delete('vet-1').subscribe({
+      complete: () => {
+        completed = true;
+      },
+    });
+
+    const httpRequest = http.expectOne(`${baseUrl}/vet-1`);
+    expect(httpRequest.request.method).toBe('DELETE');
+
+    httpRequest.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(completed).toBe(true);
+  });
+
+  it('propaga el error al eliminar un veterinario inactivo', () => {
+    let status: number | undefined;
+
+    service.delete('vet-1').subscribe({
+      error: (err) => {
+        status = err.status;
+      },
+    });
+
+    const httpRequest = http.expectOne(`${baseUrl}/vet-1`);
+    httpRequest.flush({}, { status: 409, statusText: 'Conflict' });
+
+    expect(status).toBe(409);
   });
 });
