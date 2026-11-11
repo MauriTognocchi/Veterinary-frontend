@@ -43,6 +43,8 @@ import { ReceptionistList } from './features/receptionists/pages/receptionist-li
 import { ReceptionistForm } from './features/receptionists/pages/receptionist-form/receptionist-form';
 import { ReceptionistDetail } from './features/receptionists/pages/receptionist-detail/receptionist-detail';
 import { RECEPTIONIST_ADMIN_ROLES, RECEPTIONIST_VIEW_ROLES, } from './core/models/auth.model';
+import { APPOINTMENT_VIEW_ROLES } from './core/models/auth.model';
+import { AppointmentList } from './features/appointments/pages/appointment-list/appointment-list';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -229,4 +231,10 @@ export const routes: Routes = [
         canActivate: [authGuard, roleGuard],
         data: { roles: RECEPTIONIST_VIEW_ROLES },
       },
+  {
+    path: 'appointments',
+    component: AppointmentList,
+    canActivate: [authGuard, roleGuard],
+    data: { roles: APPOINTMENT_VIEW_ROLES },
+  },
 ];

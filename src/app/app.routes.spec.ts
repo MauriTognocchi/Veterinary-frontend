@@ -10,6 +10,8 @@ import { Register } from './features/auth/pages/register/register';
 import { UserRegister } from './features/users/pages/user-register/user-register';
 import { UserList } from './features/users/pages/user-list/user-list';
 import { UserDetail } from './features/users/pages/user-detail/user-detail';
+import { APPOINTMENT_VIEW_ROLES } from './core/models/auth.model';
+import { AppointmentList } from './features/appointments/pages/appointment-list/appointment-list';
 
 const ANIMAL_TYPE_ROUTES = [
   {
@@ -96,6 +98,17 @@ describe('rutas de administración de usuarios', () => {
     expect(route?.component).toBe(UserRegister);
     expect(route?.canActivate).toEqual([authGuard, roleGuard]);
     expect(route?.data?.['roles']).toEqual(USER_ADMIN_ROLES);
+    expect(route?.data?.['permissions']).toBeUndefined();
+  });
+});
+
+describe('rutas de turnos', () => {
+  it('protege el listado de turnos con sesión y los roles de visualización', () => {
+    const route = routes.find((item) => item.path === 'appointments');
+
+    expect(route?.component).toBe(AppointmentList);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(APPOINTMENT_VIEW_ROLES);
     expect(route?.data?.['permissions']).toBeUndefined();
   });
 });
