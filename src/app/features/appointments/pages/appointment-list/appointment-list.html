@@ -1,160 +1,207 @@
 <section class="appointment-list">
-  <h2 #listHeading tabindex="-1">Turnos</h2>
-
-  <form
-    class="card filters-card"
-    [formGroup]="filtersForm"
-    (ngSubmit)="loadAppointments()"
-  >
-    <div class="form-grid">
-      <div class="form-group">
-        <label for="filter-date-from">Fecha desde</label>
-        <input
-          id="filter-date-from"
-          type="date"
-          formControlName="dateFrom"
-        />
+      <div class="appointment-list-header">
+        <h2 #listHeading tabindex="-1">Turnos</h2>
+        @if (canCreateAppointment()) {
+          <a routerLink="/appointments/new" class="btn btn-primary btn-sm">
+            Nuevo turno
+          </a>
+        }
       </div>
-      <div class="form-group">
-        <label for="filter-date-to">Fecha hasta</label>
-        <input
-          id="filter-date-to"
-          type="date"
-          formControlName="dateTo"
-        />
-      </div>
-      <div class="form-group">
-        <label for="filter-status">Estado</label>
-        <select id="filter-status" formControlName="status">
-          <option value="">Todos</option>
-          <option value="PENDING">Pendiente</option>
-          <option value="CONFIRMED">Confirmado</option>
-          <option value="COMPLETED">Completado</option>
-          <option value="CANCELLED">Cancelado</option>
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="filter-pet">Mascota</label>
-        <select id="filter-pet" formControlName="petExternalId">
-          <option value="">Todas</option>
-          @for (pet of pets(); track pet.externalId) {
-            <option [value]="pet.externalId">{{ petLabel(pet) }}</option>
-          }
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="filter-veterinarian">Veterinario</label>
-        <select id="filter-veterinarian" formControlName="veterinarianExternalId">
-          <option value="">Todos</option>
-          @for (veterinarian of veterinarians(); track veterinarian.externalId) {
-            <option [value]="veterinarian.externalId">
-              {{ veterinarianLabel(veterinarian) }}
-            </option>
-          }
-        </select>
-      </div>
-      <div class="form-group">
-        <label for="filter-reason">Motivo</label>
-        <input
-          id="filter-reason"
-          type="text"
-          formControlName="reason"
-          autocomplete="off"
-        />
-      </div>
-    </div>
-    <div class="filters-actions">
-      <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading()">
-        Buscar
-      </button>
-      <button
-        type="button"
-        class="btn btn-secondary btn-sm"
-        [disabled]="loading()"
-        (click)="clearFilters()"
+    
+      @if (actionError()) {
+        <div class="alert alert-error" role="alert">{{ actionError() }}</div>
+      }
+    
+      <form
+        class="card filters-card"
+        [formGroup]="filtersForm"
+        (ngSubmit)="loadAppointments()"
       >
-        Limpiar filtros
-      </button>
-    </div>
-    @if (filtersError()) {
-      <p class="filters-error" role="alert">{{ filtersError() }}</p>
-    }
-    @if (petsLoadError()) {
-      <p class="filters-warning">
-        No pudimos cargar las mascotas para el filtro. Podés seguir buscando
-        por los demás filtros.
-      </p>
-    }
-    @if (veterinariansLoadError()) {
-      <p class="filters-warning">
-        No pudimos cargar los veterinarios para el filtro. Podés seguir
-        buscando por los demás filtros.
-      </p>
-    }
-  </form>
-
-  @if (loading()) {
-    <div class="state-message is-loading" role="status" aria-live="polite">
-      Cargando turnos...
-    </div>
-  } @else if (error()) {
-    <div class="alert alert-error" role="alert">
-      <p>{{ error() }}</p>
-      @if (loadErrorRetryable()) {
-        <div class="state-actions">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="filter-date-from">Fecha desde</label>
+            <input
+              id="filter-date-from"
+              type="date"
+              formControlName="dateFrom"
+            />
+          </div>
+          <div class="form-group">
+            <label for="filter-date-to">Fecha hasta</label>
+            <input
+              id="filter-date-to"
+              type="date"
+              formControlName="dateTo"
+            />
+          </div>
+          <div class="form-group">
+            <label for="filter-status">Estado</label>
+            <select id="filter-status" formControlName="status">
+              <option value="">Todos</option>
+              <option value="PENDING">Pendiente</option>
+              <option value="CONFIRMED">Confirmado</option>
+              <option value="COMPLETED">Completado</option>
+              <option value="CANCELLED">Cancelado</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-pet">Mascota</label>
+            <select id="filter-pet" formControlName="petExternalId">
+              <option value="">Todas</option>
+              @for (pet of pets(); track pet.externalId) {
+                <option [value]="pet.externalId">{{ petLabel(pet) }}</option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-veterinarian">Veterinario</label>
+            <select id="filter-veterinarian" formControlName="veterinarianExternalId">
+              <option value="">Todos</option>
+              @for (veterinarian of veterinarians(); track veterinarian.externalId) {
+                <option [value]="veterinarian.externalId">
+                  {{ veterinarianLabel(veterinarian) }}
+                </option>
+              }
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="filter-reason">Motivo</label>
+            <input
+              id="filter-reason"
+              type="text"
+              formControlName="reason"
+              autocomplete="off"
+            />
+          </div>
+        </div>
+        <div class="filters-actions">
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading()">
+            Buscar
+          </button>
           <button
             type="button"
             class="btn btn-secondary btn-sm"
-            (click)="retryLoad()"
+            [disabled]="loading()"
+            (click)="clearFilters()"
           >
-            Reintentar
+            Limpiar filtros
           </button>
         </div>
-      }
-    </div>
-  } @else if (appointments().length === 0) {
-    <div class="state-message" role="status">
-      @if (appliedFilters()) {
-        No encontramos turnos con los filtros aplicados.
-      } @else {
-        No hay turnos registrados.
-      }
-    </div>
-  } @else {
-    <table>
-      <thead>
-        <tr>
-          <th>Fecha y hora</th>
-          <th>Mascota</th>
-          <th>Veterinario</th>
-          <th>Sucursal</th>
-          <th>Motivo</th>
-          <th>Estado</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (appointment of appointments(); track appointment.externalId) {
-          <tr>
-            <td class="appointment-datetime">
-              <span class="appointment-datetime-main">
-                {{ formatAppointmentDate(appointment.appointmentDate) }}
-              </span>
-              <span class="appointment-datetime-sub">
-                {{ appointment.durationMinutes }} min
-              </span>
-            </td>
-            <td>{{ appointment.pet?.name ?? 'No disponible' }}</td>
-            <td>{{ veterinarianName(appointment.veterinarian) }}</td>
-            <td>{{ appointment.branch?.name ?? 'No disponible' }}</td>
-            <td>{{ appointment.reason || '—' }}</td>
-            <td>
-              <span [class]="statusClass(appointment.status)">
-                {{ statusLabel(appointment.status) }}
-              </span>
-            </td>
-          </tr>
+        @if (filtersError()) {
+          <p class="filters-error" role="alert">{{ filtersError() }}</p>
         }
-      </tbody>
-    </table>
-  }
-</section>
+        @if (petsLoadError()) {
+          <p class="filters-warning">
+            No pudimos cargar las mascotas para el filtro. Podés seguir buscando
+            por los demás filtros.
+          </p>
+        }
+        @if (veterinariansLoadError()) {
+          <p class="filters-warning">
+            No pudimos cargar los veterinarios para el filtro. Podés seguir
+            buscando por los demás filtros.
+          </p>
+        }
+      </form>
+    
+      @if (loading()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando turnos...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ error() }}</p>
+          @if (loadErrorRetryable()) {
+            <div class="state-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="retryLoad()"
+              >
+                Reintentar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (appointments().length === 0) {
+        <div class="state-message" role="status">
+          @if (appliedFilters()) {
+            No encontramos turnos con los filtros aplicados.
+          } @else {
+            No hay turnos registrados.
+          }
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Fecha y hora</th>
+              <th>Mascota</th>
+              <th>Veterinario</th>
+              <th>Sucursal</th>
+              <th>Motivo</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of appointments(); track appointment.externalId) {
+              <tr>
+                <td class="appointment-datetime">
+                  <span class="appointment-datetime-main">
+                    {{ formatAppointmentDate(appointment.appointmentDate) }}
+                  </span>
+                  <span class="appointment-datetime-sub">
+                    {{ appointment.durationMinutes }} min
+                  </span>
+                </td>
+                <td>{{ appointment.pet?.name ?? 'No disponible' }}</td>
+                <td>{{ veterinarianName(appointment.veterinarian) }}</td>
+                <td>{{ appointment.branch?.name ?? 'No disponible' }}</td>
+                <td>{{ appointment.reason || '—' }}</td>
+                <td>
+                  <span [class]="statusClass(appointment.status)">
+                    {{ statusLabel(appointment.status) }}
+                  </span>
+                </td>
+                <td class="actions-cell">
+                  <!-- KAN-43: Confirmar turno (solo Veterinario en PENDING) -->
+                  @if (isVeterinarian() && appointment.status === 'PENDING') {
+                    <button
+                      type="button"
+                      class="btn btn-primary btn-xs"
+                      [disabled]="actionInProgressId() !== null"
+                      (click)="confirmAppointment(appointment)"
+                    >
+                      Confirmar
+                    </button>
+                  }
+    
+                  <!-- KAN-41: Editar turno (solo Admin y Recepcionista si no está Cancelado) -->
+                  @if (canEditAppointment() && appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED') {
+                    <a
+                      [routerLink]="['/appointments', appointment.externalId, 'edit']"
+                      class="edit-link"
+                    >
+                      Editar
+                    </a>
+                  }
+    
+                  <!-- KAN-41: Cancelar turno (Admin, Recepcionista, Cliente) -->
+                  @if (canDeleteAppointment() && appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED') {
+                    <button
+                      type="button"
+                      class="btn btn-danger btn-xs"
+                      [disabled]="actionInProgressId() !== null"
+                      (click)="cancelAppointment(appointment)"
+                    >
+                      Cancelar
+                    </button>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>

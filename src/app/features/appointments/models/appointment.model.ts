@@ -10,7 +10,7 @@ export type AppointmentStatus =
 
 export interface AppointmentResponse {
   externalId: string;
-  appointmentDate: string; // ISO LocalDateTime yyyy-MM-dd'T'HH:mm:ss, sin zona horaria
+  appointmentDate: string; 
   durationMinutes: number;
   reason: string;
   status: AppointmentStatus;
@@ -20,11 +20,30 @@ export interface AppointmentResponse {
 }
 
 export interface AppointmentFilters {
-  dateFrom?: string; // yyyy-MM-dd
-  dateTo?: string; // yyyy-MM-dd
-  date?: string; // Coincidencia exacta de fecha y hora; no se combina con dateFrom/dateTo
+  dateFrom?: string; 
+  dateTo?: string; 
+  date?: string; 
   reason?: string;
   status?: AppointmentStatus | '';
   petExternalId?: string;
   veterinarianExternalId?: string;
 }
+
+ export interface AppointmentCreateRequest {
+      appointmentDate: string; 
+      durationMinutes: number;
+      reason: string;
+      petExternalId: string;
+      veterinarianExternalId: string;
+      branchExternalId: string;
+    }
+
+    export interface AppointmentUpdateRequest {
+      appointmentDate: string; 
+      durationMinutes: number;
+      reason: string;
+      status: AppointmentStatus;
+      petExternalId: string;
+      veterinarianExternalId: string;
+      branchExternalId: string;
+    }
