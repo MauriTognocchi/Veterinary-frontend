@@ -39,6 +39,10 @@ import {
 
 import { ConditionList } from './features/conditions/pages/condition-list/condition-list';
 import { ConditionForm } from './features/conditions/pages/condition-form/condition-form';
+import { ReceptionistList } from './features/receptionists/pages/receptionist-list/receptionist-list';
+import { ReceptionistForm } from './features/receptionists/pages/receptionist-form/receptionist-form';
+import { ReceptionistDetail } from './features/receptionists/pages/receptionist-detail/receptionist-detail';
+import { RECEPTIONIST_ADMIN_ROLES, RECEPTIONIST_VIEW_ROLES, } from './core/models/auth.model';
 
 export const routes: Routes = [
   { path: '', component: Home },
@@ -207,4 +211,22 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { permissions: ['UPDATE_CLINICAL_RECORDS'] },
   },
+  {
+        path: 'receptionists',
+        component: ReceptionistList,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: RECEPTIONIST_VIEW_ROLES },
+      },
+      {
+        path: 'receptionists/:externalId/edit',
+        component: ReceptionistForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: RECEPTIONIST_ADMIN_ROLES },
+      },
+      {
+        path: 'receptionists/:externalId',
+        component: ReceptionistDetail,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: RECEPTIONIST_VIEW_ROLES },
+      },
 ];

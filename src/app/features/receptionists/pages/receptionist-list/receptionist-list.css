@@ -1,0 +1,89 @@
+ .receptionist-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .receptionist-list > .alert {
+      margin-bottom: 0;
+    }
+
+    .receptionist-list-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .receptionist-list-header h2 {
+      font-size: clamp(1.4rem, 3vw, 1.75rem);
+    }
+
+    .filters-card {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .filters-card .form-grid {
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    }
+
+    .filters-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .filters-warning {
+      margin: 0;
+      color: #8a5a00;
+      font-size: 0.85rem;
+    }
+
+    .view-link,
+    .edit-link {
+      color: var(--violet-700);
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-decoration: none;
+    }
+
+    .view-link:hover,
+    .edit-link:hover {
+      text-decoration: underline;
+    }
+
+    .actions-cell {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background-color: #d1e7dd;
+      color: #0a3622;
+    }
+
+    .status-badge.is-inactive {
+      background-color: #f8d7da;
+      color: #58151c;
+    }
+
+    tbody tr.is-inactive td {
+      color: #6b7280;
+    }
+
+    @media (max-width: 640px) {
+      .receptionist-list-header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }

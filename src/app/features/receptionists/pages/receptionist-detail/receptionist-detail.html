@@ -1,0 +1,99 @@
+<section class="receptionist-detail-container">
+      <div class="card card-accent receptionist-detail-card">
+        <div class="receptionist-detail-header">
+          <h2 #detailHeading tabindex="-1">Detalle del recepcionista</h2>
+          <div class="receptionist-detail-actions">
+            @if (receptionist(); as receptionist) {
+              @if (isAdmin()) {
+                <a
+                  [routerLink]="['/receptionists', receptionist.externalId, 'edit']"
+                  class="btn btn-primary btn-sm"
+                >
+                  Editar
+                </a>
+                @if (receptionist.active) {
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    [disabled]="deleting()"
+                    (click)="deleteReceptionist()"
+                  >
+                    @if (deleting()) {
+                      Eliminando...
+                    } @else {
+                      Eliminar
+                    }
+                  </button>
+                }
+              }
+            }
+            <a routerLink="/receptionists" class="btn btn-secondary btn-sm">
+              Volver al listado
+            </a>
+          </div>
+        </div>
+
+        @if (deleteError()) {
+          <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+        }
+
+        @if (loading()) {
+          <div class="state-message is-loading" role="status" aria-live="polite">
+            Cargando recepcionista...
+          </div>
+        } @else if (error()) {
+          <div class="alert alert-error" role="alert">
+            <p>{{ error() }}</p>
+            @if (loadErrorRetryable()) {
+              <div class="state-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  (click)="retryLoad()"
+                >
+                  Reintentar
+                </button>
+              </div>
+            }
+          </div>
+        } @else if (notFound()) {
+          <div class="state-message" role="status">
+            No encontramos el recepcionista solicitado.
+          </div>
+        } @else if (receptionist(); as receptionist) {
+          <dl class="detail-list">
+            <div class="detail-row">
+              <dt>Nombre</dt>
+              <dd>{{ receptionist.firstName }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Apellido</dt>
+              <dd>{{ receptionist.lastName }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Teléfono</dt>
+              <dd>{{ receptionist.phone }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Email</dt>
+              <dd>{{ receptionist.email }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Sucursal</dt>
+              <dd>{{ receptionist.branch?.name ?? 'Sin sucursal asignada' }}</dd>
+            </div>
+            <div class="detail-row">
+              <dt>Estado</dt>
+              <dd>
+                <span
+                  class="status-badge"
+                  [class.is-inactive]="!receptionist.active"
+                >
+                  {{ receptionist.active ? 'Activo' : 'Inactivo' }}
+                </span>
+              </dd>
+            </div>
+          </dl>
+        }
+      </div>
+    </section>
