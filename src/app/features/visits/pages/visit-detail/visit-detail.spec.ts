@@ -8,6 +8,11 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
 import { DiagnosisResponse } from '../../../diagnoses/models/diagnosis.model';
 import { DiagnosisService } from '../../../diagnoses/services/diagnosis';
+import {
+  StudyByVisitResponse,
+  StudyResponse,
+} from '../../../studies/models/study.model';
+import { StudyService } from '../../../studies/services/study';
 import { VisitResponse } from '../../models/visit.model';
 import { VisitService } from '../../services/visit';
 import { VisitDetail } from './visit-detail';
@@ -26,11 +31,19 @@ describe('VisitDetail', () => {
     hasAnyRole: ReturnType<typeof vi.fn>;
     hasAnyPermission: ReturnType<typeof vi.fn>;
   };
+  let studyService: {
+    getAll: ReturnType<typeof vi.fn>;
+    getAssociations: ReturnType<typeof vi.fn>;
+    associate: ReturnType<typeof vi.fn>;
+    deactivateAssociation: ReturnType<typeof vi.fn>;
+  };
 
   interface AccessOptions {
     view?: boolean;
     manage?: boolean;
     remove?: boolean;
+    addStudies?: boolean;
+    removeStudies?: boolean;
   }
 
   const visit: VisitResponse = {
@@ -78,16 +91,49 @@ describe('VisitDetail', () => {
     visit,
   };
 
+  const radiographyStudy: StudyResponse = {
+    externalId: 'study-radiography',
+    name: 'Radiografía',
+    description: 'Radiografía de tórax.',
+  };
+
+  const bloodStudy: StudyResponse = {
+    externalId: 'study-blood',
+    name: 'Análisis de sangre',
+    description: 'Hemograma completo.',
+  };
+
+  const urineStudy: StudyResponse = {
+    externalId: 'study-urine',
+    name: 'Análisis de orina',
+    description: 'Urianálisis completo.',
+  };
+
+  const radiographyAssociation: StudyByVisitResponse = {
+    externalId: 'assoc-radiography',
+    study: radiographyStudy,
+    visit,
+    active: true,
+  };
+
   function configureAccess(options: AccessOptions = {}): void {
-    const { view = true, manage = false, remove = false } = options;
+    const {
+      view = true,
+      manage = false,
+      remove = false,
+      addStudies = false,
+      removeStudies = false,
+    } = options;
 
     authService.hasAnyRole.mockImplementation((roles: readonly string[]) =>
-      manage && roles.includes('ROLE_VETERINARIAN'),
+      (manage && roles.includes('ROLE_VETERINARIAN')) ||
+      (removeStudies && roles.includes('ROLE_ADMIN')),
     );
     authService.hasAnyPermission.mockImplementation(
       (permissions: readonly string[]) =>
         (view && permissions.includes('VIEW_CLINICAL_RECORDS')) ||
-        (remove && permissions.includes('DELETE_DIAGNOSES')),
+        (remove && permissions.includes('DELETE_DIAGNOSES')) ||
+        (addStudies && permissions.includes('CREATE_CLINICAL_RECORDS')),
     );
   }
 
@@ -115,6 +161,22 @@ describe('VisitDetail', () => {
     fixture.detectChanges();
   }
 
+  function selectStudy(externalId: string): void {
+    component.studyForm.setValue({ studyExternalId: externalId });
+    fixture.detectChanges();
+  }
+
+  function studyOptions(): string[] {
+    const select =
+      element().querySelector<HTMLSelectElement>('#studyExternalId');
+
+    return select
+      ? Array.from(select.options).map(
+          (option) => option.textContent?.trim() ?? '',
+        )
+      : [];
+  }
+
   beforeEach(async () => {
     visitService = {
       getById: vi.fn().mockReturnValue(of(visit)),
@@ -124,6 +186,12 @@ describe('VisitDetail', () => {
       create: vi.fn(),
       update: vi.fn(),
       delete: vi.fn(),
+    };
+    studyService = {
+      getAll: vi.fn().mockReturnValue(of([radiographyStudy, bloodStudy])),
+      getAssociations: vi.fn().mockReturnValue(of([])),
+      associate: vi.fn(),
+      deactivateAssociation: vi.fn(),
     };
     authService = {
       hasAnyRole: vi.fn().mockReturnValue(false),
@@ -136,6 +204,7 @@ describe('VisitDetail', () => {
         provideRouter([]),
         { provide: VisitService, useValue: visitService },
         { provide: DiagnosisService, useValue: diagnosisService },
+        { provide: StudyService, useValue: studyService },
         { provide: AuthService, useValue: authService },
         {
           provide: ActivatedRoute,
@@ -492,5 +561,330 @@ describe('VisitDetail', () => {
     expect(element().textContent).toContain(
       'Esta visita todavía no tiene diagnósticos registrados.',
     );
+  });
+
+  it('carga y muestra los estudios activos de la visita', () => {
+    configureAccess();
+    studyService.getAssociations.mockReturnValue(
+      of([
+        radiographyAssociation,
+        {
+          ...radiographyAssociation,
+          externalId: 'assoc-inactive',
+          study: bloodStudy,
+          active: false,
+        },
+        {
+          ...radiographyAssociation,
+          externalId: 'assoc-other-visit',
+          visit: { ...visit, externalId: 'visit-2' },
+        },
+      ]),
+    );
+
+    createComponent();
+
+    expect(studyService.getAssociations).toHaveBeenCalled();
+    expect(element().textContent).toContain('Radiografía');
+    expect(element().textContent).not.toContain('Análisis de sangre');
+  });
+
+  it('excluye del selector los estudios con asociación inactiva', () => {
+    configureAccess({ addStudies: true });
+    studyService.getAll.mockReturnValue(
+      of([radiographyStudy, bloodStudy, urineStudy]),
+    );
+    studyService.getAssociations.mockReturnValue(
+      of([
+        radiographyAssociation,
+        {
+          ...radiographyAssociation,
+          externalId: 'assoc-inactive',
+          study: bloodStudy,
+          active: false,
+        },
+      ]),
+    );
+
+    createComponent();
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(studyOptions()).toContain('Análisis de orina');
+    expect(studyOptions()).not.toContain('Radiografía');
+    expect(studyOptions()).not.toContain('Análisis de sangre');
+  });
+
+  it('al quitar un estudio no vuelve a ofrecerse en el selector', () => {
+    configureAccess({ addStudies: true, removeStudies: true });
+    studyService.getAssociations.mockReturnValue(of([radiographyAssociation]));
+    studyService.deactivateAssociation.mockReturnValue(of(void 0));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(studyOptions()).toContain('Análisis de sangre');
+    expect(studyOptions()).not.toContain('Radiografía');
+
+    findButtonByText('Cancelar')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.study-remove-btn')!.click();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain(
+      'Esta visita todavía no tiene estudios asociados.',
+    );
+    expect(
+      component
+        .studyAssociations()
+        .find((association) => association.externalId === 'assoc-radiography')
+        ?.active,
+    ).toBe(false);
+
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(studyOptions()).not.toContain('Radiografía');
+    expect(studyOptions()).toContain('Análisis de sangre');
+  });
+
+  it('no consulta ni muestra estudios sin VIEW_CLINICAL_RECORDS', () => {
+    configureAccess({ view: false });
+
+    createComponent();
+
+    expect(studyService.getAssociations).not.toHaveBeenCalled();
+    expect(element().querySelector('.studies-section')).toBeNull();
+  });
+
+  it('muestra la carga y luego el estado vacío de estudios', () => {
+    configureAccess();
+    const studies$ = new Subject<StudyByVisitResponse[]>();
+    studyService.getAssociations.mockReturnValue(studies$);
+
+    createComponent();
+
+    expect(element().textContent).toContain('Cargando estudios...');
+
+    studies$.next([]);
+    studies$.complete();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain(
+      'Esta visita todavía no tiene estudios asociados.',
+    );
+  });
+
+  it('muestra el error de carga de estudios y permite reintentar', () => {
+    configureAccess();
+    studyService.getAssociations.mockReturnValue(
+      throwError(() => ({ status: 500 })),
+    );
+
+    createComponent();
+
+    expect(element().textContent).toContain(
+      'No pudimos cargar los estudios. Intentá nuevamente.',
+    );
+
+    const retryButton = findButtonByText('Reintentar');
+    expect(retryButton).toBeDefined();
+
+    studyService.getAssociations.mockReturnValue(of([radiographyAssociation]));
+    retryButton!.click();
+    fixture.detectChanges();
+
+    expect(studyService.getAssociations).toHaveBeenCalledTimes(2);
+    expect(element().textContent).toContain('Radiografía');
+  });
+
+  it('no ofrece reintentar estudios cuando el error no es recuperable', () => {
+    configureAccess();
+    studyService.getAssociations.mockReturnValue(
+      throwError(() => ({ status: 403 })),
+    );
+
+    createComponent();
+
+    expect(element().textContent).toContain(
+      'No tenés permisos para ver los estudios.',
+    );
+    expect(findButtonByText('Reintentar')).toBeUndefined();
+  });
+
+  it('solo muestra el alta de estudios con CREATE_CLINICAL_RECORDS', () => {
+    configureAccess({ addStudies: false });
+    createComponent();
+
+    expect(findButtonByText('Agregar estudio')).toBeUndefined();
+  });
+
+  it('asocia un estudio disponible a la visita', () => {
+    configureAccess({ addStudies: true });
+    studyService.associate.mockReturnValue(of(radiographyAssociation));
+
+    createComponent();
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('Asociar estudio');
+
+    selectStudy('study-radiography');
+    findButtonByText('Asociar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(studyService.associate).toHaveBeenCalledWith({
+      studyExternalId: 'study-radiography',
+      visitExternalId: 'visit-1',
+    });
+    expect(element().textContent).toContain('Radiografía');
+    expect(component.studyFormVisible()).toBe(false);
+  });
+
+  it('no asocia un estudio sin seleccionarlo', () => {
+    configureAccess({ addStudies: true });
+    createComponent();
+
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    findButtonByText('Asociar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(studyService.associate).not.toHaveBeenCalled();
+    expect(element().textContent).toContain('Seleccioná un estudio.');
+  });
+
+  it('muestra el conflicto al asociar un estudio ya asociado', () => {
+    configureAccess({ addStudies: true });
+    studyService.associate.mockReturnValue(
+      throwError(() => ({ status: 409 })),
+    );
+
+    createComponent();
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    selectStudy('study-radiography');
+    findButtonByText('Asociar estudio')!.click();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain(
+      'Este estudio ya está asociado a la visita.',
+    );
+    expect(component.studyFormVisible()).toBe(true);
+  });
+
+  it('solo muestra quitar estudios a administradores', () => {
+    configureAccess({ removeStudies: false });
+    studyService.getAssociations.mockReturnValue(of([radiographyAssociation]));
+
+    createComponent();
+
+    expect(element().querySelector('.study-remove-btn')).toBeNull();
+  });
+
+  it('quita un estudio confirmado', () => {
+    configureAccess({ removeStudies: true });
+    studyService.getAssociations.mockReturnValue(of([radiographyAssociation]));
+    studyService.deactivateAssociation.mockReturnValue(of(void 0));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    const removeButton = element().querySelector<HTMLButtonElement>(
+      '.study-remove-btn',
+    );
+    expect(removeButton).not.toBeNull();
+    removeButton!.click();
+    fixture.detectChanges();
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(studyService.deactivateAssociation).toHaveBeenCalledWith(
+      'assoc-radiography',
+    );
+    expect(element().textContent).not.toContain('Radiografía');
+    expect(element().textContent).toContain(
+      'Esta visita todavía no tiene estudios asociados.',
+    );
+  });
+
+  it('no permite abrir ni enviar el formulario de estudios mientras carga el listado', () => {
+    configureAccess({ addStudies: true });
+    const pendingList$ = new Subject<StudyByVisitResponse[]>();
+    studyService.getAssociations.mockReturnValue(pendingList$);
+
+    createComponent();
+
+    const addButton = findButtonByText('Agregar estudio');
+    expect(addButton?.disabled).toBe(true);
+
+    component.openStudyForm();
+    fixture.detectChanges();
+    expect(component.studyFormVisible()).toBe(false);
+
+    selectStudy('study-radiography');
+    component.submitStudy();
+    fixture.detectChanges();
+
+    expect(studyService.associate).not.toHaveBeenCalled();
+    expect(component.studyFormError()).toBe(
+      'Esperá a que terminen de cargar los estudios.',
+    );
+
+    pendingList$.next([]);
+    pendingList$.complete();
+    fixture.detectChanges();
+
+    expect(component.studiesLoading()).toBe(false);
+    expect(findButtonByText('Agregar estudio')?.disabled).toBe(false);
+  });
+
+  it('una respuesta pendiente del listado no sobrescribe un estudio recién asociado', () => {
+    configureAccess({ addStudies: true });
+
+    createComponent();
+    findButtonByText('Agregar estudio')!.click();
+    fixture.detectChanges();
+
+    const associate$ = new Subject<StudyByVisitResponse>();
+    studyService.associate.mockReturnValue(associate$);
+
+    selectStudy('study-radiography');
+    findButtonByText('Asociar estudio')!.click();
+    fixture.detectChanges();
+
+    const staleList$ = new Subject<StudyByVisitResponse[]>();
+    studyService.getAssociations.mockReturnValue(staleList$);
+    component.loadStudies('visit-1');
+    fixture.detectChanges();
+
+    expect(component.studiesLoading()).toBe(true);
+
+    associate$.next(radiographyAssociation);
+    associate$.complete();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('Radiografía');
+    expect(component.studiesLoading()).toBe(false);
+
+    staleList$.next([
+      {
+        ...radiographyAssociation,
+        externalId: 'assoc-stale',
+        study: bloodStudy,
+      },
+    ]);
+    staleList$.complete();
+    fixture.detectChanges();
+
+    expect(component.studies().map((item) => item.externalId)).toEqual([
+      'assoc-radiography',
+    ]);
+    expect(element().textContent).not.toContain('Análisis de sangre');
   });
 });

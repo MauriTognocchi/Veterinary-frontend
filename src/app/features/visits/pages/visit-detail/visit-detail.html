@@ -266,5 +266,175 @@
             }
           </section>
         }
+
+        @if (canViewStudies()) {
+          <section class="card studies-section" aria-labelledby="studies-title">
+            <div class="studies-header">
+              <div class="studies-title-row">
+                <h2
+                  id="studies-title"
+                  #studiesHeading
+                  tabindex="-1"
+                  class="card-title"
+                >
+                  Estudios
+                </h2>
+                @if (!studiesLoading() && !studiesError() && studies().length > 0) {
+                  <span class="badge">
+                    {{ studies().length }}
+                    {{ studies().length === 1 ? 'estudio' : 'estudios' }}
+                  </span>
+                }
+              </div>
+              @if (canAddStudies() && !studyFormVisible()) {
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="studiesLoading()"
+                  (click)="openStudyForm()"
+                >
+                  Agregar estudio
+                </button>
+              }
+            </div>
+
+            @if (studyDeleteError()) {
+              <div class="alert alert-error" role="alert">
+                {{ studyDeleteError() }}
+              </div>
+            }
+
+            @if (studyFormVisible()) {
+              <form
+                [formGroup]="studyForm"
+                (ngSubmit)="submitStudy()"
+                class="study-form"
+              >
+                <h3>Asociar estudio</h3>
+
+                @if (studyCatalogLoading()) {
+                  <p class="state-message" role="status">
+                    Cargando estudios disponibles...
+                  </p>
+                } @else if (studyCatalogError()) {
+                  <div class="alert alert-error" role="alert">
+                    <p>{{ studyCatalogError() }}</p>
+                    <div class="state-actions">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        (click)="retryStudyCatalog()"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  </div>
+                } @else if (availableStudies().length === 0) {
+                  <p class="state-message" role="status">
+                    No hay estudios disponibles para asociar.
+                  </p>
+                } @else {
+                  <div class="form-group">
+                    <label for="studyExternalId">Estudio *</label>
+                    <select
+                      id="studyExternalId"
+                      formControlName="studyExternalId"
+                      [class.invalid]="isStudyFieldInvalid()"
+                    >
+                      <option value="">Seleccioná un estudio</option>
+                      @for (study of availableStudies(); track study.externalId) {
+                        <option [value]="study.externalId">{{ study.name }}</option>
+                      }
+                    </select>
+                    @if (isStudyFieldInvalid()) {
+                      <span class="field-error">Seleccioná un estudio.</span>
+                    }
+                  </div>
+                }
+
+                @if (studyFormError()) {
+                  <p class="error-text" role="alert">{{ studyFormError() }}</p>
+                }
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="studySubmitting()"
+                    (click)="cancelStudyForm()"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="
+                      studySubmitting() ||
+                      studiesLoading() ||
+                      studyCatalogLoading() ||
+                      availableStudies().length === 0
+                    "
+                  >
+                    {{ studySubmitting() ? 'Asociando...' : 'Asociar estudio' }}
+                  </button>
+                </div>
+              </form>
+            }
+
+            @if (studiesLoading()) {
+              <div class="state-message is-loading" role="status" aria-live="polite">
+                Cargando estudios...
+              </div>
+            } @else if (studiesError()) {
+              <div class="alert alert-error" role="alert">
+                <p>{{ studiesError() }}</p>
+                @if (studiesErrorRetryable()) {
+                  <div class="state-actions">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="retryStudies()"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else if (studies().length === 0) {
+              <div class="state-message" role="status">
+                Esta visita todavía no tiene estudios asociados.
+              </div>
+            } @else {
+              <ul class="study-list">
+                @for (association of studies(); track association.externalId) {
+                  <li class="study-item">
+                    <div class="study-main">
+                      <h3 class="study-name">{{ association.study.name }}</h3>
+                      @if (association.study.description) {
+                        <p class="study-description">
+                          {{ association.study.description }}
+                        </p>
+                      }
+                    </div>
+                    @if (canRemoveStudies()) {
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm study-remove-btn"
+                        [disabled]="deletingStudyId() !== null"
+                        (click)="removeStudy(association)"
+                      >
+                        @if (deletingStudyId() === association.externalId) {
+                          Quitando...
+                        } @else {
+                          Quitar
+                        }
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
       }
     </div>

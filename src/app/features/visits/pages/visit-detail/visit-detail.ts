@@ -6,6 +6,8 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
     import { AuthService } from '../../../../core/services/auth';
     import { DiagnosisRequest, DiagnosisResponse } from '../../../diagnoses/models/diagnosis.model';
     import { DiagnosisService } from '../../../diagnoses/services/diagnosis';
+    import { StudyByVisitRequest, StudyByVisitResponse, StudyResponse } from '../../../studies/models/study.model';
+    import { StudyService } from '../../../studies/services/study';
 
     @Component({
       selector: 'app-visit-detail',
@@ -18,9 +20,11 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
       private readonly route = inject(ActivatedRoute);
       private readonly visitService = inject(VisitService);
       private readonly diagnosisService = inject(DiagnosisService);
+      private readonly studyService = inject(StudyService);
       private readonly authService = inject(AuthService);
       private readonly fb = inject(FormBuilder);
       private readonly diagnosesHeading = viewChild<ElementRef<HTMLElement>>('diagnosesHeading');
+      private readonly studiesHeading = viewChild<ElementRef<HTMLElement>>('studiesHeading');
 
       visit = signal<VisitResponse | null>(null);
       loading = signal(false);
@@ -40,10 +44,36 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
 
       private diagnosesRequestId = 0;
 
+      studyAssociations = signal<StudyByVisitResponse[]>([]);
+      readonly studies = computed(() =>
+        this.studyAssociations().filter(
+          (association) => association.active !== false,
+        ),
+      );
+      studiesLoading = signal(false);
+      studiesError = signal<string | null>(null);
+      studiesErrorRetryable = signal(false);
+
+      studyCatalog = signal<StudyResponse[]>([]);
+      studyCatalogLoading = signal(false);
+      studyCatalogError = signal<string | null>(null);
+
+      studyFormVisible = signal(false);
+      studySubmitting = signal(false);
+      studyFormError = signal<string | null>(null);
+      deletingStudyId = signal<string | null>(null);
+      studyDeleteError = signal<string | null>(null);
+
+      private studiesRequestId = 0;
+
       diagnosisForm = this.fb.group({
         description: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(1000)]],
         dateDiagnosis: ['', [Validators.required]],
         observations: ['', [Validators.required, Validators.pattern(/\S/)]],
+      });
+
+      studyForm = this.fb.group({
+        studyExternalId: ['', [Validators.required]],
       });
 
       get canEdit(): boolean {
@@ -62,6 +92,30 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
         this.authService.hasAnyPermission(['DELETE_DIAGNOSES']),
       );
 
+      readonly canViewStudies = computed(() =>
+        this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
+      );
+
+      readonly canAddStudies = computed(() =>
+        this.authService.hasAnyPermission(['CREATE_CLINICAL_RECORDS']),
+      );
+
+      readonly canRemoveStudies = computed(() =>
+        this.authService.hasAnyRole(['ROLE_ADMIN']),
+      );
+
+      readonly availableStudies = computed(() => {
+        const associated = new Set(
+          this.studyAssociations().map(
+            (association) => association.study.externalId,
+          ),
+        );
+
+        return this.studyCatalog().filter(
+          (study) => !associated.has(study.externalId),
+        );
+      });
+
       ngOnInit(): void {
         const externalId = this.route.snapshot.paramMap.get('externalId')!;
         this.load(externalId);
@@ -77,6 +131,12 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
             this.loading.set(false);
             if (this.canViewDiagnoses()) {
               this.loadDiagnoses(externalId);
+            }
+            if (this.canViewStudies()) {
+              this.loadStudies(externalId);
+            }
+            if (this.canAddStudies()) {
+              this.loadStudyCatalog();
             }
           },
           error: () => {
@@ -297,6 +357,250 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
       isDiagnosisFieldInvalid(field: string): boolean {
         const control = this.diagnosisForm.get(field);
         return !!(control?.invalid && control?.touched);
+      }
+
+      loadStudies(visitExternalId: string): void {
+        if (!this.canViewStudies()) {
+          return;
+        }
+
+        this.studiesLoading.set(true);
+        this.studiesError.set(null);
+        this.studiesErrorRetryable.set(false);
+        this.studyAssociations.set([]);
+
+        const requestId = ++this.studiesRequestId;
+
+        this.studyService.getAssociations().subscribe({
+          next: (associations) => {
+            if (requestId !== this.studiesRequestId) {
+              return;
+            }
+
+            this.studyAssociations.set(
+              this.sortStudies(
+                associations.filter(
+                  (association) =>
+                    association.visit?.externalId === visitExternalId,
+                ),
+              ),
+            );
+            this.studiesLoading.set(false);
+          },
+          error: (err) => {
+            if (requestId !== this.studiesRequestId) {
+              return;
+            }
+
+            this.studiesLoading.set(false);
+
+            const status = err?.status;
+            this.studiesErrorRetryable.set(
+              status === 0 || status === 408 || status === 429 || status >= 500,
+            );
+
+            if (status === 401) {
+              this.studiesError.set(
+                'No tenés autorización para ver los estudios. Iniciá sesión nuevamente.',
+              );
+            } else if (status === 403) {
+              this.studiesError.set('No tenés permisos para ver los estudios.');
+            } else if (status === 0) {
+              this.studiesError.set(
+                'No pudimos conectar con el servidor. Revisá tu conexión.',
+              );
+            } else {
+              this.studiesError.set(
+                'No pudimos cargar los estudios. Intentá nuevamente.',
+              );
+            }
+          },
+        });
+      }
+
+      retryStudies(): void {
+        const currentVisit = this.visit();
+        if (!currentVisit) {
+          return;
+        }
+
+        this.loadStudies(currentVisit.externalId);
+        this.studiesHeading()?.nativeElement.focus();
+      }
+
+      loadStudyCatalog(): void {
+        if (!this.canAddStudies()) {
+          return;
+        }
+
+        this.studyCatalogLoading.set(true);
+        this.studyCatalogError.set(null);
+
+        this.studyService.getAll().subscribe({
+          next: (studies) => {
+            this.studyCatalog.set(
+              [...studies].sort((a, b) => a.name.localeCompare(b.name, 'es')),
+            );
+            this.studyCatalogLoading.set(false);
+          },
+          error: (err) => {
+            this.studyCatalogLoading.set(false);
+
+            if (err?.status === 403) {
+              this.studyCatalogError.set(
+                'No tenés permisos para consultar los estudios disponibles.',
+              );
+            } else {
+              this.studyCatalogError.set(
+                'No pudimos cargar los estudios disponibles. Intentá nuevamente.',
+              );
+            }
+          },
+        });
+      }
+
+      retryStudyCatalog(): void {
+        this.loadStudyCatalog();
+      }
+
+      openStudyForm(): void {
+        if (this.studiesLoading()) {
+          return;
+        }
+
+        this.studyForm.reset({ studyExternalId: '' });
+        this.studyFormError.set(null);
+        this.studyFormVisible.set(true);
+      }
+
+      cancelStudyForm(): void {
+        this.studyFormVisible.set(false);
+        this.studyFormError.set(null);
+        this.studyForm.reset({ studyExternalId: '' });
+      }
+
+      submitStudy(): void {
+        if (this.studyForm.invalid) {
+          this.studyForm.markAllAsTouched();
+          return;
+        }
+
+        const currentVisit = this.visit();
+        if (!currentVisit || this.studySubmitting()) {
+          return;
+        }
+
+        if (this.studiesLoading()) {
+          this.studyFormError.set(
+            'Esperá a que terminen de cargar los estudios.',
+          );
+          return;
+        }
+
+        const studyExternalId = this.studyForm.getRawValue().studyExternalId;
+        if (!studyExternalId) {
+          this.studyForm.markAllAsTouched();
+          return;
+        }
+
+        this.studySubmitting.set(true);
+        this.studyFormError.set(null);
+
+        const request: StudyByVisitRequest = {
+          studyExternalId,
+          visitExternalId: currentVisit.externalId,
+        };
+
+        this.studyService.associate(request).subscribe({
+          next: (association) => {
+            this.studiesRequestId++;
+            this.studiesLoading.set(false);
+
+            this.studyAssociations.update((items) =>
+              this.sortStudies([...items, association]),
+            );
+            this.studyFormVisible.set(false);
+            this.studySubmitting.set(false);
+          },
+          error: (err) => {
+            this.studySubmitting.set(false);
+
+            if (err?.status === 409) {
+              this.studyFormError.set(
+                'Este estudio ya está asociado a la visita.',
+              );
+            } else if (err?.status === 403) {
+              this.studyFormError.set(
+                'No tenés permisos para asociar estudios.',
+              );
+            } else {
+              this.studyFormError.set(
+                'No pudimos asociar el estudio. Intentá nuevamente.',
+              );
+            }
+          },
+        });
+      }
+
+      removeStudy(association: StudyByVisitResponse): void {
+        if (this.deletingStudyId() !== null) {
+          return;
+        }
+
+        const confirmed = window.confirm(
+          `¿Quitar el estudio "${association.study.name}" de la visita?`,
+        );
+
+        if (!confirmed) {
+          return;
+        }
+
+        this.deletingStudyId.set(association.externalId);
+        this.studyDeleteError.set(null);
+
+        this.studyService
+          .deactivateAssociation(association.externalId)
+          .subscribe({
+            next: () => {
+              this.studiesRequestId++;
+              this.studiesLoading.set(false);
+
+              this.studyAssociations.update((items) =>
+                items.map((item) =>
+                  item.externalId === association.externalId
+                    ? { ...item, active: false }
+                    : item,
+                ),
+              );
+              this.deletingStudyId.set(null);
+            },
+            error: (err) => {
+              this.deletingStudyId.set(null);
+
+              if (err?.status === 403) {
+                this.studyDeleteError.set(
+                  'Solo los administradores pueden quitar estudios.',
+                );
+              } else {
+                this.studyDeleteError.set(
+                  'No pudimos quitar el estudio. Intentá nuevamente.',
+                );
+              }
+            },
+          });
+      }
+
+      isStudyFieldInvalid(): boolean {
+        const control = this.studyForm.get('studyExternalId');
+        return !!(control?.invalid && control?.touched);
+      }
+
+      private sortStudies(
+        studies: StudyByVisitResponse[],
+      ): StudyByVisitResponse[] {
+        return [...studies].sort((a, b) =>
+          a.study.name.localeCompare(b.study.name, 'es'),
+        );
       }
 
       private sortDiagnoses(diagnoses: DiagnosisResponse[]): DiagnosisResponse[] {
