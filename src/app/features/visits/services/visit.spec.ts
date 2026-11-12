@@ -1,12 +1,15 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Visit } from './visit';
+import { VisitService } from './visit';
 
-describe('Visit', () => {
-  let service: Visit;
+describe('VisitService', () => {
+  let service: VisitService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Visit);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    service = TestBed.inject(VisitService);
   });
 
   it('should be created', () => {

@@ -25,6 +25,7 @@ import { Router } from '@angular/router';
 export type LogoutReason = 'manual' | 'expired' | 'timeout';
 
 interface AccessTokenClaims {
+  email: string | null;
   roles: UserRole[];
   permissions: UserPermission[];
 }
@@ -58,14 +59,20 @@ function isUserRole(value: string): value is UserRole {
 
 function extractClaims(token: string | null): AccessTokenClaims {
   if (!token) {
-    return { roles: [], permissions: [] };
+    return { email: null, roles: [], permissions: [] };
   }
 
   const payload = decodeJwtPayload(token);
 
   if (!payload) {
-    return { roles: [], permissions: [] };
+    return { email: null, roles: [], permissions: [] };
   }
+
+  const rawSubject = payload['sub'];
+  const email =
+    typeof rawSubject === 'string' && rawSubject.trim()
+      ? rawSubject.trim()
+      : null;
 
   const rawRoles = payload['roles'];
   const authorities = Array.isArray(rawRoles)
@@ -75,6 +82,7 @@ function extractClaims(token: string | null): AccessTokenClaims {
       : [];
 
   return {
+    email,
     roles: authorities.filter(isUserRole),
     permissions: authorities.filter((value) => !value.startsWith('ROLE_')),
   };
@@ -95,9 +103,11 @@ export class AuthService {
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
 
+  private readonly _email = signal<string | null>(null);
   private readonly _roles = signal<readonly UserRole[]>([]);
   private readonly _permissions = signal<readonly UserPermission[]>([]);
 
+  readonly email = this._email.asReadonly();
   readonly roles = this._roles.asReadonly();
   readonly permissions = this._permissions.asReadonly();
 
@@ -273,6 +283,7 @@ export class AuthService {
   private applyAccessToken(accessToken: string | null): void {
     const claims = extractClaims(accessToken);
 
+    this._email.set(claims.email);
     this._roles.set(claims.roles);
     this._permissions.set(claims.permissions);
   }

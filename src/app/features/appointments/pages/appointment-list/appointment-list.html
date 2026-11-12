@@ -165,8 +165,8 @@
                   </span>
                 </td>
                 <td class="actions-cell">
-                  <!-- KAN-43: Confirmar turno (solo Veterinario en PENDING) -->
-                  @if (isVeterinarian() && appointment.status === 'PENDING') {
+                  <!-- KAN-43: Confirmar turno (Veterinario o Recepcionista en PENDING) -->
+                  @if (canConfirm(appointment)) {
                     <button
                       type="button"
                       class="btn btn-primary btn-xs"
@@ -178,7 +178,7 @@
                   }
     
                   <!-- KAN-41: Editar turno (solo Admin y Recepcionista si no está Cancelado) -->
-                  @if (canEditAppointment() && appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED') {
+                  @if (canEdit(appointment) && appointment.status !== 'CANCELLED' && appointment.status !== 'COMPLETED') {
                     <a
                       [routerLink]="['/appointments', appointment.externalId, 'edit']"
                       class="edit-link"

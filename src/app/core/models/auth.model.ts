@@ -45,7 +45,6 @@ import { AddressRequest } from '../../features/owners/models/address.model';
     export const PET_WRITE_ROLES: readonly UserRole[] = [
       'ROLE_ADMIN',
       'ROLE_RECEPTIONIST',
-      'ROLE_CLIENT',
     ];
     
     export const RECEPTIONIST_VIEW_ROLES: readonly UserRole[] = [

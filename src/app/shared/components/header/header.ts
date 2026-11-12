@@ -16,6 +16,9 @@ export class Header {
   readonly isAdmin = computed(() =>
     this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
   );
+  readonly canViewOwners = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_OWNERS']),
+  );
   readonly canCreateOwner = computed(() =>
     this.authService.hasAnyPermission(['CREATE_OWNERS']),
   );

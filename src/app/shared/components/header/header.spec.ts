@@ -70,11 +70,17 @@ describe('Header', () => {
     expect(findAnimalTypesLink()).toBeUndefined();
   });
 
-  it('muestra Propietarios y Agregar Propietario con CREATE_OWNERS', () => {
-    authService.hasAnyPermission.mockReturnValue(true);
+  it('muestra Propietarios con VIEW_OWNERS y Agregar Propietario con CREATE_OWNERS', () => {
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_OWNERS') ||
+      permissions.includes('CREATE_OWNERS'),
+    );
 
     createComponent();
 
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith([
+      'VIEW_OWNERS',
+    ]);
     expect(authService.hasAnyPermission).toHaveBeenCalledWith([
       'CREATE_OWNERS',
     ]);
@@ -84,7 +90,31 @@ describe('Header', () => {
     );
   });
 
-  it('oculta Propietarios sin el permiso CREATE_OWNERS', () => {
+  it('muestra Propietarios con VIEW_OWNERS sin mostrar Agregar Propietario', () => {
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_OWNERS'),
+    );
+
+    createComponent();
+
+    expect(findNavLink('Propietarios')?.getAttribute('href')).toBe('/owners');
+    expect(findNavLink('Agregar Propietario')).toBeUndefined();
+  });
+
+  it('muestra Agregar Propietario con CREATE_OWNERS aunque no tenga VIEW_OWNERS', () => {
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('CREATE_OWNERS'),
+    );
+
+    createComponent();
+
+    expect(findNavLink('Propietarios')).toBeUndefined();
+    expect(findNavLink('Agregar Propietario')?.getAttribute('href')).toBe(
+      '/owners/new',
+    );
+  });
+
+  it('oculta Propietarios sin VIEW_OWNERS ni CREATE_OWNERS', () => {
     createComponent();
 
     expect(findNavLink('Propietarios')).toBeUndefined();

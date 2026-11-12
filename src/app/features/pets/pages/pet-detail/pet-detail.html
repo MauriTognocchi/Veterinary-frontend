@@ -19,6 +19,8 @@
               <a routerLink="/pets" class="btn btn-secondary btn-sm">Volver</a>
               @if (canWrite()) {
                 <a [routerLink]="['/pets', p.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
+              }
+              @if (canDeletePet()) {
                 <button type="button" class="btn btn-danger btn-sm" [disabled]="deleting()" (click)="deletePet()">
                   {{ deleting() ? 'Eliminando...' : 'Eliminar' }}
                 </button>
@@ -54,29 +56,31 @@
           </div>
 
           <!-- TARJETA DESTACADA DEL PROPIETARIO CON BOTÓN DIRECTO -->
-          <div class="owner-box">
-            <div class="owner-box-header">
-              <span class="owner-box-title">👤 Propietario / Dueño</span>
+          @if (canViewOwners()) {
+            <div class="owner-box">
+              <div class="owner-box-header">
+                <span class="owner-box-title">👤 Propietario / Dueño</span>
+                @if (owner(); as o) {
+                  <a [routerLink]="['/owners', o.externalId]" class="btn btn-secondary btn-sm">
+                    Ver perfil completo del dueño →
+                  </a>
+                }
+              </div>
+
               @if (owner(); as o) {
-                <a [routerLink]="['/owners', o.externalId]" class="btn btn-secondary btn-sm">
-                  Ver perfil completo del dueño →
-                </a>
+                <div class="owner-box-content">
+                  <h4 class="owner-full-name">{{ o.firstName }} {{ o.lastName }}</h4>
+                  <div class="owner-contact-grid">
+                    <div><strong>DNI:</strong> {{ o.dni }}</div>
+                    <div><strong>Teléfono:</strong> {{ o.phone }}</div>
+                    <div><strong>Email:</strong> {{ o.email }}</div>
+                  </div>
+                </div>
+              } @else {
+                <p class="no-owner-text">Esta mascota no tiene un propietario asignado aún.</p>
               }
             </div>
-
-            @if (owner(); as o) {
-              <div class="owner-box-content">
-                <h4 class="owner-full-name">{{ o.firstName }} {{ o.lastName }}</h4>
-                <div class="owner-contact-grid">
-                  <div><strong>DNI:</strong> {{ o.dni }}</div>
-                  <div><strong>Teléfono:</strong> {{ o.phone }}</div>
-                  <div><strong>Email:</strong> {{ o.email }}</div>
-                </div>
-              </div>
-            } @else {
-              <p class="no-owner-text">Esta mascota no tiene un propietario asignado aún.</p>
-            }
-          </div>
+          }
         </div>
       }
     </section>

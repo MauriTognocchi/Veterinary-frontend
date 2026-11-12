@@ -1,12 +1,15 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Breed } from './breed';
+import { BreedService } from './breed';
 
-describe('Breed', () => {
-  let service: Breed;
+describe('BreedService', () => {
+  let service: BreedService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Breed);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    service = TestBed.inject(BreedService);
   });
 
   it('should be created', () => {

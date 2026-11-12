@@ -63,6 +63,8 @@
                     <a [routerLink]="['/pets', pet.externalId, 'edit']" class="edit-link">
                       Editar
                     </a>
+                  }
+                  @if (canDeletePet()) {
                     <button
                       type="button"
                       class="btn btn-danger btn-sm"

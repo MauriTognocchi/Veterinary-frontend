@@ -1,12 +1,15 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { OwnerByPet } from './owner-by-pet';
+import { OwnerByPetService } from './owner-by-pet';
 
-describe('OwnerByPet', () => {
-  let service: OwnerByPet;
+describe('OwnerByPetService', () => {
+  let service: OwnerByPetService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(OwnerByPet);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    service = TestBed.inject(OwnerByPetService);
   });
 
   it('should be created', () => {

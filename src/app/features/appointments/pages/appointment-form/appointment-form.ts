@@ -56,6 +56,7 @@ import {
       this.authService.hasRole('ROLE_CLIENT'));
       readonly isEditMode = signal<boolean>(false);
       readonly externalId = signal<string | null>(null);
+      private readonly currentStatus = signal<AppointmentStatus>('PENDING');
 
       loading = signal<boolean>(false);
       saving = signal<boolean>(false);
@@ -84,7 +85,6 @@ import {
           Validators.max(120)],
         ],
         reason: ['', [Validators.required, Validators.pattern(/\S/)]],
-        status: ['PENDING'],
       });
 
       get minDate(): string {
@@ -156,6 +156,8 @@ import {
         const [datePart, timePart] = dateStr.split('T');
         const timeFormatted = timePart ? timePart.slice(0, 5) : '';
 
+        this.currentStatus.set(appointment.status ?? 'PENDING');
+
         this.appointmentForm.patchValue({
           branchExternalId: appointment.branch?.externalId ?? '',
           veterinarianExternalId: appointment.veterinarian?.externalId
@@ -165,7 +167,6 @@ import {
           petExternalId: appointment.pet?.externalId ?? '',
           durationMinutes: appointment.durationMinutes ?? 30,
           reason: appointment.reason ?? '',
-          status: appointment.status ?? 'PENDING',
         });
 
         if (
@@ -235,7 +236,19 @@ import {
           error: (err) => {
             this.loadingSlots.set(false);
             this.availableSlots.set([]);
-            if (err?.status === 400 || err?.status === 422) {
+            const message =
+              typeof err?.error?.message === 'string'
+                ? err.error.message.toLowerCase()
+                : '';
+            const ruleMessage = this.appointmentRuleMessage(message);
+
+            if (ruleMessage) {
+              this.slotsError.set(ruleMessage);
+            } else if (
+              err?.status === 400 ||
+              err?.status === 409 ||
+              err?.status === 422
+            ) {
               this.slotsError.set(
                 'El veterinario o la sucursal no están disponibles en la fecha seleccionada.',
               );
@@ -258,6 +271,7 @@ import {
         }
 
         const raw = this.appointmentForm.getRawValue();
+
         const timeFormatted =
           raw.time.length === 5 ? `${raw.time}:00` : raw.time;
         const appointmentDate = `${raw.date}T${timeFormatted}`;
@@ -271,7 +285,7 @@ import {
             appointmentDate,
             durationMinutes: Number(raw.durationMinutes),
             reason: raw.reason.trim(),
-            status: raw.status as AppointmentStatus,
+            status: this.currentStatus(),
             petExternalId: raw.petExternalId,
             veterinarianExternalId: raw.veterinarianExternalId,
             branchExternalId: raw.branchExternalId,
@@ -307,24 +321,86 @@ import {
       private handleSubmitError(err: any): void {
         this.saving.set(false);
         const status = err?.status;
-        const message = err?.error?.message;
+        const message =
+          typeof err?.error?.message === 'string'
+            ? err.error.message.toLowerCase()
+            : '';
 
-        if (status === 409 || message?.includes('overlapping')) {
-          this.error.set(
-            'El veterinario o la mascota ya tienen un turno en ese horario.',
-          );
-        } else if (status === 400 && message?.includes('past')) {
-          this.error.set('No se pueden programar turnos en el pasado.');
-        } else if (status === 400 && message?.includes('closed')) {
-          this.error.set('La sucursal está cerrada en el horario seleccionado.');
-        } else if (status === 400 && message?.includes('working hours')) {
-          this.error.set(
-            'El horario está fuera del rango laboral del veterinario.',
-          );
+        if (status === 401) {
+          this.error.set('Tu sesión expiró. Iniciá sesión nuevamente.');
         } else if (status === 403) {
           this.error.set('No tenés permisos para realizar esta acción.');
+        } else if (status === 409) {
+          const ruleMessage = this.appointmentRuleMessage(message);
+
+          if (ruleMessage) {
+            this.error.set(ruleMessage);
+
+            if (message.includes('status cannot be changed')) {
+              this.reloadAppointmentAfterConflict();
+            }
+          } else {
+            this.error.set(
+              'El turno entra en conflicto con otro existente. Revisá el horario.',
+            );
+          }
+        } else if (status === 400) {
+          const ruleMessage = this.appointmentRuleMessage(message);
+
+          this.error.set(
+            ruleMessage ??
+              'Datos inválidos. Revisá los campos e intentá nuevamente.',
+          );
         } else {
           this.error.set('Ocurrió un error al guardar el turno. Intentá nuevamente.');
+        }
+      }
+
+      private appointmentRuleMessage(message: string): string | null {
+        if (message.includes('status cannot be changed')) {
+          return 'El turno cambió de estado. Actualizamos los datos para que puedas revisarlo e intentar nuevamente.';
+        }
+
+        if (message.includes('use delete endpoint to cancel')) {
+          return 'Para cancelar el turno usá la acción Cancelar del listado.';
+        }
+
+        if (message.includes('completed via visit')) {
+          return 'El turno solo puede completarse desde una visita.';
+        }
+
+        if (message.includes('overlap')) {
+          return 'El veterinario o la mascota ya tienen un turno en ese horario.';
+        }
+
+        if (message.includes('past')) {
+          return 'No se pueden programar turnos en el pasado.';
+        }
+
+        if (message.includes('closed')) {
+          return 'La sucursal está cerrada en el horario seleccionado.';
+        }
+
+        if (message.includes('does not have working hours')) {
+          return 'El veterinario no tiene horario laboral configurado.';
+        }
+
+        if (message.includes('working hours')) {
+          return 'El horario está fuera del rango laboral del veterinario.';
+        }
+
+        if (message.includes('hour or half hour')) {
+          return 'El turno debe comenzar en punto o a la media hora.';
+        }
+
+        return null;
+      }
+
+      private reloadAppointmentAfterConflict(): void {
+        const id = this.externalId();
+
+        if (this.isEditMode() && id) {
+          this.loadAppointment(id);
         }
       }
 
