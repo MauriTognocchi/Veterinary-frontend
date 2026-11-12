@@ -32,6 +32,10 @@ export class UserList implements OnInit {
     this.authService.hasAnyPermission(['DELETE_USERS']),
   );
 
+  readonly canReactivateUsers = computed(() =>
+    this.authService.hasAnyPermission(['UPDATE_USERS']),
+  );
+
   users = signal<UserResponse[]>([]);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
@@ -40,7 +44,13 @@ export class UserList implements OnInit {
   statusFilter = signal<UserStatusFilter>('ALL');
   deletingId = signal<string | null>(null);
   deleteError = signal<string | null>(null);
+  reactivatingId = signal<string | null>(null);
+  reactivateError = signal<string | null>(null);
   success = signal<string | null>(null);
+
+  readonly actionPending = computed(
+    () => this.deletingId() !== null || this.reactivatingId() !== null,
+  );
 
   readonly filteredUsers = computed(() => {
     const term = this.searchTerm().trim().toLowerCase();
@@ -121,7 +131,7 @@ export class UserList implements OnInit {
     if (
       !this.canDeleteUsers() ||
       user.userState !== 'ACTIVE' ||
-      this.deletingId() !== null
+      this.actionPending()
     ) {
       return;
     }
@@ -136,6 +146,7 @@ export class UserList implements OnInit {
 
     this.deletingId.set(user.externalId);
     this.deleteError.set(null);
+    this.reactivateError.set(null);
     this.success.set(null);
 
     this.userService.deactivate(user.externalId).subscribe({
@@ -168,6 +179,64 @@ export class UserList implements OnInit {
         } else {
           this.deleteError.set(
             'No pudimos desactivar el usuario. Intentá nuevamente.',
+          );
+        }
+      },
+    });
+  }
+
+  reactivateUser(user: UserResponse): void {
+    if (
+      !this.canReactivateUsers() ||
+      user.userState !== 'INACTIVE' ||
+      this.actionPending()
+    ) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Reactivar a ${user.firstName} ${user.lastName}? El usuario volverá a estar activo.`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    this.reactivatingId.set(user.externalId);
+    this.reactivateError.set(null);
+    this.deleteError.set(null);
+    this.success.set(null);
+
+    this.userService.reactivate(user.externalId).subscribe({
+      next: () => {
+        this.users.update((users) =>
+          users.map((item) =>
+            item.externalId === user.externalId
+              ? { ...item, userState: 'ACTIVE' as UserState }
+              : item,
+          ),
+        );
+        this.reactivatingId.set(null);
+        this.success.set(`${user.firstName} ${user.lastName} quedó activo.`);
+      },
+      error: (err) => {
+        this.reactivatingId.set(null);
+
+        if (err?.status === 404) {
+          this.reactivateError.set('El usuario ya no existe.');
+        } else if (err?.status === 400) {
+          this.reactivateError.set('El usuario ya estaba activo.');
+        } else if (err?.status === 401) {
+          this.reactivateError.set(
+            'No tenés autorización para reactivar usuarios. Iniciá sesión nuevamente.',
+          );
+        } else if (err?.status === 403) {
+          this.reactivateError.set(
+            'No tenés permisos para reactivar usuarios.',
+          );
+        } else {
+          this.reactivateError.set(
+            'No pudimos reactivar el usuario. Intentá nuevamente.',
           );
         }
       },

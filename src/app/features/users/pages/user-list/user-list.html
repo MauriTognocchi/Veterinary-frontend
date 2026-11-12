@@ -11,6 +11,10 @@
     <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
   }
 
+  @if (reactivateError()) {
+    <div class="alert alert-error" role="alert">{{ reactivateError() }}</div>
+  }
+
   <div class="user-filters" role="search">
     <div class="form-group">
       <label for="user-search">Buscar</label>
@@ -94,13 +98,27 @@
                 <button
                   type="button"
                   class="btn btn-danger btn-sm"
-                  [disabled]="deletingId() !== null"
+                  [disabled]="actionPending()"
                   (click)="deactivateUser(user)"
                 >
                   @if (deletingId() === user.externalId) {
                     Desactivando...
                   } @else {
                     Desactivar
+                  }
+                </button>
+              }
+              @if (canReactivateUsers() && user.userState === 'INACTIVE') {
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm reactivate-button"
+                  [disabled]="actionPending()"
+                  (click)="reactivateUser(user)"
+                >
+                  @if (reactivatingId() === user.externalId) {
+                    Reactivando...
+                  } @else {
+                    Reactivar cuenta
                   }
                 </button>
               }

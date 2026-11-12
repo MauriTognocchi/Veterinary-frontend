@@ -23,4 +23,11 @@ export class UserService {
       `${this.baseUrl}/api/users/${encodeURIComponent(externalId)}`,
     );
   }
+
+  reactivate(externalId: string): Observable<void> {
+    return this.http.patch<void>(
+      `${this.baseUrl}/api/users/${encodeURIComponent(externalId)}/reactivate`,
+      null,
+    );
+  }
 }

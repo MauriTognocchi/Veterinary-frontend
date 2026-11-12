@@ -12,6 +12,7 @@ describe('UserList', () => {
   let service: {
     getAll: ReturnType<typeof vi.fn>;
     deactivate: ReturnType<typeof vi.fn>;
+    reactivate: ReturnType<typeof vi.fn>;
   };
   let auth: { hasAnyPermission: ReturnType<typeof vi.fn> };
 
@@ -57,10 +58,19 @@ describe('UserList', () => {
     );
   }
 
+  function reactivateButtons(): HTMLButtonElement[] {
+    return Array.from(
+      (fixture.nativeElement as HTMLElement).querySelectorAll<HTMLButtonElement>(
+        'button.reactivate-button',
+      ),
+    );
+  }
+
   beforeEach(async () => {
     service = {
       getAll: vi.fn(),
       deactivate: vi.fn(),
+      reactivate: vi.fn(),
     };
     auth = {
       hasAnyPermission: vi.fn().mockReturnValue(false),
@@ -218,6 +228,127 @@ describe('UserList', () => {
     );
     expect(component.users()[0].userState).toBe('ACTIVE');
   });
+
+  it('muestra la acción de reactivación solo con UPDATE_USERS y en usuarios inactivos', () => {
+    service.getAll.mockReturnValue(of(users));
+
+    createComponent();
+    expect(reactivateButtons()).toHaveLength(0);
+
+    auth.hasAnyPermission.mockReturnValue(true);
+    fixture = TestBed.createComponent(UserList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    expect(auth.hasAnyPermission).toHaveBeenCalledWith(['UPDATE_USERS']);
+    const buttons = reactivateButtons();
+    expect(buttons).toHaveLength(1);
+    expect(buttons[0].textContent).toContain('Reactivar cuenta');
+  });
+
+  it('no reactiva usuarios activos ni sin permiso', () => {
+    const confirm = vi.spyOn(window, 'confirm');
+    service.getAll.mockReturnValue(of(users));
+    createComponent();
+
+    component.reactivateUser(users[2]);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(service.reactivate).not.toHaveBeenCalled();
+
+    auth.hasAnyPermission.mockReturnValue(true);
+    fixture = TestBed.createComponent(UserList);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    component.reactivateUser(users[0]);
+    expect(confirm).not.toHaveBeenCalled();
+    expect(service.reactivate).not.toHaveBeenCalled();
+  });
+
+  it('no reactiva si el usuario cancela la confirmación', () => {
+    auth.hasAnyPermission.mockReturnValue(true);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    service.getAll.mockReturnValue(of(users));
+    createComponent();
+
+    component.reactivateUser(users[2]);
+
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(service.reactivate).not.toHaveBeenCalled();
+    expect(component.users()[2].userState).toBe('INACTIVE');
+  });
+
+  it('bloquea envíos duplicados mientras se reactiva', () => {
+    auth.hasAnyPermission.mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    service.getAll.mockReturnValue(of(users));
+    const request = new Subject<void>();
+    service.reactivate.mockReturnValue(request.asObservable());
+
+    createComponent();
+    component.reactivateUser(users[2]);
+    fixture.detectChanges();
+
+    expect(service.reactivate).toHaveBeenCalledTimes(1);
+    expect(reactivateButtons()[0].disabled).toBe(true);
+    expect(reactivateButtons()[0].textContent).toContain('Reactivando...');
+
+    component.reactivateUser(users[2]);
+    expect(service.reactivate).toHaveBeenCalledTimes(1);
+
+    request.next();
+    request.complete();
+    fixture.detectChanges();
+
+    expect(reactivateButtons()).toHaveLength(0);
+  });
+
+  it('reactiva tras confirmar, actualiza el estado y no dispara otras acciones', () => {
+    auth.hasAnyPermission.mockReturnValue(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    service.getAll.mockReturnValue(of(users));
+    service.reactivate.mockReturnValue(of(undefined));
+
+    createComponent();
+    component.reactivateUser(users[2]);
+    fixture.detectChanges();
+
+    expect(service.reactivate).toHaveBeenCalledWith('user-3');
+    expect(
+      component.users().find((user) => user.externalId === 'user-3')?.userState,
+    ).toBe('ACTIVE');
+    expect(component.success()).toContain('Carla Díaz quedó activo.');
+    expect(fixture.nativeElement.textContent).toContain('ACTIVE');
+    expect(reactivateButtons()).toHaveLength(0);
+    expect(service.getAll).toHaveBeenCalledTimes(1);
+    expect(service.deactivate).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    [404, 'El usuario ya no existe.'],
+    [400, 'El usuario ya estaba activo.'],
+    [403, 'No tenés permisos para reactivar usuarios.'],
+    [500, 'No pudimos reactivar el usuario. Intentá nuevamente.'],
+  ])(
+    'muestra el error de reactivación para el estado %s',
+    (status, message) => {
+      auth.hasAnyPermission.mockReturnValue(true);
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      service.getAll.mockReturnValue(of(users));
+      service.reactivate.mockReturnValue(throwError(() => ({ status })));
+
+      createComponent();
+      component.reactivateUser(users[2]);
+      fixture.detectChanges();
+
+      expect(component.reactivateError()).toBe(message);
+      expect(
+        component.users().find((user) => user.externalId === 'user-3')
+          ?.userState,
+      ).toBe('INACTIVE');
+      expect(component.reactivatingId()).toBeNull();
+    },
+  );
 
   it('muestra el error de carga y permite reintentar', () => {
     service.getAll
