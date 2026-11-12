@@ -28,6 +28,9 @@
 @if (canViewConditions()) {
     <a routerLink="/conditions" routerLinkActive="active">Condiciones</a>
 }
+@if (canViewStudies()) {
+    <a routerLink="/studies" routerLinkActive="active">Estudios</a>
+}
 @if (canViewMedications()) {
     <a routerLink="/medications" routerLinkActive="active">Medicamentos</a>
 }

@@ -1,65 +1,67 @@
 import { Routes } from '@angular/router';
-    import { AnimalTypeForm } from './features/animal-types/pages/animal-type-form/animal-type-form';
-    import { AnimalTypeList } from './features/animal-types/pages/animal-type-list/animal-type-list';
-    import { OwnerList } from './features/owners/pages/owner-list/owner-list';
-    import { OwnerForm } from './features/owners/pages/owner-form/owner-form';
-    import { OwnerDetail } from './features/owners/pages/owner-detail/owner-detail';
-    import { Login } from './features/auth/pages/login/login';
-    import { Register } from './features/auth/pages/register/register';
-    import { Forbidden } from './features/auth/pages/forbidden/forbidden';
-    import { Home } from './home/pages/home/home';
-    import { authGuard } from './core/guards/auth-guard';
-    import { roleGuard } from './core/guards/role-guard';
-    import {
+import { AnimalTypeForm } from './features/animal-types/pages/animal-type-form/animal-type-form';
+import { AnimalTypeList } from './features/animal-types/pages/animal-type-list/animal-type-list';
+import { OwnerList } from './features/owners/pages/owner-list/owner-list';
+import { OwnerForm } from './features/owners/pages/owner-form/owner-form';
+import { OwnerDetail } from './features/owners/pages/owner-detail/owner-detail';
+import { Login } from './features/auth/pages/login/login';
+import { Register } from './features/auth/pages/register/register';
+import { Forbidden } from './features/auth/pages/forbidden/forbidden';
+import { Home } from './home/pages/home/home';
+import { authGuard } from './core/guards/auth-guard';
+import { roleGuard } from './core/guards/role-guard';
+import {
       ANIMAL_TYPE_ADMIN_ROLES,
       OWNER_VIEW_ROLES,
     } from './core/models/auth.model';
-    import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
-    import { BreedList } from './features/breeds/pages/breed-list/breed-list';
-    import { BREED_ADMIN_ROLES } from './core/models/auth.model';
-    import { PetList } from './features/pets/pages/pet-list/pet-list';
-    import { PetForm } from './features/pets/pages/pet-form/pet-form';
-    import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
-    import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
-    import { BranchList } from './features/branches/pages/branch-list/branch-list';
-    import { BranchForm } from './features/branches/pages/branch-form/branch-form';
-    import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
-    import { BRANCH_ADMIN_ROLES } from './core/models/auth.model';
-    import { UserRegister } from './features/users/pages/user-register/user-register';
-    import { UserList } from './features/users/pages/user-list/user-list';
-    import { UserDetail } from './features/users/pages/user-detail/user-detail';
-    import { USER_ADMIN_ROLES } from './core/models/auth.model';
-    import { VeterinarianList } from './features/veterinarians/pages/veterinarian-list/veterinarian-list';
-    import { VeterinarianForm } from './features/veterinarians/pages/veterinarian-form/veterinarian-form';
-    import { VeterinarianDetail } from './features/veterinarians/pages/veterinarian-detail/veterinarian-detail';
-    import {
+import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
+import { BreedList } from './features/breeds/pages/breed-list/breed-list';
+import { BREED_ADMIN_ROLES } from './core/models/auth.model';
+import { PetList } from './features/pets/pages/pet-list/pet-list';
+import { PetForm } from './features/pets/pages/pet-form/pet-form';
+import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
+import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
+import { BranchList } from './features/branches/pages/branch-list/branch-list';
+import { BranchForm } from './features/branches/pages/branch-form/branch-form';
+import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
+import { BRANCH_ADMIN_ROLES } from './core/models/auth.model';
+import { UserRegister } from './features/users/pages/user-register/user-register';
+import { UserList } from './features/users/pages/user-list/user-list';
+import { UserDetail } from './features/users/pages/user-detail/user-detail';
+import { USER_ADMIN_ROLES } from './core/models/auth.model';
+import { VeterinarianList } from './features/veterinarians/pages/veterinarian-list/veterinarian-list';
+import { VeterinarianForm } from './features/veterinarians/pages/veterinarian-form/veterinarian-form';
+import { VeterinarianDetail } from './features/veterinarians/pages/veterinarian-detail/veterinarian-detail';
+import {
       VETERINARIAN_ADMIN_ROLES,
       VETERINARIAN_VIEW_ROLES,
     } from './core/models/auth.model';
     
-    import { ConditionList } from './features/conditions/pages/condition-list/condition-list';
-    import { ConditionForm } from './features/conditions/pages/condition-form/condition-form';
-    import { ReceptionistList } from './features/receptionists/pages/receptionist-list/receptionist-list';
-    import { ReceptionistForm } from './features/receptionists/pages/receptionist-form/receptionist-form';
-    import { ReceptionistDetail } from './features/receptionists/pages/receptionist-detail/receptionist-detail';
-    import {
+import { ConditionList } from './features/conditions/pages/condition-list/condition-list';
+import { ConditionForm } from './features/conditions/pages/condition-form/condition-form';
+import { ReceptionistList } from './features/receptionists/pages/receptionist-list/receptionist-list';
+import { ReceptionistForm } from './features/receptionists/pages/receptionist-form/receptionist-form';
+import { ReceptionistDetail } from './features/receptionists/pages/receptionist-detail/receptionist-detail';
+import {
       RECEPTIONIST_ADMIN_ROLES,
       RECEPTIONIST_VIEW_ROLES,
     } from './core/models/auth.model';
-    import { AppointmentList } from './features/appointments/pages/appointment-list/appointment-list';
-    import { AppointmentForm } from './features/appointments/pages/appointment-form/appointment-form';
-    import {
+import { AppointmentList } from './features/appointments/pages/appointment-list/appointment-list';
+import { AppointmentForm } from './features/appointments/pages/appointment-form/appointment-form';
+import {
       APPOINTMENT_CREATE_ROLES,
       APPOINTMENT_UPDATE_ROLES,
       APPOINTMENT_VIEW_ROLES,
       MEDICATION_ADMIN_ROLES,
       VISIT_WRITE_ROLES,
     } from './core/models/auth.model';
-    import { VisitList } from './features/visits/pages/visit-list/visit-list';
-    import { VisitForm } from './features/visits/pages/visit-form/visit-form';
-    import { VisitDetail } from './features/visits/pages/visit-detail/visit-detail';
-    import { MedicationList } from './features/medications/pages/medication-list/medication-list';
-    import { MedicationForm } from './features/medications/pages/medication-form/medication-form';
+import { VisitList } from './features/visits/pages/visit-list/visit-list';
+import { VisitForm } from './features/visits/pages/visit-form/visit-form';
+import { VisitDetail } from './features/visits/pages/visit-detail/visit-detail';
+import { MedicationList } from './features/medications/pages/medication-list/medication-list';
+import { MedicationForm } from './features/medications/pages/medication-form/medication-form';
+import { StudyList } from './features/studies/pages/study-list/study-list';
+import { StudyForm } from './features/studies/pages/study-form/study-form';
     
     export const routes: Routes = [
       { path: '', component: Home },
@@ -312,4 +314,22 @@ import { Routes } from '@angular/router';
         canActivate: [authGuard, roleGuard],
         data: { roles: MEDICATION_ADMIN_ROLES },
       },
+      {
+  path: 'studies',
+  component: StudyList,
+  canActivate: [authGuard, roleGuard],
+  data: { permissions: ['VIEW_CLINICAL_RECORDS'] },
+},
+{
+  path: 'studies/new',
+  component: StudyForm,
+  canActivate: [authGuard, roleGuard],
+  data: { roles: ['ROLE_VETERINARIAN'] },
+},
+{
+  path: 'studies/:externalId/edit',
+  component: StudyForm,
+  canActivate: [authGuard, roleGuard],
+  data: { permissions: ['UPDATE_CLINICAL_RECORDS'] },
+},
     ];

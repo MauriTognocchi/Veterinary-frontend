@@ -98,6 +98,7 @@ export class VisitDetail implements OnInit {
 
   studyForm = this.fb.group({
     studyExternalId: ['', [Validators.required]],
+    description: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(255)]],
   });
 
   prescriptionForm = this.fb.group({
@@ -521,7 +522,7 @@ export class VisitDetail implements OnInit {
       return;
     }
 
-    this.studyForm.reset({ studyExternalId: '' });
+    this.studyForm.reset({ studyExternalId: '', description: '' });
     this.studyFormError.set(null);
     this.studyFormVisible.set(true);
   }
@@ -529,7 +530,7 @@ export class VisitDetail implements OnInit {
   cancelStudyForm(): void {
     this.studyFormVisible.set(false);
     this.studyFormError.set(null);
-    this.studyForm.reset({ studyExternalId: '' });
+    this.studyForm.reset({ studyExternalId: '', description: '' });
   }
 
   submitStudy(): void {
@@ -550,7 +551,10 @@ export class VisitDetail implements OnInit {
       return;
     }
 
-    const studyExternalId = this.studyForm.getRawValue().studyExternalId;
+    const value = this.studyForm.getRawValue();
+    const studyExternalId = value.studyExternalId;
+    const description = (value.description ?? '').trim();
+
     if (!studyExternalId) {
       this.studyForm.markAllAsTouched();
       return;
@@ -562,6 +566,7 @@ export class VisitDetail implements OnInit {
     const request: StudyByVisitRequest = {
       studyExternalId,
       visitExternalId: currentVisit.externalId,
+      description,
     };
 
     this.studyService.associate(request).subscribe({
@@ -643,8 +648,8 @@ export class VisitDetail implements OnInit {
       });
   }
 
-  isStudyFieldInvalid(): boolean {
-    const control = this.studyForm.get('studyExternalId');
+  isStudyFieldInvalid(field: string): boolean {
+    const control = this.studyForm.get(field);
     return !!(control?.invalid && control?.touched);
   }
 
