@@ -12,6 +12,12 @@ import { UserList } from './features/users/pages/user-list/user-list';
 import { UserDetail } from './features/users/pages/user-detail/user-detail';
 import { APPOINTMENT_VIEW_ROLES } from './core/models/auth.model';
 import { AppointmentList } from './features/appointments/pages/appointment-list/appointment-list';
+import { MEDICATION_ADMIN_ROLES, VISIT_WRITE_ROLES } from './core/models/auth.model';
+import { VisitList } from './features/visits/pages/visit-list/visit-list';
+import { VisitForm } from './features/visits/pages/visit-form/visit-form';
+import { VisitDetail } from './features/visits/pages/visit-detail/visit-detail';
+import { MedicationList } from './features/medications/pages/medication-list/medication-list';
+import { MedicationForm } from './features/medications/pages/medication-form/medication-form';
 
 const ANIMAL_TYPE_ROUTES = [
   {
@@ -111,4 +117,54 @@ describe('rutas de turnos', () => {
     expect(route?.data?.['roles']).toEqual(APPOINTMENT_VIEW_ROLES);
     expect(route?.data?.['permissions']).toBeUndefined();
   });
+});
+
+describe('rutas de visitas', () => {
+  it.each([
+    { path: 'visits', component: VisitList },
+    { path: 'visits/:externalId', component: VisitDetail },
+  ])('protege $path con VIEW_CLINICAL_RECORDS', ({ path, component }) => {
+    const route = routes.find((item) => item.path === path);
+
+    expect(route?.component).toBe(component);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['permissions']).toEqual(['VIEW_CLINICAL_RECORDS']);
+    expect(route?.data?.['roles']).toBeUndefined();
+  });
+
+  it.each([
+    'visits/new',
+    'visits/walk-in',
+    'visits/:externalId/edit',
+  ])('reserva %s a ROLE_VETERINARIAN', (path) => {
+    const route = routes.find((item) => item.path === path);
+
+    expect(route?.component).toBe(VisitForm);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(VISIT_WRITE_ROLES);
+    expect(route?.data?.['permissions']).toBeUndefined();
+  });
+});
+
+describe('rutas de medicamentos', () => {
+  it('protege el listado con VIEW_MEDICATIONS', () => {
+    const route = routes.find((item) => item.path === 'medications');
+
+    expect(route?.component).toBe(MedicationList);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['permissions']).toEqual(['VIEW_MEDICATIONS']);
+    expect(route?.data?.['roles']).toBeUndefined();
+  });
+
+  it.each(['medications/new', 'medications/:externalId/edit'])(
+    'reserva %s a ROLE_ADMIN',
+    (path) => {
+      const route = routes.find((item) => item.path === path);
+
+      expect(route?.component).toBe(MedicationForm);
+      expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+      expect(route?.data?.['roles']).toEqual(MEDICATION_ADMIN_ROLES);
+      expect(route?.data?.['permissions']).toBeUndefined();
+    },
+  );
 });
