@@ -55,6 +55,78 @@
             </div>
           </div>
 
+          @if (canViewClinicalRecords()) {
+            <section class="medical-history-section" aria-labelledby="medical-history-title">
+              <div class="medical-history-header">
+                <h3 id="medical-history-title">Historial clínico</h3>
+                @if (!historyLoading() && !historyError() && visits().length > 0) {
+                  <span class="badge">
+                    {{ visits().length }}
+                    {{ visits().length === 1 ? 'visita' : 'visitas' }}
+                  </span>
+                }
+              </div>
+
+              @if (historyLoading()) {
+                <div class="state-message is-loading" role="status" aria-live="polite">
+                  Cargando historial clínico...
+                </div>
+              } @else if (historyError()) {
+                <div class="alert alert-error" role="alert">
+                  <p>{{ historyError() }}</p>
+                  @if (historyErrorRetryable()) {
+                    <div class="state-actions">
+                      <button
+                        type="button"
+                        class="btn btn-secondary btn-sm"
+                        (click)="loadMedicalHistory(p.externalId)"
+                      >
+                        Reintentar
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else if (visits().length === 0) {
+                <div class="state-message" role="status">
+                  Esta mascota todavía no tiene visitas clínicas registradas.
+                </div>
+              } @else {
+                <ul class="visit-history-list">
+                  @for (visit of visits(); track visit.externalId) {
+                    <li class="visit-history-item">
+                      <div class="visit-history-main">
+                        <div class="visit-history-top">
+                          <span class="visit-history-date">
+                            {{ formatDate(visit.visitDate) }}
+                          </span>
+                          @if (isWalkIn(visit)) {
+                            <span class="badge badge-walkin">Walk-in</span>
+                          } @else {
+                            <span class="badge badge-scheduled">Programada</span>
+                          }
+                        </div>
+                        <p class="visit-history-vet">
+                          {{ visit.veterinarian.firstName }}
+                          {{ visit.veterinarian.lastName }}
+                          <span>· Mat. {{ visit.veterinarian.licenseNumber }}</span>
+                        </p>
+                        <p class="visit-history-observations">
+                          {{ visit.observations || 'Sin observaciones registradas.' }}
+                        </p>
+                      </div>
+                      <a
+                        [routerLink]="['/visits', visit.externalId]"
+                        class="btn btn-secondary btn-sm"
+                      >
+                        Ver detalle
+                      </a>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+
           <!-- TARJETA DESTACADA DEL PROPIETARIO CON BOTÓN DIRECTO -->
           @if (canViewOwners()) {
             <div class="owner-box">
