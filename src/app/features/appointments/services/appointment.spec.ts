@@ -201,4 +201,16 @@ describe('AppointmentService', () => {
 
     expect(status).toBe(500);
   });
+
+  it('confirma un turno con PATCH al endpoint /confirm', () => {
+    service.confirmAppointment('appointment-1').subscribe();
+
+    const httpRequest = http.expectOne(
+      `${baseUrl}/appointment-1/confirm`,
+    );
+    expect(httpRequest.request.method).toBe('PATCH');
+    expect(httpRequest.request.body).toBeNull();
+
+    httpRequest.flush(null);
+  });
 });

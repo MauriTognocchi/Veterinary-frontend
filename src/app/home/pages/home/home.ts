@@ -1,5 +1,6 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../core/services/auth';
 
 @Component({
   imports: [RouterLink],
@@ -7,4 +8,13 @@ import { RouterLink } from '@angular/router';
   styleUrl: './home.css',
   templateUrl: './home.html',
 })
-export class Home {}
+export class Home {
+  private readonly authService = inject(AuthService);
+
+  readonly canViewOwners = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_OWNERS']),
+  );
+  readonly canCreateOwner = computed(() =>
+    this.authService.hasAnyPermission(['CREATE_OWNERS']),
+  );
+}

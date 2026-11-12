@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
 import { PetResponse } from '../../../pets/models/pet.model';
@@ -12,13 +13,21 @@ import { AppointmentList } from './appointment-list';
 describe('AppointmentList', () => {
   let fixture: ComponentFixture<AppointmentList>;
   let component: AppointmentList;
-  let appointmentService: { getAll: ReturnType<typeof vi.fn> };
+  let appointmentService: {
+    getAll: ReturnType<typeof vi.fn>;
+    confirmAppointment: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
   let petService: {
     getAll: ReturnType<typeof vi.fn>;
     getMyPets: ReturnType<typeof vi.fn>;
   };
   let veterinarianService: { getAll: ReturnType<typeof vi.fn> };
-  let authService: { hasRole: ReturnType<typeof vi.fn> };
+  let authService: {
+    hasRole: ReturnType<typeof vi.fn>;
+    hasAnyRole: ReturnType<typeof vi.fn>;
+    email: ReturnType<typeof vi.fn>;
+  };
 
   const veterinarian: VeterinarianResponse = {
     externalId: 'vet-1',
@@ -88,17 +97,26 @@ describe('AppointmentList', () => {
   }
 
   beforeEach(async () => {
-    appointmentService = { getAll: vi.fn() };
+    appointmentService = {
+      getAll: vi.fn(),
+      confirmAppointment: vi.fn(),
+      delete: vi.fn(),
+    };
     petService = {
       getAll: vi.fn().mockReturnValue(of([])),
       getMyPets: vi.fn().mockReturnValue(of([])),
     };
     veterinarianService = { getAll: vi.fn().mockReturnValue(of([])) };
-    authService = { hasRole: vi.fn().mockReturnValue(false) };
+    authService = {
+      hasRole: vi.fn().mockReturnValue(false),
+      hasAnyRole: vi.fn().mockReturnValue(false),
+      email: vi.fn().mockReturnValue(null),
+    };
 
     await TestBed.configureTestingModule({
       imports: [AppointmentList],
       providers: [
+        provideRouter([]),
         { provide: AppointmentService, useValue: appointmentService },
         { provide: PetService, useValue: petService },
         { provide: VeterinarianService, useValue: veterinarianService },
@@ -518,5 +536,123 @@ describe('AppointmentList', () => {
       'No pudimos cargar los veterinarios para el filtro.',
     );
     expect(component.appointments()).toEqual([appointment()]);
+  });
+
+  it('muestra Confirmar a recepcionistas en turnos pendientes', () => {
+    authService.hasRole.mockImplementation(
+      (role: string) => role === 'ROLE_RECEPTIONIST',
+    );
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+
+    createComponent();
+
+    const buttons = fixture.nativeElement.querySelectorAll(
+      '.actions-cell button',
+    );
+    const confirmButton = Array.from(buttons).find(
+      (button) => (button as HTMLButtonElement).textContent?.trim() === 'Confirmar',
+    );
+    expect(confirmButton).toBeDefined();
+  });
+
+  it('muestra Confirmar al veterinario asignado en turnos pendientes', () => {
+    authService.hasRole.mockImplementation(
+      (role: string) => role === 'ROLE_VETERINARIAN',
+    );
+    authService.email.mockReturnValue(veterinarian.email);
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).toContain('Confirmar');
+  });
+
+  it('no muestra Confirmar a un veterinario no asignado', () => {
+    authService.hasRole.mockImplementation(
+      (role: string) => role === 'ROLE_VETERINARIAN',
+    );
+    authService.email.mockReturnValue('otro@veterinaria.com');
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+  });
+
+  it('no muestra Confirmar a clientes', () => {
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+  });
+
+  it('no muestra Confirmar para turnos que no están pendientes', () => {
+    authService.hasRole.mockImplementation(
+      (role: string) => role === 'ROLE_RECEPTIONIST',
+    );
+    appointmentService.getAll.mockReturnValue(
+      of([appointment({ status: 'CONFIRMED' })]),
+    );
+
+    createComponent();
+
+    expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+  });
+
+  it('confirma el turno y recarga el listado', () => {
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+    appointmentService.confirmAppointment.mockReturnValue(of(appointment()));
+
+    createComponent();
+    component.confirmAppointment(appointment());
+
+    expect(appointmentService.confirmAppointment).toHaveBeenCalledWith(
+      'appointment-1',
+    );
+    expect(appointmentService.getAll).toHaveBeenCalledTimes(2);
+  });
+
+  it('muestra un mensaje genérico cuando confirmar devuelve 403', () => {
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+    appointmentService.confirmAppointment.mockReturnValue(
+      throwError(() => ({ status: 403 })),
+    );
+
+    createComponent();
+    component.confirmAppointment(appointment());
+
+    expect(component.actionError()).toBe(
+      'No tenés permisos para confirmar este turno.',
+    );
+  });
+
+  it('muestra un mensaje de sesión expirada cuando confirmar devuelve 401', () => {
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+    appointmentService.confirmAppointment.mockReturnValue(
+      throwError(() => ({ status: 401 })),
+    );
+
+    createComponent();
+    component.confirmAppointment(appointment());
+
+    expect(component.actionError()).toBe(
+      'Tu sesión expiró. Iniciá sesión nuevamente.',
+    );
+  });
+
+  it('muestra un mensaje de conflicto y recarga cuando confirmar devuelve 409', () => {
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+    appointmentService.confirmAppointment.mockReturnValue(
+      throwError(() => ({ status: 409 })),
+    );
+
+    createComponent();
+    component.confirmAppointment(appointment());
+
+    expect(component.actionError()).toBe(
+      'El turno ya no se puede confirmar. Actualizá el listado e intentá nuevamente.',
+    );
+    expect(appointmentService.getAll).toHaveBeenCalledTimes(2);
   });
 });

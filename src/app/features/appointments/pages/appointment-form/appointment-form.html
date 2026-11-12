@@ -159,16 +159,6 @@
                 </select>
               </div>
 
-              @if (isEditMode()) {
-                <div class="form-group">
-                  <label for="status">Estado del turno *</label>
-                  <select id="status" formControlName="status">
-                    <option value="PENDING">Pendiente</option>
-                    <option value="CONFIRMED">Confirmado</option>
-                  </select>
-                </div>
-              }
-
               <div class="form-group full-width">
                 <label for="reason">Motivo de la consulta *</label>
                 <textarea
@@ -197,8 +187,7 @@
                 @if (saving()) {
                   Guardando...
                 } @else {
-                  {{ isEditMode() ? 'Actualizar turno' : 'Confirmar
-                  turno' }}
+                  {{ isEditMode() ? 'Actualizar turno' : 'Crear turno' }}
                 }
               </button>
               <a routerLink="/appointments" class="btn btn-secondary">

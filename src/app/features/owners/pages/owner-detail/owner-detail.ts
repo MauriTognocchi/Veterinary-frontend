@@ -1,5 +1,14 @@
-import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import {
+      Component,
+      ElementRef,
+      OnInit,
+      computed,
+      inject,
+      signal,
+      viewChild,
+    } from '@angular/core';
     import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+    import { AuthService } from '../../../../core/services/auth';
     import { OwnerService } from '../../services/owner';
     import { OwnerResponse } from '../../models/owner.model';
     import { PetResponse } from '../../../pets/models/pet.model';
@@ -17,7 +26,18 @@ import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angul
       private router = inject(Router);
       private ownerService = inject(OwnerService);
       private ownerByPetService = inject(OwnerByPetService);
+      private authService = inject(AuthService);
       private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
+
+      readonly canEditOwner = computed(() =>
+        this.authService.hasAnyPermission(['UPDATE_OWNERS']),
+      );
+      readonly canDeleteOwner = computed(() =>
+        this.authService.hasAnyPermission(['DELETE_OWNERS']),
+      );
+      readonly canCreatePet = computed(() =>
+        this.authService.hasAnyPermission(['CREATE_PETS']),
+      );
 
       owner = signal<OwnerResponse | null>(null);
       pets = signal<PetResponse[]>([]);

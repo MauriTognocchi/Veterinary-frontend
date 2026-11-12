@@ -1,5 +1,14 @@
-import { Component, ElementRef, OnInit, inject, signal, viewChild } from '@angular/core';
+import {
+  Component,
+  ElementRef,
+  OnInit,
+  computed,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { AuthService } from '../../../../core/services/auth';
 import { OwnerService } from '../../services/owner';
 import { OwnerResponse } from '../../models/owner.model';
 
@@ -12,7 +21,15 @@ import { OwnerResponse } from '../../models/owner.model';
 })
 export class OwnerList implements OnInit {
   private ownerService = inject(OwnerService);
+  private authService = inject(AuthService);
   private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
+
+  readonly canCreateOwner = computed(() =>
+    this.authService.hasAnyPermission(['CREATE_OWNERS']),
+  );
+  readonly canDeleteOwners = computed(() =>
+    this.authService.hasAnyPermission(['DELETE_OWNERS']),
+  );
 
   owners = signal<OwnerResponse[]>([]);
   loading = signal<boolean>(true);

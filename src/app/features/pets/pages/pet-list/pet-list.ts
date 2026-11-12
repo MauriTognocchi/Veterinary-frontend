@@ -25,8 +25,15 @@
       private authService = inject(AuthService);
       private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
 
+      private readonly isClient = computed(() =>
+        this.authService.hasRole('ROLE_CLIENT'),
+      );
       readonly canWrite = computed(() =>
-        this.authService.hasAnyRole(PET_WRITE_ROLES),
+        !this.isClient() && this.authService.hasAnyRole(PET_WRITE_ROLES),
+      );
+      readonly canDeletePet = computed(() =>
+        !this.isClient() &&
+        this.authService.hasAnyPermission(['DELETE_PETS']),
       );
 
       pets = signal<PetResponse[]>([]);

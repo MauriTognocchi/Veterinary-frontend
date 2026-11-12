@@ -10,7 +10,7 @@
     </div>
     <nav class="main-nav">
         <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">Home</a>
-        @if (canCreateOwner()) {
+        @if (canViewOwners()) {
             <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
         }
         <a routerLink="/pets" routerLinkActive="active">Mascotas</a>

@@ -51,16 +51,18 @@ import {
         this.authService.hasAnyRole(['ROLE_ADMIN', 'ROLE_RECEPTIONIST',
         'ROLE_CLIENT']),
       );
-      readonly canEditAppointment = computed(() =>
-        this.authService.hasAnyRole(['ROLE_ADMIN',
-        'ROLE_RECEPTIONIST']),
-      );
       readonly canDeleteAppointment = computed(() =>
         this.authService.hasAnyRole(['ROLE_ADMIN', 'ROLE_RECEPTIONIST',
         'ROLE_CLIENT']),
       );
-      readonly isVeterinarian = computed(() =>
+      private readonly isAdmin = computed(() =>
+        this.authService.hasRole('ROLE_ADMIN'),
+      );
+      private readonly isVeterinarian = computed(() =>
         this.authService.hasRole('ROLE_VETERINARIAN'),
+      );
+      private readonly isReceptionist = computed(() =>
+        this.authService.hasRole('ROLE_RECEPTIONIST'),
       );
 
       appointments = signal<AppointmentResponse[]>([]);
@@ -200,6 +202,44 @@ import {
         });
       }
 
+      canConfirm(appointment: AppointmentResponse): boolean {
+        if (appointment.status !== 'PENDING') {
+          return false;
+        }
+
+        if (this.isVeterinarian()) {
+          const assignedVeterinarian = appointment.veterinarian;
+
+          return (
+            assignedVeterinarian?.active !== false &&
+            this.sameEmail(
+              assignedVeterinarian?.email,
+              this.authService.email(),
+            )
+          );
+        }
+
+        return this.isReceptionist();
+      }
+
+      canEdit(appointment: AppointmentResponse): boolean {
+        return this.isAdmin() || this.isReceptionist();
+      }
+
+      private sameEmail(
+        first: string | null | undefined,
+        second: string | null | undefined,
+      ): boolean {
+        const normalizedFirst = first?.trim().toLowerCase();
+        const normalizedSecond = second?.trim().toLowerCase();
+
+        return Boolean(
+          normalizedFirst &&
+            normalizedSecond &&
+            normalizedFirst === normalizedSecond,
+        );
+      }
+
       clearFilters(): void {
         this.filtersForm.reset({
           dateFrom: '',
@@ -234,10 +274,29 @@ import {
           },
           error: (err) => {
             this.actionInProgressId.set(null);
-            if (err?.status === 403) {
-              this.actionError.set('Solo el veterinario puede confirmar el turno.');
+            const status = err?.status;
+
+            if (status === 401) {
+              this.actionError.set(
+                'Tu sesión expiró. Iniciá sesión nuevamente.',
+              );
+            } else if (status === 403) {
+              this.actionError.set(
+                'No tenés permisos para confirmar este turno.',
+              );
+            } else if (status === 409) {
+              this.actionError.set(
+                'El turno ya no se puede confirmar. Actualizá el listado e intentá nuevamente.',
+              );
+              this.loadAppointments();
+            } else if (status === 400) {
+              this.actionError.set(
+                'El turno no se puede confirmar en su estado actual.',
+              );
             } else {
-              this.actionError.set('No pudimos confirmar el turno. Intentá nuevamente.');
+              this.actionError.set(
+                'No pudimos confirmar el turno. Intentá nuevamente.',
+              );
             }
           },
         });
@@ -268,7 +327,17 @@ import {
           },
           error: (err) => {
             this.actionInProgressId.set(null);
-            if (err?.status === 400) {
+            const status = err?.status;
+
+            if (status === 401) {
+              this.actionError.set(
+                'Tu sesión expiró. Iniciá sesión nuevamente.',
+              );
+            } else if (status === 403) {
+              this.actionError.set(
+                'No tenés permisos para cancelar este turno.',
+              );
+            } else if (status === 400 || status === 409) {
               this.actionError.set('No se puede cancelar un turno ya completado o cancelado.');
             } else {
               this.actionError.set('No pudimos cancelar el turno.');
@@ -308,8 +377,7 @@ import {
         if (!veterinarian) {
           return 'No disponible';
         }
-        const name = `${veterinarian.firstName}
-        ${veterinarian.lastName}`.trim();
+        const name = `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
         return name || 'No disponible';
       }
 
@@ -322,8 +390,7 @@ import {
       }
 
       veterinarianLabel(veterinarian: VeterinarianResponse): string {
-        const name = `${veterinarian.firstName}
-        ${veterinarian.lastName}`.trim();
+        const name = `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
         const license = veterinarian.licenseNumber?.trim();
         return license ? `${name} (${license})` : name;
       }

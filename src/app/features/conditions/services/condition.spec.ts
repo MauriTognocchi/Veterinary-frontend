@@ -1,12 +1,15 @@
+import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { Condition } from './condition';
+import { ConditionService } from './condition';
 
-describe('Condition', () => {
-  let service: Condition;
+describe('ConditionService', () => {
+  let service: ConditionService;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({});
-    service = TestBed.inject(Condition);
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient()],
+    });
+    service = TestBed.inject(ConditionService);
   });
 
   it('should be created', () => {

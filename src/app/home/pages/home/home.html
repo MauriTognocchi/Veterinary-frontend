@@ -6,8 +6,14 @@
     necesita para brindar un mejor cuidado.
   </p>
 
-  <div class="home-actions">
-    <a routerLink="/owners" class="primary-button">Ver propietarios</a>
-    <a routerLink="/owners/new" class="secondary-button">Nuevo propietario</a>
-  </div>
+  @if (canViewOwners() || canCreateOwner()) {
+    <div class="home-actions">
+      @if (canViewOwners()) {
+        <a routerLink="/owners" class="primary-button">Ver propietarios</a>
+      }
+      @if (canCreateOwner()) {
+        <a routerLink="/owners/new" class="secondary-button">Nuevo propietario</a>
+      }
+    </div>
+  }
 </section>

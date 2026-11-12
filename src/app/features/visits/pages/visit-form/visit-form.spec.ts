@@ -1,4 +1,7 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { VisitForm } from './visit-form';
 
 describe('VisitForm', () => {
@@ -8,6 +11,11 @@ describe('VisitForm', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [VisitForm],
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     }).compileComponents();
 
     fixture = TestBed.createComponent(VisitForm);

@@ -4,14 +4,18 @@
           <h2 #detailHeading tabindex="-1">Detalle del propietario</h2>
           <div class="owner-detail-actions">
             @if (owner(); as owner) {
-              <a [routerLink]="['/owners', owner.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
-              <button type="button" class="btn btn-danger btn-sm" [disabled]="deleting()" (click)="deleteOwner()">
-                @if (deleting()) {
-                  Eliminando...
-                } @else {
-                  Eliminar
-                }
-              </button>
+              @if (canEditOwner()) {
+                <a [routerLink]="['/owners', owner.externalId, 'edit']" class="btn btn-primary btn-sm">Editar</a>
+              }
+              @if (canDeleteOwner()) {
+                <button type="button" class="btn btn-danger btn-sm" [disabled]="deleting()" (click)="deleteOwner()">
+                  @if (deleting()) {
+                    Eliminando...
+                  } @else {
+                    Eliminar
+                  }
+                </button>
+              }
             }
             <a routerLink="/owners" class="btn btn-secondary btn-sm">Volver al listado</a>
           </div>
@@ -96,9 +100,11 @@
           <section class="owner-pets-section">
             <div class="pets-section-header">
               <h3>🐾 Mascotas a su cargo</h3>
-              <a [routerLink]="['/pets/new']" [queryParams]="{ ownerId: owner.externalId }" class="btn btn-secondary btn-sm">
-                + Agregar mascota para este dueño
-              </a>
+              @if (canCreatePet()) {
+                <a [routerLink]="['/pets/new']" [queryParams]="{ ownerId: owner.externalId }" class="btn btn-secondary btn-sm">
+                  + Agregar mascota para este dueño
+                </a>
+              }
             </div>
 
             @if (petsLoading()) {

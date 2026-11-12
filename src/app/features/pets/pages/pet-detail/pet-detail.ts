@@ -33,6 +33,12 @@ import {
       readonly canWrite = computed(() =>
         this.authService.hasAnyRole(PET_WRITE_ROLES),
       );
+      readonly canDeletePet = computed(() =>
+        this.authService.hasAnyPermission(['DELETE_PETS']),
+      );
+      readonly canViewOwners = computed(() =>
+        this.authService.hasAnyPermission(['VIEW_OWNERS']),
+      );
     
       pet = signal<PetResponse | null>(null);
       owner = signal<OwnerResponse | null>(null);
@@ -60,7 +66,11 @@ import {
         this.petService.getById(externalId).subscribe({
           next: (pet) => {
             this.pet.set(pet);
-            this.loadOwner(externalId);
+            if (this.canViewOwners()) {
+              this.loadOwner(externalId);
+            } else {
+              this.loading.set(false);
+            }
           },
           error: (err) => {
             this.loading.set(false);
