@@ -106,7 +106,12 @@
                 }
               </div>
               @if (canManageDiagnoses() && !diagnosisFormVisible()) {
-                <button type="button" class="btn btn-primary" (click)="openCreateForm()">
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="diagnosesLoading()"
+                  (click)="openCreateForm()"
+                >
                   Agregar diagnóstico
                 </button>
               }
@@ -181,7 +186,11 @@
                   >
                     Cancelar
                   </button>
-                  <button type="submit" class="btn btn-primary" [disabled]="diagnosisSubmitting()">
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="diagnosisSubmitting() || diagnosesLoading()"
+                  >
                     {{ diagnosisSubmitting() ? 'Guardando...' : 'Guardar diagnóstico' }}
                   </button>
                 </div>

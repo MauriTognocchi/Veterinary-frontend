@@ -38,6 +38,8 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
       deletingDiagnosisId = signal<string | null>(null);
       diagnosisDeleteError = signal<string | null>(null);
 
+      private diagnosesRequestId = 0;
+
       diagnosisForm = this.fb.group({
         description: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(1000)]],
         dateDiagnosis: ['', [Validators.required]],
@@ -94,12 +96,22 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
         this.diagnosesErrorRetryable.set(false);
         this.diagnoses.set([]);
 
+        const requestId = ++this.diagnosesRequestId;
+
         this.diagnosisService.getByVisit(visitExternalId).subscribe({
           next: (diagnoses) => {
+            if (requestId !== this.diagnosesRequestId) {
+              return;
+            }
+
             this.diagnoses.set(this.sortDiagnoses(diagnoses));
             this.diagnosesLoading.set(false);
           },
           error: (err) => {
+            if (requestId !== this.diagnosesRequestId) {
+              return;
+            }
+
             this.diagnosesLoading.set(false);
 
             const status = err?.status;
@@ -137,6 +149,10 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
       }
 
       openCreateForm(): void {
+        if (this.diagnosesLoading()) {
+          return;
+        }
+
         this.diagnosisForm.reset({
           description: '',
           dateDiagnosis: this.formattedNow(),
@@ -148,6 +164,10 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
       }
 
       startEdit(diagnosis: DiagnosisResponse): void {
+        if (this.diagnosesLoading()) {
+          return;
+        }
+
         this.diagnosisForm.reset({
           description: diagnosis.description,
           dateDiagnosis: this.toDateTimeLocal(diagnosis.dateDiagnosis),
@@ -180,6 +200,13 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
           return;
         }
 
+        if (this.diagnosesLoading()) {
+          this.diagnosisFormError.set(
+            'Esperá a que terminen de cargar los diagnósticos.',
+          );
+          return;
+        }
+
         this.diagnosisSubmitting.set(true);
         this.diagnosisFormError.set(null);
 
@@ -198,6 +225,9 @@ import { Component, ElementRef, computed, inject, signal, OnInit, viewChild } fr
 
         request$.subscribe({
           next: (diagnosis) => {
+            this.diagnosesRequestId++;
+            this.diagnosesLoading.set(false);
+
             this.diagnoses.update((items) =>
               this.sortDiagnoses(
                 editing

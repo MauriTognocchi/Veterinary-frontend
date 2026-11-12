@@ -296,6 +296,89 @@ describe('VisitDetail', () => {
     expect(component.diagnosisFormVisible()).toBe(false);
   });
 
+  it('no permite abrir ni enviar el formulario mientras carga el listado', () => {
+    configureAccess({ manage: true });
+    const pendingList$ = new Subject<DiagnosisResponse[]>();
+    diagnosisService.getByVisit.mockReturnValue(pendingList$);
+
+    createComponent();
+
+    const addButton = findButtonByText('Agregar diagnóstico');
+    expect(addButton?.disabled).toBe(true);
+
+    component.openCreateForm();
+    fixture.detectChanges();
+    expect(component.diagnosisFormVisible()).toBe(false);
+
+    fillDiagnosisForm({
+      description: 'Otitis',
+      dateDiagnosis: '2026-11-12T10:30',
+      observations: 'Control',
+    });
+    component.submitDiagnosis();
+    fixture.detectChanges();
+
+    expect(diagnosisService.create).not.toHaveBeenCalled();
+    expect(component.diagnosisFormError()).toBe(
+      'Esperá a que terminen de cargar los diagnósticos.',
+    );
+
+    pendingList$.next([]);
+    pendingList$.complete();
+    fixture.detectChanges();
+
+    expect(component.diagnosesLoading()).toBe(false);
+    expect(findButtonByText('Agregar diagnóstico')?.disabled).toBe(false);
+  });
+
+  it('una respuesta pendiente del listado no sobrescribe un diagnóstico recién creado', () => {
+    configureAccess({ manage: true });
+
+    createComponent();
+    findButtonByText('Agregar diagnóstico')!.click();
+    fixture.detectChanges();
+
+    const create$ = new Subject<DiagnosisResponse>();
+    diagnosisService.create.mockReturnValue(create$);
+
+    fillDiagnosisForm({
+      description: 'Otitis',
+      dateDiagnosis: '2026-11-12T10:30',
+      observations: 'Control',
+    });
+    findButtonByText('Guardar diagnóstico')!.click();
+    fixture.detectChanges();
+
+    const staleList$ = new Subject<DiagnosisResponse[]>();
+    diagnosisService.getByVisit.mockReturnValue(staleList$);
+    component.loadDiagnoses('visit-1');
+    fixture.detectChanges();
+
+    expect(component.diagnosesLoading()).toBe(true);
+
+    create$.next({
+      externalId: 'diag-new',
+      description: 'Otitis',
+      dateDiagnosis: '2026-11-12T10:30',
+      observations: 'Control',
+      visit,
+    });
+    create$.complete();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('Otitis');
+    expect(component.diagnosesLoading()).toBe(false);
+
+    staleList$.next([olderDiagnosis]);
+    staleList$.complete();
+    fixture.detectChanges();
+
+    expect(component.diagnoses().map((item) => item.externalId)).toEqual([
+      'diag-new',
+    ]);
+    expect(element().textContent).not.toContain('Otitis externa');
+  });
+
   it('no envía el formulario si los datos obligatorios están vacíos', () => {
     configureAccess({ manage: true });
     createComponent();
