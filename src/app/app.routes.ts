@@ -52,7 +52,14 @@ import { Routes } from '@angular/router';
       APPOINTMENT_CREATE_ROLES,
       APPOINTMENT_UPDATE_ROLES,
       APPOINTMENT_VIEW_ROLES,
+      MEDICATION_ADMIN_ROLES,
+      VISIT_WRITE_ROLES,
     } from './core/models/auth.model';
+    import { VisitList } from './features/visits/pages/visit-list/visit-list';
+    import { VisitForm } from './features/visits/pages/visit-form/visit-form';
+    import { VisitDetail } from './features/visits/pages/visit-detail/visit-detail';
+    import { MedicationList } from './features/medications/pages/medication-list/medication-list';
+    import { MedicationForm } from './features/medications/pages/medication-form/medication-form';
     
     export const routes: Routes = [
       { path: '', component: Home },
@@ -256,5 +263,53 @@ import { Routes } from '@angular/router';
         component: AppointmentForm,
         canActivate: [authGuard, roleGuard],
         data: { roles: APPOINTMENT_UPDATE_ROLES },
+      },
+      {
+        path: 'visits',
+        component: VisitList,
+        canActivate: [authGuard, roleGuard],
+        data: { permissions: ['VIEW_CLINICAL_RECORDS'] },
+      },
+      {
+        path: 'visits/new',
+        component: VisitForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: VISIT_WRITE_ROLES },
+      },
+      {
+        path: 'visits/walk-in',
+        component: VisitForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: VISIT_WRITE_ROLES },
+      },
+      {
+        path: 'visits/:externalId/edit',
+        component: VisitForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: VISIT_WRITE_ROLES },
+      },
+      {
+        path: 'visits/:externalId',
+        component: VisitDetail,
+        canActivate: [authGuard, roleGuard],
+        data: { permissions: ['VIEW_CLINICAL_RECORDS'] },
+      },
+      {
+        path: 'medications',
+        component: MedicationList,
+        canActivate: [authGuard, roleGuard],
+        data: { permissions: ['VIEW_MEDICATIONS'] },
+      },
+      {
+        path: 'medications/new',
+        component: MedicationForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: MEDICATION_ADMIN_ROLES },
+      },
+      {
+        path: 'medications/:externalId/edit',
+        component: MedicationForm,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: MEDICATION_ADMIN_ROLES },
       },
     ];

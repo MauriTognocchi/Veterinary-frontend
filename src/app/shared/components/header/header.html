@@ -15,6 +15,9 @@
         }
         <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
         <a routerLink="/appointments" routerLinkActive="active">Turnos</a>
+        @if (canViewVisits()) {
+            <a routerLink="/visits" routerLinkActive="active">Visitas</a>
+        }
         @if (canViewUsers()) {
             <a routerLink="/users" routerLinkActive="active">Usuarios</a>
         }
@@ -24,6 +27,9 @@
 <a routerLink="/receptionists" routerLinkActive="active">Recepcionistas</a>
 @if (canViewConditions()) {
     <a routerLink="/conditions" routerLinkActive="active">Condiciones</a>
+}
+@if (canViewMedications()) {
+    <a routerLink="/medications" routerLinkActive="active">Medicamentos</a>
 }
         @if (isAdmin()) {
             <a routerLink="/animal-types" routerLinkActive="active">Tipos de animales</a>

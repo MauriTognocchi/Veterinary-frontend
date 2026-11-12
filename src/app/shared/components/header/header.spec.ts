@@ -137,4 +137,25 @@ describe('Header', () => {
 
     expect(findNavLink('Usuarios')).toBeUndefined();
   });
+
+  it('muestra Visitas y Medicamentos según sus permisos', () => {
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_CLINICAL_RECORDS') ||
+      permissions.includes('VIEW_MEDICATIONS'),
+    );
+
+    createComponent();
+
+    expect(findNavLink('Visitas')?.getAttribute('href')).toBe('/visits');
+    expect(findNavLink('Medicamentos')?.getAttribute('href')).toBe(
+      '/medications',
+    );
+  });
+
+  it('oculta Visitas y Medicamentos sin sus permisos', () => {
+    createComponent();
+
+    expect(findNavLink('Visitas')).toBeUndefined();
+    expect(findNavLink('Medicamentos')).toBeUndefined();
+  });
 });

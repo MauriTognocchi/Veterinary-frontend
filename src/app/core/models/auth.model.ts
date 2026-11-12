@@ -74,6 +74,12 @@ import { AddressRequest } from '../../features/owners/models/address.model';
       'ROLE_RECEPTIONIST',
     ];
     
+    // El backend exige ROLE_VETERINARIAN para crear/editar visitas.
+    export const VISIT_WRITE_ROLES: readonly UserRole[] = ['ROLE_VETERINARIAN'];
+    
+    // El backend exige ROLE_ADMIN para crear/editar/eliminar medicamentos.
+    export const MEDICATION_ADMIN_ROLES: readonly UserRole[] = ['ROLE_ADMIN'];
+    
     export interface LoginRequest {
       username: string;
       password: string;

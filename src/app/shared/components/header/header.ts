@@ -28,6 +28,12 @@ export class Header {
   readonly canViewConditions = computed(() =>
         this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
       );
+  readonly canViewVisits = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
+  );
+  readonly canViewMedications = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_MEDICATIONS']),
+  );
 
   logout(): void {
     this.authService.logout('manual');
