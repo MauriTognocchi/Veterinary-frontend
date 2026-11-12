@@ -34,6 +34,9 @@ export class Header {
   readonly canViewMedications = computed(() =>
     this.authService.hasAnyPermission(['VIEW_MEDICATIONS']),
   );
+   readonly canViewStudies = computed(() =>
+    this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
+  );
 
   logout(): void {
     this.authService.logout('manual');

@@ -1,0 +1,95 @@
+<section class="study-form-container">
+  <div class="card card-accent study-form-card">
+    <h2 #formHeading tabindex="-1">
+      {{ editando() ? 'Editar estudio' : 'Nuevo estudio' }}
+    </h2>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando estudio...
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">
+        No encontramos el estudio solicitado.
+      </div>
+      <div class="state-actions">
+        <a routerLink="/studies" class="btn btn-secondary btn-sm">
+          Volver al listado
+        </a>
+      </div>
+    } @else if (loadError()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ loadError() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <form [formGroup]="studyForm" (ngSubmit)="onSubmit()">
+        <div class="form-group">
+          <label for="name">Nombre</label>
+          <input
+            id="name"
+            type="text"
+            formControlName="name"
+            maxlength="100"
+            autocomplete="off"
+            placeholder="Ej: Hemograma completo, Radiografía..."
+          />
+          @if (
+            studyForm.get('name')?.touched &&
+            studyForm.get('name')?.invalid
+          ) {
+            <small class="field-error">
+              El nombre es obligatorio (máximo 100 caracteres).
+            </small>
+          }
+        </div>
+
+        <div class="form-group">
+          <label for="description">Descripción (opcional)</label>
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="4"
+            maxlength="255"
+            placeholder="Detalle del estudio (opcional)..."
+          ></textarea>
+          @if (
+            studyForm.get('description')?.touched &&
+            studyForm.get('description')?.invalid
+          ) {
+            <small class="field-error">
+              La descripción no puede superar los 255 caracteres.
+            </small>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-error" role="alert">{{ error() }}</div>
+        }
+
+        <div class="actions">
+          <a routerLink="/studies" class="btn btn-secondary">Cancelar</a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="saving() || studyForm.invalid"
+          >
+            @if (saving()) {
+              Guardando...
+            } @else if (editando()) {
+              Guardar cambios
+            } @else {
+              Crear estudio
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</section>
