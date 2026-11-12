@@ -436,5 +436,291 @@
             }
           </section>
         }
+
+        @if (canViewPrescriptions()) {
+          <section
+            class="card prescriptions-section"
+            aria-labelledby="prescriptions-title"
+          >
+            <div class="prescriptions-header">
+              <div class="prescriptions-title-row">
+                <h2
+                  id="prescriptions-title"
+                  #prescriptionsHeading
+                  tabindex="-1"
+                  class="card-title"
+                >
+                  Prescripciones
+                </h2>
+                @if (!prescriptionsLoading() && !prescriptionsError() && prescriptions().length > 0) {
+                  <span class="badge">
+                    {{ prescriptions().length }}
+                    {{ prescriptions().length === 1 ? 'prescripción' : 'prescripciones' }}
+                  </span>
+                }
+              </div>
+              @if (canManagePrescriptions() && !prescriptionFormVisible()) {
+                <button
+                  type="button"
+                  class="btn btn-primary"
+                  [disabled]="prescriptionsLoading()"
+                  (click)="openPrescriptionForm()"
+                >
+                  Agregar prescripción
+                </button>
+              }
+            </div>
+
+            @if (prescriptionDeleteError()) {
+              <div class="alert alert-error" role="alert">
+                {{ prescriptionDeleteError() }}
+              </div>
+            }
+
+            @if (prescriptionFormVisible()) {
+              <form
+                [formGroup]="prescriptionForm"
+                (ngSubmit)="submitPrescription()"
+                class="prescription-form"
+              >
+                <h3>Nueva prescripción</h3>
+
+                @if (diagnosesLoading()) {
+                  <p class="state-message" role="status">
+                    Cargando diagnósticos...
+                  </p>
+                } @else if (diagnosesError()) {
+                  <div class="alert alert-error" role="alert">
+                    <p>{{ diagnosesError() }}</p>
+                    @if (diagnosesErrorRetryable()) {
+                      <div class="state-actions">
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          (click)="retryPrescriptionDiagnoses()"
+                        >
+                          Reintentar
+                        </button>
+                      </div>
+                    }
+                  </div>
+                } @else if (diagnoses().length === 0) {
+                  <p class="state-message" role="status">
+                    Necesitás un diagnóstico registrado para prescribir.
+                  </p>
+                } @else {
+                  <div class="form-group">
+                    <label for="prescriptionDiagnosis">Diagnóstico *</label>
+                    <select
+                      id="prescriptionDiagnosis"
+                      formControlName="diagnosisExternalId"
+                      [class.invalid]="isPrescriptionFieldInvalid('diagnosisExternalId')"
+                    >
+                      <option value="">Seleccioná un diagnóstico</option>
+                      @for (diagnosis of diagnoses(); track diagnosis.externalId) {
+                        <option [value]="diagnosis.externalId">
+                          {{ diagnosis.description }} —
+                          {{ formatDate(diagnosis.dateDiagnosis) }}
+                        </option>
+                      }
+                    </select>
+                    @if (isPrescriptionFieldInvalid('diagnosisExternalId')) {
+                      <span class="field-error">Seleccioná un diagnóstico.</span>
+                    }
+                  </div>
+                }
+
+                <div class="form-group">
+                  <label for="prescriptionMedication">Medicamento *</label>
+                  @if (medicationCatalogLoading()) {
+                    <p class="state-message" role="status">
+                      Cargando medicamentos...
+                    </p>
+                  } @else if (medicationCatalogError()) {
+                    <div class="alert alert-error" role="alert">
+                      <p>{{ medicationCatalogError() }}</p>
+                      <div class="state-actions">
+                        <button
+                          type="button"
+                          class="btn btn-secondary btn-sm"
+                          (click)="retryMedicationCatalog()"
+                        >
+                          Reintentar
+                        </button>
+                      </div>
+                    </div>
+                  } @else if (medicationCatalog().length === 0) {
+                    <p class="state-message" role="status">
+                      No hay medicamentos disponibles para prescribir.
+                    </p>
+                  } @else {
+                    <select
+                      id="prescriptionMedication"
+                      formControlName="medicationExternalId"
+                      [class.invalid]="isPrescriptionFieldInvalid('medicationExternalId')"
+                    >
+                      <option value="">Seleccioná un medicamento</option>
+                      @for (medication of medicationCatalog(); track medication.externalId) {
+                        <option [value]="medication.externalId">
+                          {{ medication.name }} ({{ medication.dosage }}
+                          {{ medication.dosageUnit }})
+                        </option>
+                      }
+                    </select>
+                    @if (isPrescriptionFieldInvalid('medicationExternalId')) {
+                      <span class="field-error">Seleccioná un medicamento.</span>
+                    }
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="prescriptionQuantity">Cantidad *</label>
+                  <input
+                    id="prescriptionQuantity"
+                    type="number"
+                    min="1"
+                    step="1"
+                    formControlName="quantity"
+                    [class.invalid]="isPrescriptionFieldInvalid('quantity')"
+                  />
+                  @if (isPrescriptionFieldInvalid('quantity')) {
+                    <span class="field-error">
+                      La cantidad debe ser un número entero mayor a 0.
+                    </span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="prescriptionIndication">Indicación *</label>
+                  <textarea
+                    id="prescriptionIndication"
+                    formControlName="indication"
+                    rows="3"
+                    [class.invalid]="isPrescriptionFieldInvalid('indication')"
+                  ></textarea>
+                  @if (isPrescriptionFieldInvalid('indication')) {
+                    <span class="field-error">La indicación es obligatoria.</span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="prescriptionExpirationDate">
+                    Fecha de vencimiento *
+                  </label>
+                  <input
+                    id="prescriptionExpirationDate"
+                    type="date"
+                    formControlName="expirationDate"
+                    [class.invalid]="isPrescriptionFieldInvalid('expirationDate')"
+                  />
+                  @if (isPrescriptionFieldInvalid('expirationDate')) {
+                    <span class="field-error">
+                      La fecha de vencimiento es obligatoria.
+                    </span>
+                  }
+                </div>
+
+                @if (prescriptionFormError()) {
+                  <p class="error-text" role="alert">
+                    {{ prescriptionFormError() }}
+                  </p>
+                }
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="prescriptionSubmitting()"
+                    (click)="cancelPrescriptionForm()"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    class="btn btn-primary"
+                    [disabled]="
+                      prescriptionSubmitting() ||
+                      prescriptionsLoading() ||
+                      diagnosesLoading() ||
+                      !!diagnosesError() ||
+                      diagnoses().length === 0 ||
+                      medicationCatalogLoading() ||
+                      medicationCatalog().length === 0
+                    "
+                  >
+                    {{ prescriptionSubmitting() ? 'Guardando...' : 'Guardar prescripción' }}
+                  </button>
+                </div>
+              </form>
+            }
+
+            @if (prescriptionsLoading()) {
+              <div class="state-message is-loading" role="status" aria-live="polite">
+                Cargando prescripciones...
+              </div>
+            } @else if (prescriptionsError()) {
+              <div class="alert alert-error" role="alert">
+                <p>{{ prescriptionsError() }}</p>
+                @if (prescriptionsErrorRetryable()) {
+                  <div class="state-actions">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="retryPrescriptions()"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else if (prescriptions().length === 0) {
+              <div class="state-message" role="status">
+                Esta visita todavía no tiene prescripciones registradas.
+              </div>
+            } @else {
+              <ul class="prescription-list">
+                @for (prescription of prescriptions(); track prescription.externalId) {
+                  <li class="prescription-item">
+                    <div class="prescription-main">
+                      <div class="prescription-top">
+                        <h3 class="prescription-medication">
+                          {{ prescription.medication.name }}
+                        </h3>
+                        <span class="prescription-dosage">
+                          {{ prescription.medication.dosage }}
+                          {{ prescription.medication.dosageUnit }}
+                        </span>
+                      </div>
+                      <p class="prescription-indication">
+                        {{ prescription.indication }}
+                      </p>
+                      <p class="prescription-meta">
+                        Cantidad: {{ prescription.quantity }} · Diagnóstico:
+                        {{ prescription.diagnosis.description }} · Vence:
+                        {{ formatDateOnly(prescription.expirationDate) }}
+                      </p>
+                    </div>
+                    @if (canManagePrescriptions()) {
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm prescription-delete-btn"
+                        [disabled]="deletingPrescriptionId() !== null"
+                        (click)="removePrescription(prescription)"
+                      >
+                        @if (deletingPrescriptionId() === prescription.externalId) {
+                          Dando de baja...
+                        } @else {
+                          Dar de baja
+                        }
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
       }
     </div>
+
+    diagnosesLoading

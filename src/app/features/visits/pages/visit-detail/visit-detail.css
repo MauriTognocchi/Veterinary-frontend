@@ -144,12 +144,14 @@
     }
 
     .diagnoses-section,
-    .studies-section {
+    .studies-section,
+    .prescriptions-section {
       margin-top: 1.25rem;
     }
 
     .diagnoses-header,
-    .studies-header {
+    .studies-header,
+    .prescriptions-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
@@ -158,21 +160,24 @@
     }
 
     .diagnoses-title-row,
-    .studies-title-row {
+    .studies-title-row,
+    .prescriptions-title-row {
       display: flex;
       align-items: center;
       gap: 0.5rem;
     }
 
     .diagnoses-title-row .card-title,
-    .studies-title-row .card-title {
+    .studies-title-row .card-title,
+    .prescriptions-title-row .card-title {
       margin: 0;
       padding: 0;
       border-bottom: none;
     }
 
     .diagnosis-form,
-    .study-form {
+    .study-form,
+    .prescription-form {
       display: flex;
       flex-direction: column;
       gap: 0.75rem;
@@ -183,7 +188,8 @@
     }
 
     .diagnosis-form h3,
-    .study-form h3 {
+    .study-form h3,
+    .prescription-form h3 {
       margin: 0;
       font-size: 0.95rem;
       font-weight: 600;
@@ -337,6 +343,60 @@
       white-space: pre-wrap;
     }
 
+    .prescription-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0;
+      margin: 0;
+      list-style: none;
+    }
+
+    .prescription-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      padding: 0.85rem 1rem;
+      border: 1px solid #e5e7eb;
+      border-radius: 8px;
+    }
+
+    .prescription-main {
+      min-width: 0;
+    }
+
+    .prescription-top {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .prescription-medication {
+      margin: 0;
+      font-size: 0.95rem;
+      color: #1a1a2e;
+    }
+
+    .prescription-quantity {
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
+    .prescription-indication {
+      margin: 0.35rem 0 0;
+      font-size: 0.875rem;
+      line-height: 1.5;
+      color: #4b5563;
+      white-space: pre-wrap;
+    }
+
+    .prescription-meta {
+      margin: 0.35rem 0 0;
+      font-size: 0.8rem;
+      color: #6b7280;
+    }
+
     .state-message {
       padding: 1rem;
       text-align: center;
@@ -373,7 +433,10 @@
       .diagnosis-item,
       .diagnosis-top,
       .studies-header,
-      .study-item {
+      .study-item,
+      .prescriptions-header,
+      .prescription-item,
+      .prescription-top {
         flex-direction: column;
         align-items: flex-start;
       }

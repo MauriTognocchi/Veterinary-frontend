@@ -8,6 +8,10 @@ import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
 import { DiagnosisResponse } from '../../../diagnoses/models/diagnosis.model';
 import { DiagnosisService } from '../../../diagnoses/services/diagnosis';
+import { MedicationResponse } from '../../../medications/models/medication.model';
+import { MedicationService } from '../../../medications/services/medication';
+import { PrescriptionResponse } from '../../../prescriptions/models/prescription.model';
+import { PrescriptionService } from '../../../prescriptions/services/prescription';
 import {
   StudyByVisitResponse,
   StudyResponse,
@@ -37,6 +41,12 @@ describe('VisitDetail', () => {
     associate: ReturnType<typeof vi.fn>;
     deactivateAssociation: ReturnType<typeof vi.fn>;
   };
+  let prescriptionService: {
+    getByVisit: ReturnType<typeof vi.fn>;
+    create: ReturnType<typeof vi.fn>;
+    delete: ReturnType<typeof vi.fn>;
+  };
+  let medicationService: { getAll: ReturnType<typeof vi.fn> };
 
   interface AccessOptions {
     view?: boolean;
@@ -116,6 +126,30 @@ describe('VisitDetail', () => {
     active: true,
   };
 
+  const amoxicillin: MedicationResponse = {
+    externalId: 'med-amoxicillin',
+    name: 'Amoxicilina',
+    dosage: 250,
+    dosageUnit: 'mg',
+  };
+
+  const meloxicam: MedicationResponse = {
+    externalId: 'med-meloxicam',
+    name: 'Meloxicam',
+    dosage: 1,
+    dosageUnit: 'mg',
+  };
+
+  const recentPrescription: PrescriptionResponse = {
+    externalId: 'presc-recent',
+    quantity: 10,
+    indication: 'Cada 12 horas por 7 días.',
+    expirationDate: '2026-12-10',
+    active: true,
+    medication: amoxicillin,
+    diagnosis: recentDiagnosis,
+  };
+
   function configureAccess(options: AccessOptions = {}): void {
     const {
       view = true,
@@ -133,7 +167,8 @@ describe('VisitDetail', () => {
       (permissions: readonly string[]) =>
         (view && permissions.includes('VIEW_CLINICAL_RECORDS')) ||
         (remove && permissions.includes('DELETE_DIAGNOSES')) ||
-        (addStudies && permissions.includes('CREATE_CLINICAL_RECORDS')),
+        (addStudies && permissions.includes('CREATE_CLINICAL_RECORDS')) ||
+        (manage && permissions.includes('VIEW_MEDICATIONS')),
     );
   }
 
@@ -177,6 +212,17 @@ describe('VisitDetail', () => {
       : [];
   }
 
+  function fillPrescriptionForm(values: {
+    quantity: number;
+    indication: string;
+    expirationDate: string;
+    medicationExternalId: string;
+    diagnosisExternalId: string;
+  }): void {
+    component.prescriptionForm.setValue(values);
+    fixture.detectChanges();
+  }
+
   beforeEach(async () => {
     visitService = {
       getById: vi.fn().mockReturnValue(of(visit)),
@@ -193,6 +239,14 @@ describe('VisitDetail', () => {
       associate: vi.fn(),
       deactivateAssociation: vi.fn(),
     };
+    prescriptionService = {
+      getByVisit: vi.fn().mockReturnValue(of([])),
+      create: vi.fn(),
+      delete: vi.fn(),
+    };
+    medicationService = {
+      getAll: vi.fn().mockReturnValue(of([amoxicillin, meloxicam])),
+    };
     authService = {
       hasAnyRole: vi.fn().mockReturnValue(false),
       hasAnyPermission: vi.fn().mockReturnValue(false),
@@ -205,6 +259,8 @@ describe('VisitDetail', () => {
         { provide: VisitService, useValue: visitService },
         { provide: DiagnosisService, useValue: diagnosisService },
         { provide: StudyService, useValue: studyService },
+        { provide: PrescriptionService, useValue: prescriptionService },
+        { provide: MedicationService, useValue: medicationService },
         { provide: AuthService, useValue: authService },
         {
           provide: ActivatedRoute,
@@ -886,5 +942,300 @@ describe('VisitDetail', () => {
       'assoc-radiography',
     ]);
     expect(element().textContent).not.toContain('Análisis de sangre');
+  });
+
+  it('carga y muestra solo las prescripciones activas de la visita', () => {
+    configureAccess();
+    prescriptionService.getByVisit.mockReturnValue(
+      of([
+        recentPrescription,
+        {
+          ...recentPrescription,
+          externalId: 'presc-inactive',
+          indication: 'Prescripción dada de baja.',
+          active: false,
+        },
+      ]),
+    );
+
+    createComponent();
+
+    expect(prescriptionService.getByVisit).toHaveBeenCalledWith('visit-1');
+    expect(element().textContent).toContain('Amoxicilina');
+    expect(element().textContent).toContain('Cada 12 horas por 7 días.');
+    expect(element().textContent).not.toContain('Prescripción dada de baja.');
+    expect(
+      element().querySelectorAll('.prescription-item').length,
+    ).toBe(1);
+  });
+
+  it('no consulta ni muestra prescripciones sin VIEW_CLINICAL_RECORDS', () => {
+    configureAccess({ view: false });
+
+    createComponent();
+
+    expect(prescriptionService.getByVisit).not.toHaveBeenCalled();
+    expect(element().querySelector('.prescriptions-section')).toBeNull();
+  });
+
+  it('muestra la carga y luego el estado vacío de prescripciones', () => {
+    configureAccess();
+    const prescriptions$ = new Subject<PrescriptionResponse[]>();
+    prescriptionService.getByVisit.mockReturnValue(prescriptions$);
+
+    createComponent();
+
+    expect(element().textContent).toContain('Cargando prescripciones...');
+
+    prescriptions$.next([]);
+    prescriptions$.complete();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain(
+      'Esta visita todavía no tiene prescripciones registradas.',
+    );
+  });
+
+  it('muestra el error de carga de prescripciones y permite reintentar', () => {
+    configureAccess();
+    prescriptionService.getByVisit.mockReturnValue(
+      throwError(() => ({ status: 500 })),
+    );
+
+    createComponent();
+
+    expect(element().textContent).toContain(
+      'No pudimos cargar las prescripciones. Intentá nuevamente.',
+    );
+
+    const retryButton = findButtonByText('Reintentar');
+    expect(retryButton).toBeDefined();
+
+    prescriptionService.getByVisit.mockReturnValue(of([recentPrescription]));
+    retryButton!.click();
+    fixture.detectChanges();
+
+    expect(prescriptionService.getByVisit).toHaveBeenCalledTimes(2);
+    expect(element().textContent).toContain('Amoxicilina');
+  });
+
+  it('no ofrece reintentar prescripciones cuando el error no es recuperable', () => {
+    configureAccess();
+    prescriptionService.getByVisit.mockReturnValue(
+      throwError(() => ({ status: 403 })),
+    );
+
+    createComponent();
+
+    expect(element().textContent).toContain(
+      'No tenés permisos para ver las prescripciones.',
+    );
+    expect(findButtonByText('Reintentar')).toBeUndefined();
+  });
+
+  it('solo muestra el alta y la baja de prescripciones a veterinarios', () => {
+    configureAccess({ view: true, manage: false });
+    prescriptionService.getByVisit.mockReturnValue(of([recentPrescription]));
+
+    createComponent();
+
+    expect(findButtonByText('Agregar prescripción')).toBeUndefined();
+    expect(element().querySelector('.prescription-delete-btn')).toBeNull();
+    expect(medicationService.getAll).not.toHaveBeenCalled();
+  });
+
+  it('registra una prescripción para el diagnóstico de la visita', () => {
+    configureAccess({ manage: true });
+    diagnosisService.getByVisit.mockReturnValue(of([recentDiagnosis]));
+    prescriptionService.create.mockReturnValue(of(recentPrescription));
+
+    createComponent();
+    findButtonByText('Agregar prescripción')!.click();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('Nueva prescripción');
+
+    fillPrescriptionForm({
+      quantity: 10,
+      indication: '  Cada 12 horas por 7 días.  ',
+      expirationDate: '2026-12-10',
+      medicationExternalId: 'med-amoxicillin',
+      diagnosisExternalId: 'diag-recent',
+    });
+    findButtonByText('Guardar prescripción')!.click();
+    fixture.detectChanges();
+
+    expect(prescriptionService.create).toHaveBeenCalledWith({
+      quantity: 10,
+      indication: 'Cada 12 horas por 7 días.',
+      expirationDate: '2026-12-10',
+      medicationExternalId: 'med-amoxicillin',
+      diagnosisExternalId: 'diag-recent',
+    });
+    expect(element().textContent).toContain('Amoxicilina');
+    expect(component.prescriptionFormVisible()).toBe(false);
+  });
+
+  it('muestra el conflicto al prescribir sobre un diagnóstico de más de un mes', () => {
+    configureAccess({ manage: true });
+    diagnosisService.getByVisit.mockReturnValue(of([olderDiagnosis]));
+    prescriptionService.create.mockReturnValue(
+      throwError(() => ({ status: 409 })),
+    );
+
+    createComponent();
+    findButtonByText('Agregar prescripción')!.click();
+    fixture.detectChanges();
+
+    fillPrescriptionForm({
+      quantity: 5,
+      indication: 'Cada 24 horas.',
+      expirationDate: '2026-12-10',
+      medicationExternalId: 'med-meloxicam',
+      diagnosisExternalId: 'diag-older',
+    });
+    findButtonByText('Guardar prescripción')!.click();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain(
+      'No se puede prescribir: el diagnóstico tiene más de un mes de antigüedad.',
+    );
+    expect(component.prescriptionFormVisible()).toBe(true);
+  });
+
+  it('renderiza prescripciones duplicadas del mismo medicamento', () => {
+    configureAccess();
+    prescriptionService.getByVisit.mockReturnValue(
+      of([
+        recentPrescription,
+        {
+          ...recentPrescription,
+          externalId: 'presc-duplicate',
+          quantity: 5,
+          indication: 'Segunda indicación.',
+          expirationDate: '2026-12-20',
+        },
+      ]),
+    );
+
+    createComponent();
+
+    expect(
+      element().querySelectorAll('.prescription-item').length,
+    ).toBe(2);
+    expect(element().textContent).toContain('Segunda indicación.');
+  });
+
+  it('da de baja una prescripción confirmada', () => {
+    configureAccess({ manage: true });
+    prescriptionService.getByVisit.mockReturnValue(of([recentPrescription]));
+    prescriptionService.delete.mockReturnValue(of(void 0));
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+
+    createComponent();
+
+    const deleteButton = element().querySelector<HTMLButtonElement>(
+      '.prescription-delete-btn',
+    );
+    expect(deleteButton).not.toBeNull();
+    deleteButton!.click();
+    fixture.detectChanges();
+
+    expect(window.confirm).toHaveBeenCalled();
+    expect(prescriptionService.delete).toHaveBeenCalledWith('presc-recent');
+    expect(element().textContent).not.toContain('Amoxicilina');
+    expect(element().textContent).toContain(
+      'Esta visita todavía no tiene prescripciones registradas.',
+    );
+  });
+
+  it('no permite abrir ni enviar el formulario de prescripciones mientras carga el listado', () => {
+    configureAccess({ manage: true });
+    diagnosisService.getByVisit.mockReturnValue(of([recentDiagnosis]));
+    const pendingList$ = new Subject<PrescriptionResponse[]>();
+    prescriptionService.getByVisit.mockReturnValue(pendingList$);
+
+    createComponent();
+
+    const addButton = findButtonByText('Agregar prescripción');
+    expect(addButton?.disabled).toBe(true);
+
+    component.openPrescriptionForm();
+    fixture.detectChanges();
+    expect(component.prescriptionFormVisible()).toBe(false);
+
+    fillPrescriptionForm({
+      quantity: 10,
+      indication: 'Cada 12 horas.',
+      expirationDate: '2026-12-10',
+      medicationExternalId: 'med-amoxicillin',
+      diagnosisExternalId: 'diag-recent',
+    });
+    component.submitPrescription();
+    fixture.detectChanges();
+
+    expect(prescriptionService.create).not.toHaveBeenCalled();
+    expect(component.prescriptionFormError()).toBe(
+      'Esperá a que terminen de cargar las prescripciones.',
+    );
+
+    pendingList$.next([]);
+    pendingList$.complete();
+    fixture.detectChanges();
+
+    expect(component.prescriptionsLoading()).toBe(false);
+    expect(findButtonByText('Agregar prescripción')?.disabled).toBe(false);
+  });
+
+  it('una respuesta pendiente del listado no sobrescribe una prescripción recién creada', () => {
+    configureAccess({ manage: true });
+    diagnosisService.getByVisit.mockReturnValue(of([recentDiagnosis]));
+
+    createComponent();
+    findButtonByText('Agregar prescripción')!.click();
+    fixture.detectChanges();
+
+    const create$ = new Subject<PrescriptionResponse>();
+    prescriptionService.create.mockReturnValue(create$);
+
+    fillPrescriptionForm({
+      quantity: 10,
+      indication: 'Cada 12 horas por 7 días.',
+      expirationDate: '2026-12-10',
+      medicationExternalId: 'med-amoxicillin',
+      diagnosisExternalId: 'diag-recent',
+    });
+    findButtonByText('Guardar prescripción')!.click();
+    fixture.detectChanges();
+
+    const staleList$ = new Subject<PrescriptionResponse[]>();
+    prescriptionService.getByVisit.mockReturnValue(staleList$);
+    component.loadPrescriptions('visit-1');
+    fixture.detectChanges();
+
+    expect(component.prescriptionsLoading()).toBe(true);
+
+    create$.next(recentPrescription);
+    create$.complete();
+    fixture.detectChanges();
+
+    expect(element().textContent).toContain('Amoxicilina');
+    expect(component.prescriptionsLoading()).toBe(false);
+
+    staleList$.next([
+      {
+        ...recentPrescription,
+        externalId: 'presc-stale',
+        medication: meloxicam,
+        indication: 'Prescripción obsoleta.',
+      },
+    ]);
+    staleList$.complete();
+    fixture.detectChanges();
+
+    expect(
+      component.prescriptions().map((item) => item.externalId),
+    ).toEqual(['presc-recent']);
+    expect(element().textContent).not.toContain('Meloxicam');
   });
 });
