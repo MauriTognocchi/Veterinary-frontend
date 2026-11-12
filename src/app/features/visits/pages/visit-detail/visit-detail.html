@@ -85,5 +85,177 @@
           }
 
         </div>
+
+        @if (canViewDiagnoses()) {
+          <section class="card diagnoses-section" aria-labelledby="diagnoses-title">
+            <div class="diagnoses-header">
+              <div class="diagnoses-title-row">
+                <h2
+                  id="diagnoses-title"
+                  #diagnosesHeading
+                  tabindex="-1"
+                  class="card-title"
+                >
+                  Diagnósticos
+                </h2>
+                @if (!diagnosesLoading() && !diagnosesError() && diagnoses().length > 0) {
+                  <span class="badge">
+                    {{ diagnoses().length }}
+                    {{ diagnoses().length === 1 ? 'diagnóstico' : 'diagnósticos' }}
+                  </span>
+                }
+              </div>
+              @if (canManageDiagnoses() && !diagnosisFormVisible()) {
+                <button type="button" class="btn btn-primary" (click)="openCreateForm()">
+                  Agregar diagnóstico
+                </button>
+              }
+            </div>
+
+            @if (diagnosisDeleteError()) {
+              <div class="alert alert-error" role="alert">
+                {{ diagnosisDeleteError() }}
+              </div>
+            }
+
+            @if (diagnosisFormVisible()) {
+              <form
+                [formGroup]="diagnosisForm"
+                (ngSubmit)="submitDiagnosis()"
+                class="diagnosis-form"
+              >
+                <h3>{{ editingDiagnosis() ? 'Editar diagnóstico' : 'Nuevo diagnóstico' }}</h3>
+
+                <div class="form-group">
+                  <label for="diagnosisDescription">Descripción *</label>
+                  <input
+                    id="diagnosisDescription"
+                    type="text"
+                    formControlName="description"
+                    maxlength="1000"
+                    [class.invalid]="isDiagnosisFieldInvalid('description')"
+                  />
+                  @if (isDiagnosisFieldInvalid('description')) {
+                    <span class="field-error">
+                      La descripción es obligatoria (máximo 1000 caracteres).
+                    </span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="diagnosisDate">Fecha del diagnóstico *</label>
+                  <input
+                    id="diagnosisDate"
+                    type="datetime-local"
+                    formControlName="dateDiagnosis"
+                    [class.invalid]="isDiagnosisFieldInvalid('dateDiagnosis')"
+                  />
+                  @if (isDiagnosisFieldInvalid('dateDiagnosis')) {
+                    <span class="field-error">La fecha del diagnóstico es obligatoria.</span>
+                  }
+                </div>
+
+                <div class="form-group">
+                  <label for="diagnosisObservations">Observaciones *</label>
+                  <textarea
+                    id="diagnosisObservations"
+                    formControlName="observations"
+                    rows="3"
+                    [class.invalid]="isDiagnosisFieldInvalid('observations')"
+                  ></textarea>
+                  @if (isDiagnosisFieldInvalid('observations')) {
+                    <span class="field-error">Las observaciones son obligatorias.</span>
+                  }
+                </div>
+
+                @if (diagnosisFormError()) {
+                  <p class="error-text" role="alert">{{ diagnosisFormError() }}</p>
+                }
+
+                <div class="form-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    [disabled]="diagnosisSubmitting()"
+                    (click)="cancelDiagnosisForm()"
+                  >
+                    Cancelar
+                  </button>
+                  <button type="submit" class="btn btn-primary" [disabled]="diagnosisSubmitting()">
+                    {{ diagnosisSubmitting() ? 'Guardando...' : 'Guardar diagnóstico' }}
+                  </button>
+                </div>
+              </form>
+            }
+
+            @if (diagnosesLoading()) {
+              <div class="state-message is-loading" role="status" aria-live="polite">
+                Cargando diagnósticos...
+              </div>
+            } @else if (diagnosesError()) {
+              <div class="alert alert-error" role="alert">
+                <p>{{ diagnosesError() }}</p>
+                @if (diagnosesErrorRetryable()) {
+                  <div class="state-actions">
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      (click)="retryDiagnoses()"
+                    >
+                      Reintentar
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else if (diagnoses().length === 0) {
+              <div class="state-message" role="status">
+                Esta visita todavía no tiene diagnósticos registrados.
+              </div>
+            } @else {
+              <ul class="diagnosis-list">
+                @for (diagnosis of diagnoses(); track diagnosis.externalId) {
+                  <li class="diagnosis-item">
+                    <div class="diagnosis-main">
+                      <div class="diagnosis-top">
+                        <h3 class="diagnosis-description">{{ diagnosis.description }}</h3>
+                        <span class="diagnosis-date">
+                          {{ formatDate(diagnosis.dateDiagnosis) }}
+                        </span>
+                      </div>
+                      <p class="diagnosis-observations">{{ diagnosis.observations }}</p>
+                    </div>
+                    @if (canManageDiagnoses() || canDeleteDiagnoses()) {
+                      <div class="diagnosis-actions">
+                        @if (canManageDiagnoses()) {
+                          <button
+                            type="button"
+                            class="btn btn-secondary btn-sm diagnosis-edit-btn"
+                            (click)="startEdit(diagnosis)"
+                          >
+                            Editar
+                          </button>
+                        }
+                        @if (canDeleteDiagnoses()) {
+                          <button
+                            type="button"
+                            class="btn btn-danger btn-sm diagnosis-delete-btn"
+                            [disabled]="deletingDiagnosisId() !== null"
+                            (click)="deleteDiagnosis(diagnosis)"
+                          >
+                            @if (deletingDiagnosisId() === diagnosis.externalId) {
+                              Eliminando...
+                            } @else {
+                              Eliminar
+                            }
+                          </button>
+                        }
+                      </div>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+        }
       }
     </div>
