@@ -29,6 +29,27 @@
   font-size: 0.8rem;
 }
 
+.password-input {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.password-input input {
+  flex: 1;
+  min-width: 0;
+}
+
+.password-input .password-toggle {
+  flex-shrink: 0;
+}
+
+.success-actions {
+  display: flex;
+  justify-content: center;
+  margin-bottom: var(--space-md);
+}
+
 .group-label {
   color: var(--violet-900);
   font-size: 0.88rem;

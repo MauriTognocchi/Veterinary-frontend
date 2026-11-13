@@ -6,8 +6,11 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
+import { Observable } from 'rxjs';
 import { BranchResponse } from '../../../branches/models/branch.model';
 import { BranchService } from '../../../branches/services/branch';
+import { OwnerWithCredentialsRequest } from '../../../owners/models/owner.model';
+import { OwnerService } from '../../../owners/services/owner';
 import {
   AdminUserRole,
   WEEK_DAYS,
@@ -26,6 +29,7 @@ export class UserRegister implements OnInit {
   private fb = inject(FormBuilder);
   private branchService = inject(BranchService);
   private userRegistrationService = inject(UserRegistrationService);
+  private ownerService = inject(OwnerService);
   private route = inject(ActivatedRoute);
 
   readonly weekDays = WEEK_DAYS;
@@ -35,6 +39,8 @@ export class UserRegister implements OnInit {
   branchesError = signal<string | null>(null);
   branchesErrorRetryable = signal<boolean>(false);
   isVeterinarian = signal<boolean>(true);
+  isOwnerMode = signal<boolean>(false);
+  showPassword = signal<boolean>(false);
   saving = signal<boolean>(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
@@ -47,6 +53,37 @@ export class UserRegister implements OnInit {
     lastName: ['', [Validators.required, Validators.pattern(/\S/)]],
     phone: ['', [Validators.required, Validators.pattern(/\S/)]],
     email: ['', [Validators.required, Validators.email]],
+    dni: [
+      '',
+      [
+        Validators.required,
+        Validators.pattern(/\S/),
+        Validators.minLength(7),
+        Validators.maxLength(15),
+      ],
+    ],
+    address: this.fb.group({
+      street: [
+        '',
+        [Validators.required, Validators.pattern(/\S/), Validators.maxLength(100)],
+      ],
+      number: [
+        '',
+        [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)],
+      ],
+      city: [
+        '',
+        [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)],
+      ],
+      province: [
+        '',
+        [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)],
+      ],
+      country: [
+        '',
+        [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)],
+      ],
+    }),
     password: ['', [Validators.required, Validators.minLength(6)]],
     branchExternalId: ['', [Validators.required]],
     licenseNumber: ['', [Validators.required, Validators.pattern(/\S/)]],
@@ -64,19 +101,42 @@ export class UserRegister implements OnInit {
   });
 
   constructor() {
+    this.userForm.get('dni')?.disable();
+    this.addressGroup.disable();
+
     this.userForm.get('role')?.valueChanges.subscribe((role) => {
       this.syncRoleControls(role as AdminUserRole);
     });
   }
 
+  get addressGroup(): FormGroup {
+    return this.userForm.get('address') as FormGroup;
+  }
+
   ngOnInit(): void {
+    const mode = this.route.snapshot.data?.['mode'] as string | undefined;
+    const roleParam = this.route.snapshot.queryParams?.['role'] as
+      | string
+      | null
+      | undefined;
+    const ownerMode =
+      mode === 'OWNER' || roleParam === 'OWNER' || roleParam === 'CLIENT';
+
+    this.isOwnerMode.set(ownerMode);
+
+    if (ownerMode) {
+      this.applyOwnerMode();
+      return;
+    }
+
     this.loadBranches();
-    const roleParam = this.route.snapshot.queryParams['role'] as string | null;
+
     if (roleParam === 'RECEPTIONIST' || roleParam === 'VETERINARIAN') {
       this.defaultRole = roleParam as AdminUserRole;
-      this.userForm.patchValue({role: this.defaultRole}, {emitEvent: false});
-      this.syncRoleControls(this.defaultRole);
+      this.userForm.patchValue({ role: this.defaultRole }, { emitEvent: false });
     }
+
+    this.applyStaffMode(this.defaultRole);
   }
 
   loadBranches(): void {
@@ -119,6 +179,11 @@ export class UserRegister implements OnInit {
   }
 
   syncRoleControls(role: AdminUserRole): void {
+    if (this.isOwnerMode()) {
+      this.isVeterinarian.set(false);
+      return;
+    }
+
     const isVeterinarian = role === 'VETERINARIAN';
     this.isVeterinarian.set(isVeterinarian);
 
@@ -144,6 +209,36 @@ export class UserRegister implements OnInit {
     }
   }
 
+  togglePasswordVisibility(): void {
+    this.showPassword.update((visible) => !visible);
+  }
+
+  private applyOwnerMode(): void {
+    this.isVeterinarian.set(false);
+    this.userForm.get('role')?.disable({ emitEvent: false });
+    this.userForm.get('branchExternalId')?.disable({ emitEvent: false });
+
+    for (const name of [
+      'licenseNumber',
+      'workStartTime',
+      'workEndTime',
+      'workDays',
+    ]) {
+      this.userForm.get(name)?.disable({ emitEvent: false });
+    }
+
+    this.userForm.get('dni')?.enable({ emitEvent: false });
+    this.addressGroup.enable({ emitEvent: false });
+  }
+
+  private applyStaffMode(role: AdminUserRole): void {
+    this.userForm.get('role')?.enable({ emitEvent: false });
+    this.userForm.get('branchExternalId')?.enable({ emitEvent: false });
+    this.userForm.get('dni')?.disable({ emitEvent: false });
+    this.addressGroup.disable({ emitEvent: false });
+    this.syncRoleControls(role);
+  }
+
   onSubmit(): void {
     if (this.userForm.invalid || this.saving()) {
       this.userForm.markAllAsTouched();
@@ -157,66 +252,121 @@ export class UserRegister implements OnInit {
 
     const raw = this.userForm.getRawValue();
     const role = raw.role as AdminUserRole;
-    const common = {
-      firstName: raw.firstName.trim(),
-      lastName: raw.lastName.trim(),
-      phone: raw.phone.trim(),
-      email: raw.email.trim(),
-      password: raw.password,
-      branchExternalId: raw.branchExternalId,
-    };
+    const ownerMode = this.isOwnerMode();
 
-    const request$ =
-      role === 'VETERINARIAN'
-        ? this.userRegistrationService.createVeterinarian({
-            ...common,
-            licenseNumber: raw.licenseNumber.trim(),
-            workStartTime: raw.workStartTime,
-            workEndTime: raw.workEndTime,
-            workDays: WEEK_DAYS.filter(
-              (day) => raw.workDays[day.value],
-            ).map((day) => day.value as WorkDay),
-          })
-        : this.userRegistrationService.createReceptionist(common);
+    let request$: Observable<{ firstName: string; lastName: string }>;
+
+    if (ownerMode) {
+      const ownerRequest: OwnerWithCredentialsRequest = {
+        firstName: raw.firstName.trim(),
+        lastName: raw.lastName.trim(),
+        phone: raw.phone.trim(),
+        email: raw.email.trim(),
+        dni: raw.dni.trim(),
+        address: {
+          street: raw.address.street.trim(),
+          number: raw.address.number.trim(),
+          city: raw.address.city.trim(),
+          province: raw.address.province.trim(),
+          country: raw.address.country.trim(),
+        },
+        password: raw.password,
+      };
+
+      request$ = this.ownerService.createWithCredentials(ownerRequest);
+    } else {
+      const common = {
+        firstName: raw.firstName.trim(),
+        lastName: raw.lastName.trim(),
+        phone: raw.phone.trim(),
+        email: raw.email.trim(),
+        password: raw.password,
+        branchExternalId: raw.branchExternalId,
+      };
+
+      request$ =
+        role === 'VETERINARIAN'
+          ? this.userRegistrationService.createVeterinarian({
+              ...common,
+              licenseNumber: raw.licenseNumber.trim(),
+              workStartTime: raw.workStartTime,
+              workEndTime: raw.workEndTime,
+              workDays: WEEK_DAYS.filter(
+                (day) => raw.workDays[day.value],
+              ).map((day) => day.value as WorkDay),
+            })
+          : this.userRegistrationService.createReceptionist(common);
+    }
 
     request$.subscribe({
       next: (created) => {
         this.saving.set(false);
         this.success.set(
-          `Usuario ${created.firstName} ${created.lastName} registrado correctamente.`,
+          ownerMode
+            ? `Propietario ${created.firstName} ${created.lastName} registrado correctamente. Ya puede iniciar sesión con el email y la contraseña acordada.`
+            : `Usuario ${created.firstName} ${created.lastName} registrado correctamente.`,
         );
         this.resetForm();
       },
-      error: (err) => {
-        this.saving.set(false);
-        this.userForm.enable();
-        this.syncRoleControls(role);
-
-        if (err?.status === 404) {
-          this.error.set('La sucursal seleccionada ya no existe.');
-        } else if (err?.status === 409) {
-          this.error.set(
-            'Ya existe un usuario con ese email, teléfono o matrícula.',
-          );
-        } else if (err?.status === 400) {
-          this.error.set('Datos inválidos. Revisá los campos.');
-        } else if (err?.status === 401) {
-          this.error.set('Tu sesión no está autorizada. Iniciá sesión nuevamente.');
-        } else if (err?.status === 403) {
-          this.error.set('No tenés permisos para registrar usuarios.');
-        } else if (err?.status === 0) {
-          this.error.set(
-            'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
-          );
-        } else if (err?.status >= 500 || err?.status === 408 || err?.status === 429) {
-          this.error.set(
-            'No pudimos registrar el usuario. Intentá nuevamente en unos minutos.',
-          );
-        } else {
-          this.error.set('No pudimos registrar el usuario. Intentá nuevamente.');
-        }
-      },
+      error: (err) => this.handleSubmitError(err, role, ownerMode),
     });
+  }
+
+  private handleSubmitError(
+    err: { status?: number } | null | undefined,
+    role: AdminUserRole,
+    ownerMode: boolean,
+  ): void {
+    this.saving.set(false);
+    this.userForm.enable();
+
+    if (ownerMode) {
+      this.applyOwnerMode();
+    } else {
+      this.syncRoleControls(role);
+    }
+
+    const status = err?.status;
+
+    if (status === 404) {
+      this.error.set(
+        ownerMode
+          ? 'No encontramos los datos necesarios para registrar al propietario.'
+          : 'La sucursal seleccionada ya no existe.',
+      );
+    } else if (status === 409) {
+      this.error.set(
+        ownerMode
+          ? 'Ya existe un propietario o usuario con ese email o DNI.'
+          : 'Ya existe un usuario con ese email, teléfono o matrícula.',
+      );
+    } else if (status === 400) {
+      this.error.set('Datos inválidos. Revisá los campos.');
+    } else if (status === 401) {
+      this.error.set('Tu sesión no está autorizada. Iniciá sesión nuevamente.');
+    } else if (status === 403) {
+      this.error.set(
+        ownerMode
+          ? 'No tenés permisos para registrar propietarios.'
+          : 'No tenés permisos para registrar usuarios.',
+      );
+    } else if (status === 0) {
+      this.error.set(
+        'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.',
+      );
+    } else if (status !== undefined && (status >= 500 || status === 408 || status === 429)) {
+      this.error.set(
+        ownerMode
+          ? 'No pudimos registrar al propietario. Intentá nuevamente en unos minutos.'
+          : 'No pudimos registrar el usuario. Intentá nuevamente en unos minutos.',
+      );
+    } else {
+      this.error.set(
+        ownerMode
+          ? 'No pudimos registrar al propietario. Intentá nuevamente.'
+          : 'No pudimos registrar el usuario. Intentá nuevamente.',
+      );
+    }
   }
 
   private resetForm(): void {
@@ -226,6 +376,14 @@ export class UserRegister implements OnInit {
       lastName: '',
       phone: '',
       email: '',
+      dni: '',
+      address: {
+        street: '',
+        number: '',
+        city: '',
+        province: '',
+        country: '',
+      },
       password: '',
       branchExternalId: '',
       licenseNumber: '',
@@ -242,6 +400,11 @@ export class UserRegister implements OnInit {
       },
     });
     this.userForm.enable();
-    this.syncRoleControls(this.defaultRole);
+
+    if (this.isOwnerMode()) {
+      this.applyOwnerMode();
+    } else {
+      this.syncRoleControls(this.defaultRole);
+    }
   }
 }

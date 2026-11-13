@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { BranchService } from '../../../branches/services/branch';
+import { OwnerService } from '../../../owners/services/owner';
 import { UserRegistrationService } from '../../services/user-registration';
 import { UserRegister } from './user-register';
 
@@ -23,12 +24,27 @@ describe('UserRegister', () => {
     createVeterinarian: ReturnType<typeof vi.fn>;
     createReceptionist: ReturnType<typeof vi.fn>;
   };
+  let ownerService: {
+    createWithCredentials: ReturnType<typeof vi.fn>;
+  };
+  let routeData: Record<string, unknown>;
+  let queryParams: Record<string, string>;
 
   const createdUser = {
     externalId: 'user-1',
     firstName: 'Ana',
     lastName: 'Pérez',
     email: 'ana@example.com',
+  };
+
+  const createdOwner = {
+    externalId: 'owner-1',
+    firstName: 'Ana',
+    lastName: 'Gómez',
+    phone: '11 5555-1234',
+    email: 'ana@example.com',
+    dni: '30123456',
+    address: null,
   };
 
   function createComponent(): void {
@@ -44,6 +60,14 @@ describe('UserRegister', () => {
       lastName: '  Pérez  ',
       phone: '  11 5555-1234  ',
       email: 'ana@example.com',
+      dni: '',
+      address: {
+        street: '',
+        number: '',
+        city: '',
+        province: '',
+        country: '',
+      },
       password: 'secreto',
       branchExternalId: 'branch-1',
       licenseNumber: '  MP 1234  ',
@@ -68,6 +92,14 @@ describe('UserRegister', () => {
       lastName: '  Pérez  ',
       phone: '  11 5555-1234  ',
       email: 'ana@example.com',
+      dni: '',
+      address: {
+        street: '',
+        number: '',
+        city: '',
+        province: '',
+        country: '',
+      },
       password: 'secreto',
       branchExternalId: 'branch-1',
       licenseNumber: '',
@@ -85,11 +117,35 @@ describe('UserRegister', () => {
     });
   }
 
+  function fillOwnerForm(): void {
+    component.userForm.patchValue({
+      firstName: '  Ana  ',
+      lastName: '  Gómez  ',
+      phone: '  11 5555-1234  ',
+      email: 'ana@example.com',
+      dni: '  30123456  ',
+      address: {
+        street: '  Av. Siempre Viva  ',
+        number: '  742  ',
+        city: '  Springfield  ',
+        province: '  Buenos Aires  ',
+        country: '  Argentina  ',
+      },
+      password: 'secreto',
+    });
+  }
+
   beforeEach(async () => {
+    routeData = {};
+    queryParams = {};
+
     branchService = { getAll: vi.fn().mockReturnValue(of([BRANCH])) };
     registrationService = {
       createVeterinarian: vi.fn(),
       createReceptionist: vi.fn(),
+    };
+    ownerService = {
+      createWithCredentials: vi.fn(),
     };
 
     await TestBed.configureTestingModule({
@@ -100,6 +156,8 @@ describe('UserRegister', () => {
           provide: ActivatedRoute,
           useValue: {
             snapshot: {
+              data: routeData,
+              queryParams,
               paramMap: { get: () => null },
               queryParamMap: { get: () => null },
             },
@@ -107,6 +165,7 @@ describe('UserRegister', () => {
         },
         { provide: BranchService, useValue: branchService },
         { provide: UserRegistrationService, useValue: registrationService },
+        { provide: OwnerService, useValue: ownerService },
       ],
     }).compileComponents();
   });
@@ -127,6 +186,7 @@ describe('UserRegister', () => {
     expect(component.userForm.invalid).toBe(true);
     expect(registrationService.createVeterinarian).not.toHaveBeenCalled();
     expect(registrationService.createReceptionist).not.toHaveBeenCalled();
+    expect(ownerService.createWithCredentials).not.toHaveBeenCalled();
   });
 
   it('registra un veterinario con los días seleccionados', () => {
@@ -189,5 +249,86 @@ describe('UserRegister', () => {
       'Ya existe un usuario con ese email, teléfono o matrícula.',
     );
     expect(component.userForm.enabled).toBe(true);
+  });
+
+  it('activa el modo propietario sin cargar sucursales', () => {
+    routeData['mode'] = 'OWNER';
+    createComponent();
+
+    expect(component.isOwnerMode()).toBe(true);
+    expect(branchService.getAll).not.toHaveBeenCalled();
+    expect(component.userForm.get('branchExternalId')?.disabled).toBe(true);
+    expect(component.userForm.get('licenseNumber')?.disabled).toBe(true);
+    expect(component.userForm.get('dni')?.enabled).toBe(true);
+    expect(component.userForm.get('address')?.enabled).toBe(true);
+    expect(fixture.nativeElement.querySelector('#dni')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#street')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('#role')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#branchExternalId')).toBeNull();
+    expect(fixture.nativeElement.querySelector('#licenseNumber')).toBeNull();
+  });
+
+  it('registra un propietario con credenciales', () => {
+    routeData['mode'] = 'OWNER';
+    ownerService.createWithCredentials.mockReturnValue(of(createdOwner));
+    createComponent();
+    fillOwnerForm();
+
+    component.onSubmit();
+
+    expect(ownerService.createWithCredentials).toHaveBeenCalledWith({
+      firstName: 'Ana',
+      lastName: 'Gómez',
+      phone: '11 5555-1234',
+      email: 'ana@example.com',
+      dni: '30123456',
+      address: {
+        street: 'Av. Siempre Viva',
+        number: '742',
+        city: 'Springfield',
+        province: 'Buenos Aires',
+        country: 'Argentina',
+      },
+      password: 'secreto',
+    });
+    expect(registrationService.createVeterinarian).not.toHaveBeenCalled();
+    expect(registrationService.createReceptionist).not.toHaveBeenCalled();
+    expect(component.success()).toContain('Propietario Ana Gómez');
+    expect(component.userForm.get('dni')?.enabled).toBe(true);
+    expect(component.userForm.get('branchExternalId')?.disabled).toBe(true);
+  });
+
+  it('muestra el error de duplicado en modo propietario', () => {
+    routeData['mode'] = 'OWNER';
+    ownerService.createWithCredentials.mockReturnValue(
+      throwError(() => ({ status: 409 })),
+    );
+    createComponent();
+    fillOwnerForm();
+
+    component.onSubmit();
+
+    expect(component.error()).toBe(
+      'Ya existe un propietario o usuario con ese email o DNI.',
+    );
+    expect(component.userForm.get('dni')?.enabled).toBe(true);
+  });
+
+  it('permite mostrar y ocultar la contraseña', () => {
+    routeData['mode'] = 'OWNER';
+    createComponent();
+
+    const input = fixture.nativeElement.querySelector(
+      '#password',
+    ) as HTMLInputElement;
+
+    expect(input.type).toBe('password');
+    expect(component.showPassword()).toBe(false);
+
+    component.togglePasswordVisibility();
+    fixture.detectChanges();
+
+    expect(component.showPassword()).toBe(true);
+    expect(input.type).toBe('text');
   });
 });

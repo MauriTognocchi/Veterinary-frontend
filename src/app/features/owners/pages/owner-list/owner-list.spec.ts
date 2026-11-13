@@ -10,7 +10,10 @@ describe('OwnerList', () => {
   let component: OwnerList;
   let fixture: ComponentFixture<OwnerList>;
   let ownerService: { getAll: ReturnType<typeof vi.fn> };
-  let authService: { hasAnyPermission: ReturnType<typeof vi.fn> };
+  let authService: {
+    hasAnyPermission: ReturnType<typeof vi.fn>;
+    hasAnyRole: ReturnType<typeof vi.fn>;
+  };
 
   const owner: OwnerResponse = {
     externalId: 'owner-1',
@@ -30,7 +33,10 @@ describe('OwnerList', () => {
 
   beforeEach(async () => {
     ownerService = { getAll: vi.fn().mockReturnValue(of([owner])) };
-    authService = { hasAnyPermission: vi.fn().mockReturnValue(false) };
+    authService = {
+      hasAnyPermission: vi.fn().mockReturnValue(false),
+      hasAnyRole: vi.fn().mockReturnValue(false),
+    };
 
     await TestBed.configureTestingModule({
       imports: [OwnerList],
@@ -48,21 +54,24 @@ describe('OwnerList', () => {
     expect(component).toBeTruthy();
   });
 
-  it('muestra Nuevo propietario con CREATE_OWNERS', () => {
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('CREATE_OWNERS'),
-    );
+  it.each(['ROLE_ADMIN', 'ROLE_RECEPTIONIST'])(
+    'muestra Crear propietario para %s',
+    (role) => {
+      authService.hasAnyRole.mockImplementation((roles: string[]) =>
+        roles.includes(role),
+      );
 
-    createComponent();
+      createComponent();
 
-    const link = fixture.nativeElement.querySelector(
-      '.owner-list-header a',
-    ) as HTMLAnchorElement | null;
-    expect(link?.textContent?.trim()).toBe('Nuevo propietario');
-    expect(link?.getAttribute('href')).toBe('/owners/new');
-  });
+      const link = fixture.nativeElement.querySelector(
+        '.owner-list-header a',
+      ) as HTMLAnchorElement | null;
+      expect(link?.textContent?.trim()).toBe('Crear propietario');
+      expect(link?.getAttribute('href')).toBe('/owners/new/account');
+    },
+  );
 
-  it('oculta Nuevo propietario sin CREATE_OWNERS', () => {
+  it('oculta Crear propietario sin rol de escritura', () => {
     createComponent();
 
     expect(fixture.nativeElement.querySelector('.owner-list-header a')).toBeNull();

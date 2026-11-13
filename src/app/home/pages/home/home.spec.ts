@@ -170,7 +170,7 @@ describe('Home', () => {
       ).toBe('/users/new');
       expect(
         findLink('.admin-actions', 'Agregar propietario')?.getAttribute('href'),
-      ).toBe('/owners/new');
+      ).toBe('/owners/new/account');
     });
   });
 

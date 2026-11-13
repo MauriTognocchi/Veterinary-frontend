@@ -13,6 +13,7 @@ import { roleGuard } from './core/guards/role-guard';
 import {
       ANIMAL_TYPE_ADMIN_ROLES,
       OWNER_VIEW_ROLES,
+      OWNER_WRITE_ROLES,
     } from './core/models/auth.model';
 import { BreedForm } from './features/breeds/pages/breed-form/breed-form';
 import { BreedList } from './features/breeds/pages/breed-list/breed-list';
@@ -95,6 +96,12 @@ import { StudyForm } from './features/studies/pages/study-form/study-form';
         component: OwnerList,
         canActivate: [authGuard, roleGuard],
         data: { roles: OWNER_VIEW_ROLES },
+      },
+      {
+        path: 'owners/new/account',
+        component: UserRegister,
+        canActivate: [authGuard, roleGuard],
+        data: { roles: OWNER_WRITE_ROLES, mode: 'OWNER' },
       },
       {
         path: 'owners/new',
