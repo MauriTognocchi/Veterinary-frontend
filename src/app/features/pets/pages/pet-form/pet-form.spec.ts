@@ -34,6 +34,7 @@ describe('PetForm', () => {
     birthDate: '2020-01-01',
     active: true,
     color: 'Marrón',
+    description: null,
     animalType: { externalId: 'animal-type-1', name: 'Perro' },
     breed: {
       externalId: 'breed-1',

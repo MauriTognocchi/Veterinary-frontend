@@ -22,6 +22,7 @@ describe('PetList', () => {
     birthDate: '2020-05-05',
     active: true,
     color: 'Marrón',
+    description: null,
     animalType: { externalId: 'animal-type-1', name: 'Perro' },
     breed: {
       externalId: 'breed-1',

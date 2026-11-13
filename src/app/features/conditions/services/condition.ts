@@ -1,6 +1,7 @@
 import { Injectable, inject } from '@angular/core';
     import { HttpClient } from '@angular/common/http';
     import { Observable } from 'rxjs';
+    export type { ConditionRequest, ConditionResponse } from '../models/condition.model';
     import { ConditionRequest, ConditionResponse } from '../models/condition.model';
 
     @Injectable({ providedIn: 'root' })

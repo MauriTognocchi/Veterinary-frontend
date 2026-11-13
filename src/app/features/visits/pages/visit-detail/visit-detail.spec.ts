@@ -79,6 +79,7 @@ describe('VisitDetail', () => {
       birthDate: '2020-05-05',
       active: true,
       color: 'Marrón',
+      description: null,
       animalType: { externalId: 'animal-type-1', name: 'Perro' },
       breed: {
         externalId: 'breed-1',
@@ -128,6 +129,7 @@ describe('VisitDetail', () => {
     study: radiographyStudy,
     visit,
     active: true,
+    description: null,
   };
 
   const amoxicillin: MedicationResponse = {
@@ -201,7 +203,7 @@ describe('VisitDetail', () => {
   }
 
   function selectStudy(externalId: string): void {
-    component.studyForm.setValue({ studyExternalId: externalId });
+    component.studyForm.setValue({ studyExternalId: externalId, description: 'Resultado' });
     fixture.detectChanges();
   }
 
@@ -800,6 +802,7 @@ describe('VisitDetail', () => {
     expect(studyService.associate).toHaveBeenCalledWith({
       studyExternalId: 'study-radiography',
       visitExternalId: 'visit-1',
+      description: 'Resultado',
     });
     expect(element().textContent).toContain('Radiografía');
     expect(component.studyFormVisible()).toBe(false);

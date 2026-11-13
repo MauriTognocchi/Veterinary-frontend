@@ -15,9 +15,33 @@ export interface PetResponse {
   birthDate: string;
   active: boolean;
   color: string;
+  description: string | null;
   animalType: AnimalTypeResponse;
   breed: BreedResponse;
   visitsCount?: number;
   lastVisitDate?: string;
   activeAppointments?: number;
+}
+
+export interface DescriptionUpdateRequest {
+  description: string | null;
+}
+
+export type SeverityLevel = 'MILD' | 'MODERATE' | 'SEVERE';
+
+export interface ConditionByPetResponse {
+  conditionExternalId: string;
+  petExternalId: string;
+  conditionName: string;
+  diagnosisDate: string;
+  severity: SeverityLevel;
+  observations: string | null;
+}
+
+export interface ConditionByPetRequest {
+  conditionExternalId: string;
+  petExternalId: string;
+  diagnosisDate: string;
+  severity: SeverityLevel;
+  observations: string | null;
 }
