@@ -75,6 +75,23 @@ describe('Header', () => {
     expect(findNavLink('Iniciar sesión')).toBeUndefined();
   });
 
+  it('muestra la navegación del veterinario', () => {
+    authService.isAuthenticated.set(true);
+    authService.hasAnyRole.mockImplementation((roles: string[]) =>
+      roles.includes('ROLE_VETERINARIAN'),
+    );
+
+    createComponent();
+
+    expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
+    expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
+    expect(findNavLink('Visitas')?.getAttribute('href')).toBe('/visits');
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
+    expect(findNavLink('Mascotas')).toBeUndefined();
+    expect(findNavLink('Propietarios')).toBeUndefined();
+    expect(findNavLink('Iniciar sesión')).toBeUndefined();
+  });
+
   it('mantiene la navegación completa para usuarios que no son administradores', () => {
     authService.isAuthenticated.set(true);
 

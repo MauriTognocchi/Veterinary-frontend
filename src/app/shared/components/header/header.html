@@ -14,6 +14,10 @@
             @if (isAdmin()) {
                 <a routerLink="/appointments" routerLinkActive="active">Turnos</a>
                 <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
+            } @else if (isVeterinarian()) {
+                <a routerLink="/appointments" routerLinkActive="active">Turnos</a>
+                <a routerLink="/visits" routerLinkActive="active">Visitas</a>
+                <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
             } @else {
                 @if (canViewOwners()) {
                     <a routerLink="/owners" routerLinkActive="active">Propietarios</a>

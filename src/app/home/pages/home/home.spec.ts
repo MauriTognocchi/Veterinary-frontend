@@ -1,12 +1,30 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth';
+import { AppointmentService } from '../../../features/appointments/services/appointment';
+import { OwnerByPetService } from '../../../features/owners-by-pets/services/owner-by-pet';
 import { Home } from './home';
 
 describe('Home', () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
   let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
+  let appointmentService: { getAll: ReturnType<typeof vi.fn> };
+  let ownerByPetService: { getAll: ReturnType<typeof vi.fn> };
+
+  function todayKey(): string {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+
+    return `${year}-${month}-${day}`;
+  }
+
+  function vetRoleOnly(roles: readonly string[]): boolean {
+    return roles.includes('ROLE_VETERINARIAN');
+  }
 
   function createComponent(): void {
     fixture = TestBed.createComponent(Home);
@@ -29,12 +47,16 @@ describe('Home', () => {
 
   beforeEach(async () => {
     authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
+    appointmentService = { getAll: vi.fn().mockReturnValue(of([])) };
+    ownerByPetService = { getAll: vi.fn().mockReturnValue(of([])) };
 
     await TestBed.configureTestingModule({
       imports: [Home],
       providers: [
         provideRouter([]),
         { provide: AuthService, useValue: authService },
+        { provide: AppointmentService, useValue: appointmentService },
+        { provide: OwnerByPetService, useValue: ownerByPetService },
       ],
     }).compileComponents();
   });
@@ -145,6 +167,113 @@ describe('Home', () => {
       expect(
         findLink('.admin-actions', 'Agregar propietario')?.getAttribute('href'),
       ).toBe('/owners/new');
+    });
+  });
+
+  describe('como veterinario', () => {
+    beforeEach(() => {
+      authService.hasAnyRole.mockImplementation(vetRoleOnly);
+    });
+
+    it('muestra el título y el subtítulo del home', () => {
+      createComponent();
+
+      const element = fixture.nativeElement as HTMLElement;
+
+      expect(element.querySelector('.vet-home-header h2')?.textContent?.trim()).toBe(
+        '¡Buen día, Dr./Dra.!',
+      );
+      expect(element.querySelector('.vet-home-header p')?.textContent?.trim()).toBe(
+        'Estos son los turnos programados para hoy',
+      );
+    });
+
+    it('consulta los turnos del día actual', () => {
+      createComponent();
+
+      expect(appointmentService.getAll).toHaveBeenCalledWith({
+        dateFrom: todayKey(),
+        dateTo: todayKey(),
+      });
+    });
+
+    it('muestra únicamente los turnos de hoy con sus datos y la acción Ver', () => {
+      const today = todayKey();
+      appointmentService.getAll.mockReturnValue(
+        of([
+          {
+            externalId: 'appointment-today',
+            appointmentDate: `${today}T09:30:00`,
+            status: 'CONFIRMED',
+            pet: { externalId: 'pet-1', name: 'Firulais' },
+          },
+          {
+            externalId: 'appointment-other-day',
+            appointmentDate: '2000-01-01T10:00:00',
+            status: 'PENDING',
+            pet: { externalId: 'pet-2', name: 'Michi' },
+          },
+        ]),
+      );
+      ownerByPetService.getAll.mockReturnValue(
+        of([
+          {
+            externalId: 'relation-1',
+            pet: { externalId: 'pet-1' },
+            owner: { firstName: 'Juan', lastName: 'Pérez' },
+          },
+        ]),
+      );
+
+      createComponent();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const rows = Array.from(
+        element.querySelectorAll<HTMLTableRowElement>('.vet-appointments-table tbody tr'),
+      );
+
+      expect(rows).toHaveLength(1);
+      expect(rows[0]?.textContent).toContain('09:30');
+      expect(rows[0]?.textContent).toContain('Firulais');
+      expect(rows[0]?.textContent).toContain('Juan Pérez');
+      expect(rows[0]?.textContent).toContain('Confirmado');
+      expect(
+        rows[0]
+          ?.querySelector<HTMLAnchorElement>('a')
+          ?.getAttribute('href'),
+      ).toBe('/appointments/appointment-today/edit');
+    });
+
+    it('muestra el mensaje vacío cuando no hay turnos para hoy', () => {
+      createComponent();
+
+      const element = fixture.nativeElement as HTMLElement;
+
+      expect(element.querySelector('.vet-section')?.textContent).toContain(
+        'No hay turnos programados para hoy',
+      );
+    });
+
+    it('navega a las secciones desde los accesos rápidos', () => {
+      createComponent();
+
+      expect(findLink('.quick-access-grid', 'BUSCAR MASCOTA')?.getAttribute('href')).toBe(
+        '/pets',
+      );
+      expect(
+        findLink('.quick-access-grid', 'BUSCAR PROPIETARIO')?.getAttribute('href'),
+      ).toBe('/owners');
+      expect(
+        findLink('.quick-access-grid', 'HISTORIAL DE VISITAS')?.getAttribute('href'),
+      ).toBe('/visits');
+    });
+
+    it('navega al listado de turnos desde Ver todos', () => {
+      createComponent();
+
+      expect(findLink('.vet-section-header', 'Ver todos')?.getAttribute('href')).toBe(
+        '/appointments',
+      );
     });
   });
 });
