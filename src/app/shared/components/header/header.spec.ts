@@ -29,10 +29,6 @@ describe('Header', () => {
     return links.find((link) => link.textContent?.trim() === label);
   }
 
-  function findAnimalTypesLink(): HTMLAnchorElement | undefined {
-    return findNavLink('Tipos de animales');
-  }
-
   beforeEach(async () => {
     authService = {
       isAuthenticated: signal(false),
@@ -66,21 +62,28 @@ describe('Header', () => {
     expect(findNavLink('Sucursales')).toBeUndefined();
   });
 
-  it('muestra el enlace de tipos de animales solo para administradores', () => {
+  it('muestra la navegación del administrador', () => {
     authService.isAuthenticated.set(true);
     authService.hasAnyRole.mockReturnValue(true);
 
     createComponent();
 
-    expect(findAnimalTypesLink()?.getAttribute('href')).toBe('/animal-types');
+    expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
+    expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
+    expect(findNavLink('Mascotas')).toBeUndefined();
+    expect(findNavLink('Iniciar sesión')).toBeUndefined();
   });
 
-  it('oculta el enlace de tipos de animales para usuarios no administradores', () => {
+  it('mantiene la navegación completa para usuarios que no son administradores', () => {
     authService.isAuthenticated.set(true);
 
     createComponent();
 
-    expect(findAnimalTypesLink()).toBeUndefined();
+    expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
+    expect(findNavLink('Mascotas')?.getAttribute('href')).toBe('/pets');
+    expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
   });
 
   it('muestra Propietarios con VIEW_OWNERS y Agregar Propietario con CREATE_OWNERS', () => {

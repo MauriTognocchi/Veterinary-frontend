@@ -127,3 +127,130 @@
     width: 100%;
   }
 }
+
+.admin-home {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1.5rem, 4vw, 2.5rem);
+  max-width: 100%;
+}
+
+.admin-home-header {
+  padding: clamp(1.75rem, 4vw, 2.75rem);
+  color: #ffffff;
+  background: linear-gradient(120deg, var(--violet-800), var(--violet-600) 60%, var(--violet-500));
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-md);
+}
+
+.admin-home-header h2 {
+  margin-bottom: 0.5rem;
+  color: #ffffff;
+  font-size: clamp(1.6rem, 4vw, 2.35rem);
+}
+
+.admin-home-header p {
+  color: var(--violet-100);
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
+}
+
+.admin-category {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 100%;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.admin-category h3 {
+  padding-left: 0.65rem;
+  color: var(--violet-900);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-left: 4px solid var(--violet-500);
+}
+
+.admin-card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.admin-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 0;
+  padding: 1rem 1.15rem;
+  color: var(--violet-900);
+  font-size: 0.95rem;
+  font-weight: 600;
+  text-decoration: none;
+  background-color: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: var(--radius-sm);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease,
+    background-color 0.15s ease;
+}
+
+.admin-card > span:first-child {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.admin-card-arrow {
+  flex-shrink: 0;
+  color: var(--violet-500);
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.admin-card:hover {
+  background-color: var(--violet-100);
+  border-color: var(--violet-300);
+  box-shadow: var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 1024px) {
+  .admin-card-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-actions {
+    flex-direction: column;
+  }
+
+  .admin-actions .btn {
+    width: 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-card {
+    transition: none;
+  }
+
+  .admin-card:hover {
+    transform: none;
+  }
+}
