@@ -2,7 +2,7 @@
       <div class="receptionist-list-header">
         <h2 #listHeading tabindex="-1">Recepcionistas</h2>
         @if (isAdmin()) {
-          <a routerLink="/users/new" class="btn btn-primary btn-sm">
+          <a [routerLink]="['/users/new']" [queryParams]="{role: 'RECEPTIONIST'}" class="btn btn-primary btn-sm">
             Registrar recepcionista
           </a>
         }

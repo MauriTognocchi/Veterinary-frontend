@@ -2,7 +2,7 @@
   <div class="veterinarian-list-header">
     <h2 #listHeading tabindex="-1">Veterinarios</h2>
     @if (isAdmin()) {
-      <a routerLink="/users/new" class="btn btn-primary btn-sm">
+      <a [routerLink]="['/users/new']" [queryParams]="{role: 'VETERINARIAN'}" class="btn btn-primary btn-sm">
         Registrar veterinario
       </a>
     }

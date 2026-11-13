@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BranchResponse } from '../../../branches/models/branch.model';
 import { BranchService } from '../../../branches/services/branch';
 import {
@@ -26,6 +26,7 @@ export class UserRegister implements OnInit {
   private fb = inject(FormBuilder);
   private branchService = inject(BranchService);
   private userRegistrationService = inject(UserRegistrationService);
+  private route = inject(ActivatedRoute);
 
   readonly weekDays = WEEK_DAYS;
 
@@ -37,6 +38,8 @@ export class UserRegister implements OnInit {
   saving = signal<boolean>(false);
   error = signal<string | null>(null);
   success = signal<string | null>(null);
+
+  private defaultRole: AdminUserRole = 'VETERINARIAN';
 
   userForm: FormGroup = this.fb.group({
     role: ['VETERINARIAN' as AdminUserRole, [Validators.required]],
@@ -68,6 +71,12 @@ export class UserRegister implements OnInit {
 
   ngOnInit(): void {
     this.loadBranches();
+    const roleParam = this.route.snapshot.queryParams['role'] as string | null;
+    if (roleParam === 'RECEPTIONIST' || roleParam === 'VETERINARIAN') {
+      this.defaultRole = roleParam as AdminUserRole;
+      this.userForm.patchValue({role: this.defaultRole}, {emitEvent: false});
+      this.syncRoleControls(this.defaultRole);
+    }
   }
 
   loadBranches(): void {
@@ -212,7 +221,7 @@ export class UserRegister implements OnInit {
 
   private resetForm(): void {
     this.userForm.reset({
-      role: 'VETERINARIAN',
+      role: this.defaultRole,
       firstName: '',
       lastName: '',
       phone: '',
@@ -233,6 +242,6 @@ export class UserRegister implements OnInit {
       },
     });
     this.userForm.enable();
-    this.syncRoleControls('VETERINARIAN');
+    this.syncRoleControls(this.defaultRole);
   }
 }
