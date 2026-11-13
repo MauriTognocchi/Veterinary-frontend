@@ -18,20 +18,13 @@ export class BranchList implements OnInit {
   private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
 
   readonly isAdmin = computed(() =>
-    this.authService.hasAnyRole(BRANCH_ADMIN_ROLES),
+    BRANCH_ADMIN_ROLES.some((role) => this.authService.roles().includes(role)),
   );
 
   branches = signal<BranchResponse[]>([]);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
   loadErrorRetryable = signal<boolean>(false);
-  selectedBranchId = signal<string | null>(null);
-  deletingId = signal<string | null>(null);
-  deleteError = signal<string | null>(null);
-
-  readonly selectedBranch = computed(
-    () => this.branches().find((branch) => branch.externalId === this.selectedBranchId()) ?? null,
-  );
 
   ngOnInit(): void {
     this.loadBranches();
@@ -39,7 +32,6 @@ export class BranchList implements OnInit {
 
   loadBranches(): void {
     this.loading.set(true);
-    this.selectedBranchId.set(null);
     this.error.set(null);
     this.loadErrorRetryable.set(false);
     this.branches.set([]);
@@ -80,56 +72,6 @@ export class BranchList implements OnInit {
   retryLoad(): void {
     this.loadBranches();
     this.listHeading()?.nativeElement.focus();
-  }
-
-  selectBranch(branch: BranchResponse): void {
-    this.selectedBranchId.set(branch.externalId);
-  }
-
-  deleteBranch(branch: BranchResponse): void {
-    if (this.deletingId() !== null) {
-      return;
-    }
-
-    const confirmed = window.confirm(
-      `¿Eliminar la sucursal "${branch.name}"? Esta acción no se puede deshacer.`,
-    );
-
-    if (!confirmed) {
-      return;
-    }
-
-    this.deletingId.set(branch.externalId);
-    this.deleteError.set(null);
-
-    this.branchService.delete(branch.externalId).subscribe({
-      next: () => {
-        this.branches.update((branches) =>
-          branches.filter((item) => item.externalId !== branch.externalId),
-        );
-
-        if (this.selectedBranchId() === branch.externalId) {
-          this.selectedBranchId.set(null);
-        }
-
-        this.deletingId.set(null);
-      },
-      error: (err) => {
-        this.deletingId.set(null);
-
-        if (err?.status === 404) {
-          this.deleteError.set('La sucursal ya no existe.');
-        } else if (err?.status === 401) {
-          this.deleteError.set(
-            'No tenés autorización para eliminar sucursales. Iniciá sesión nuevamente.',
-          );
-        } else if (err?.status === 403) {
-          this.deleteError.set('No tenés permisos para eliminar sucursales.');
-        } else {
-          this.deleteError.set('No pudimos eliminar la sucursal. Intentá nuevamente.');
-        }
-      },
-    });
   }
 
   formatAddress(branch: BranchResponse): string {

@@ -6,10 +6,6 @@
     }
   </div>
 
-  @if (deleteError()) {
-    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
-  }
-
   @if (loading()) {
     <div class="state-message is-loading" role="status" aria-live="polite">
       Cargando sucursales...
@@ -30,76 +26,30 @@
   } @else {
     <table>
       <caption>
-        Sucursales registradas con dirección, teléfono y horario de atención
+        Sucursales registradas
       </caption>
       <thead>
         <tr>
           <th>Nombre</th>
           <th>Dirección</th>
-          <th>Teléfono</th>
-          <th>Horario</th>
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         @for (branch of branches(); track branch.externalId) {
-          <tr [class.is-selected]="selectedBranchId() === branch.externalId">
+          <tr>
             <td>
-              <a [routerLink]="['/branches', branch.externalId]" class="detail-link">
-                {{ branch.name }}
-              </a>
+              <span class="branch-name">{{ branch.name }}</span>
             </td>
             <td>{{ formatAddress(branch) }}</td>
-            <td>{{ branch.phone }}</td>
-            <td>
-              {{ formatTime(branch.openingTime) }} -
-              {{ formatTime(branch.closingTime) }}
-            </td>
             <td class="actions-cell">
-              <button
-                type="button"
-                class="btn btn-sm"
-                [class.btn-primary]="selectedBranchId() === branch.externalId"
-                [class.btn-secondary]="selectedBranchId() !== branch.externalId"
-                [attr.aria-pressed]="selectedBranchId() === branch.externalId"
-                (click)="selectBranch(branch)"
-              >
-                @if (selectedBranchId() === branch.externalId) {
-                  Seleccionada
-                } @else {
-                  Seleccionar
-                }
-              </button>
-              @if (isAdmin()) {
-                <a
-                  [routerLink]="['/branches', branch.externalId, 'edit']"
-                  class="edit-link"
-                >
-                  Editar
-                </a>
-                <button
-                  type="button"
-                  class="btn btn-danger btn-sm"
-                  [disabled]="deletingId() !== null"
-                  (click)="deleteBranch(branch)"
-                >
-                  @if (deletingId() === branch.externalId) {
-                    Eliminando...
-                  } @else {
-                    Eliminar
-                  }
-                </button>
-              }
+              <a [routerLink]="['/branches', branch.externalId]" class="btn btn-sm btn-secondary">
+                Ver detalle
+              </a>
             </td>
           </tr>
         }
       </tbody>
     </table>
-
-    @if (selectedBranch(); as branch) {
-      <div class="alert alert-info" role="status" aria-live="polite">
-        Sucursal seleccionada: <strong>{{ branch.name }}</strong>
-      </div>
-    }
   }
 </section>

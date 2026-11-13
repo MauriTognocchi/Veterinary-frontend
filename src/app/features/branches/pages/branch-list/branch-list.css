@@ -20,25 +20,9 @@
   font-size: clamp(1.4rem, 3vw, 1.75rem);
 }
 
-.detail-link {
+.branch-name {
+  font-weight: 600;
   color: var(--violet-900);
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.detail-link:hover {
-  text-decoration: underline;
-}
-
-.edit-link {
-  color: var(--violet-700);
-  font-size: 0.85rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.edit-link:hover {
-  text-decoration: underline;
 }
 
 .actions-cell {
@@ -46,14 +30,6 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-}
-
-tbody tr.is-selected {
-  background-color: var(--violet-50);
-}
-
-tbody tr.is-selected td {
-  font-weight: 600;
 }
 
 @media (max-width: 640px) {

@@ -28,7 +28,7 @@ export class BranchDetail implements OnInit {
   private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
 
   readonly isAdmin = computed(() =>
-    this.authService.hasAnyRole(BRANCH_ADMIN_ROLES),
+    BRANCH_ADMIN_ROLES.some((role) => this.authService.roles().includes(role)),
   );
 
   branch = signal<BranchResponse | null>(null);
