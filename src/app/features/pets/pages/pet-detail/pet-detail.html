@@ -55,6 +55,56 @@
             </div>
           </div>
 
+          <!-- DESCRIPCIÓN -->
+          @if (canViewClinicalRecords()) {
+            <section class="description-section" aria-labelledby="description-title">
+              <div class="section-header">
+                <h3 id="description-title">Descripción</h3>
+                @if (canUpdateClinicalRecords() && !editingDescription()) {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="startEditDescription()">
+                    Editar
+                  </button>
+                }
+              </div>
+
+              @if (editingDescription()) {
+                <div class="description-edit">
+                  @if (descriptionError()) {
+                    <div class="alert alert-error" role="alert">{{ descriptionError() }}</div>
+                  }
+                  <textarea
+                    class="description-textarea"
+                    [ngModel]="descriptionDraft()"
+                    (ngModelChange)="descriptionDraft.set($event)"
+                    [maxlength]="500"
+                    rows="4"
+                    placeholder="Escribí una descripción de la mascota..."
+                  ></textarea>
+                  <div class="description-footer">
+                    <span class="char-count">{{ descriptionDraft().length }}/500</span>
+                    <div class="actions">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelEditDescription()">
+                        Cancelar
+                      </button>
+                      @if (p.description) {
+                        <button type="button" class="btn btn-danger btn-sm" [disabled]="descriptionSaving()" (click)="deleteDescription()">
+                          {{ descriptionSaving() ? 'Eliminando...' : 'Eliminar' }}
+                        </button>
+                      }
+                      <button type="button" class="btn btn-primary btn-sm" [disabled]="descriptionSaving()" (click)="saveDescription()">
+                        {{ descriptionSaving() ? 'Guardando...' : 'Guardar' }}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              } @else if (p.description) {
+                <p class="description-text">{{ p.description }}</p>
+              } @else {
+                <p class="state-message">No hay descripción registrada para esta mascota.</p>
+              }
+            </section>
+          }
+
           @if (canViewClinicalRecords()) {
             <section class="medical-history-section" aria-labelledby="medical-history-title">
               <div class="medical-history-header">
@@ -126,6 +176,141 @@
               }
             </section>
           }
+
+<!-- CONDICIONES MÉDICAS - OCULTO TEMPORALMENTE PARA TP
+          @if (canViewClinicalRecords()) {
+            <section class="conditions-section" aria-labelledby="conditions-title">
+              <div class="section-header">
+                <h3 id="conditions-title">Condiciones médicas</h3>
+                @if (canCreateClinicalRecords() && !associating()) {
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="loadCatalogConditions()">
+                    Asociar condición
+                  </button>
+                }
+              </div>
+
+              @if (conditionsLoading()) {
+                <div class="state-message is-loading" role="status" aria-live="polite">
+                  Cargando condiciones...
+                </div>
+              } @else if (conditionsError()) {
+                <div class="alert alert-error" role="alert">
+                  <p>{{ conditionsError() }}</p>
+                  @if (conditionsErrorRetryable()) {
+                    <div class="state-actions">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoadConditions()">
+                        Reintentar
+                      </button>
+                    </div>
+                  }
+                </div>
+              } @else if (conditions().length === 0) {
+                <div class="state-message" role="status">
+                  No hay condiciones médicas asociadas a esta mascota.
+                </div>
+              } @else {
+                <ul class="conditions-list">
+                  @for (c of conditions(); track c.conditionExternalId + c.diagnosisDate) {
+                    <li class="condition-item">
+                      <div class="condition-main">
+                        <div class="condition-top">
+                          <span class="condition-name">{{ c.conditionName }}</span>
+                          <span class="badge {{ severityClass(c.severity) }}">{{ severityLabel(c.severity) }}</span>
+                        </div>
+                        <p class="condition-date">Diagnóstico: {{ formatDate(c.diagnosisDate) }}</p>
+                        @if (c.observations) {
+                          <p class="condition-observations">{{ c.observations }}</p>
+                        }
+                      </div>
+                    </li>
+                  }
+                </ul>
+              }
+
+              FORMULARIO PARA ASOCIAR CONDICIÓN
+              @if (showAssociateForm()) {
+                <div class="associate-form">
+                  @if (associateError()) {
+                    <div class="alert alert-error" role="alert">{{ associateError() }}</div>
+                  }
+                  @if (catalogError()) {
+                    <div class="alert alert-error" role="alert">{{ catalogError() }}</div>
+                  }
+                  @if (catalogLoading()) {
+                    <div class="state-message is-loading" role="status" aria-live="polite">
+                      Cargando catálogo de condiciones...
+                    </div>
+                  } @else if (catalogConditions().length === 0 && !catalogError()) {
+                    <div class="state-message" role="status">
+                      No hay condiciones disponibles en el catálogo para asociar.
+                    </div>
+                  } @else {
+                    <div class="form-row">
+                      <label class="form-label" for="condition-select">Condición</label>
+                      <select
+                        id="condition-select"
+                        class="form-control"
+                        [ngModel]="selectedConditionId()"
+                        (ngModelChange)="selectedConditionId.set($event)"
+                        name="selectedConditionId"
+                      >
+                        <option value="">Seleccioná una condición</option>
+                        @for (cond of catalogConditions(); track cond.externalId) {
+                          <option [value]="cond.externalId">{{ cond.name }}</option>
+                        }
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label class="form-label" for="diagnosis-date">Fecha de diagnóstico</label>
+                      <input
+                        id="diagnosis-date"
+                        type="datetime-local"
+                        class="form-control"
+                        [ngModel]="diagnosisDate()"
+                        (ngModelChange)="diagnosisDate.set($event)"
+                        name="diagnosisDate"
+                      />
+                    </div>
+                    <div class="form-row">
+                      <label class="form-label" for="severity-select">Gravedad</label>
+                      <select
+                        id="severity-select"
+                        class="form-control"
+                        [ngModel]="severity()"
+                        (ngModelChange)="severity.set($event)"
+                        name="severity"
+                      >
+                        <option value="MILD">Leve</option>
+                        <option value="MODERATE">Moderada</option>
+                        <option value="SEVERE">Grave</option>
+                      </select>
+                    </div>
+                    <div class="form-row">
+                      <label class="form-label" for="observations-text">Observaciones</label>
+                      <textarea
+                        id="observations-text"
+                        class="form-control"
+                        [ngModel]="observations()"
+                        (ngModelChange)="observations.set($event)"
+                        name="observations"
+                        rows="2"
+                        placeholder="Observaciones adicionales..."
+                      ></textarea>
+                    </div>
+                    <div class="associate-actions">
+                      <button type="button" class="btn btn-secondary btn-sm" (click)="cancelAssociate()">
+                        Cancelar
+                      </button>
+                      <button type="button" class="btn btn-primary btn-sm" [disabled]="associating() || !selectedConditionId()" (click)="associateCondition()">
+                        {{ associating() ? 'Asociando...' : 'Asociar' }}
+                      </button>
+                    </div>
+                  }
+                </div>
+              }
+            </section>
+          }
+-->
 
           <!-- TARJETA DESTACADA DEL PROPIETARIO CON BOTÓN DIRECTO -->
           @if (canViewOwners()) {

@@ -1,7 +1,13 @@
 import { Injectable, inject } from '@angular/core';
     import { HttpClient } from '@angular/common/http';
     import { Observable } from 'rxjs';
-    import { PetRequest, PetResponse } from '../models/pet.model';
+    import {
+      ConditionByPetRequest,
+      ConditionByPetResponse,
+      DescriptionUpdateRequest,
+      PetRequest,
+      PetResponse,
+    } from '../models/pet.model';
 
     @Injectable({ providedIn: 'root' })
     export class PetService {
@@ -36,6 +42,32 @@ import { Injectable, inject } from '@angular/core';
       delete(externalId: string): Observable<void> {
         return this.http.delete<void>(
           `${this.baseUrl}/api/pets/${encodeURIComponent(externalId)}`,
+        );
+      }
+
+      updateDescription(
+        externalId: string,
+        payload: DescriptionUpdateRequest,
+      ): Observable<PetResponse> {
+        return this.http.put<PetResponse>(
+          `${this.baseUrl}/api/pets/${encodeURIComponent(externalId)}/description`,
+          payload,
+        );
+      }
+
+      getConditionsByPet(externalId: string): Observable<ConditionByPetResponse[]> {
+        return this.http.get<ConditionByPetResponse[]>(
+          `${this.baseUrl}/api/pets/${encodeURIComponent(externalId)}/conditions`,
+        );
+      }
+
+      createConditionByPet(
+        petExternalId: string,
+        payload: ConditionByPetRequest,
+      ): Observable<ConditionByPetResponse> {
+        return this.http.post<ConditionByPetResponse>(
+          `${this.baseUrl}/api/conditions-by-pets`,
+          payload,
         );
       }
     }
