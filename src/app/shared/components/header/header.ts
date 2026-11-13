@@ -16,6 +16,9 @@ export class Header {
   readonly isAdmin = computed(() =>
     this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
   );
+  readonly isVeterinarian = computed(() =>
+    this.authService.hasAnyRole(['ROLE_VETERINARIAN']),
+  );
   readonly canViewOwners = computed(() =>
     this.authService.hasAnyPermission(['VIEW_OWNERS']),
   );
