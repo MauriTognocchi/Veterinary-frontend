@@ -28,6 +28,8 @@ export class VisitDetail implements OnInit {
   private readonly prescriptionService = inject(PrescriptionService);
   private readonly medicationService = inject(MedicationService);
   private readonly authService = inject(AuthService);
+
+  readonly isAdmin = () => this.authService.hasAnyRole(['ROLE_ADMIN']);
   private readonly fb = inject(FormBuilder);
   private readonly diagnosesHeading = viewChild<ElementRef<HTMLElement>>('diagnosesHeading');
   private readonly studiesHeading = viewChild<ElementRef<HTMLElement>>('studiesHeading');

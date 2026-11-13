@@ -51,6 +51,7 @@ import {
       private visitService = inject(VisitService);
       private conditionService = inject(ConditionService);
       private authService = inject(AuthService);
+      readonly isAdmin = () => this.authService.hasAnyRole(['ROLE_ADMIN']);
       private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
     
       readonly canWrite = computed(() =>

@@ -6,6 +6,6 @@ export interface UserResponse {
   externalId: string;
   firstName: string;
   lastName: string;
-  email: string;
-  userState: UserState;
+  email?: string;
+  userState?: UserState;
 }

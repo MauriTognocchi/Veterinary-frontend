@@ -47,6 +47,10 @@ export class VeterinarianService {
     );
   }
 
+  getMine(): Observable<{ externalId: string }> {
+    return this.http.get<{ externalId: string }>(`${this.baseUrl}/api/veterinarians/me`);
+  }
+
   update(
     externalId: string,
     veterinarian: VeterinarianUpdateRequest,

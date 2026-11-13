@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { Subject, of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
@@ -6,6 +7,7 @@ import { PetResponse } from '../../../pets/models/pet.model';
 import { PetService } from '../../../pets/services/pet';
 import { VeterinarianResponse } from '../../../veterinarians/models/veterinarian.model';
 import { VeterinarianService } from '../../../veterinarians/services/veterinarian';
+import { VeterinarianIdentityService } from '../../../veterinarians/services/veterinarian-identity';
 import { AppointmentResponse } from '../../models/appointment.model';
 import { AppointmentService } from '../../services/appointment';
 import { AppointmentList } from './appointment-list';
@@ -23,6 +25,7 @@ describe('AppointmentList', () => {
     getMyPets: ReturnType<typeof vi.fn>;
   };
   let veterinarianService: { getAll: ReturnType<typeof vi.fn> };
+  let identity: { externalId: ReturnType<typeof signal<string | null>>; errorStatus: ReturnType<typeof signal<number | null>>; load: ReturnType<typeof vi.fn> };
   let authService: {
     hasRole: ReturnType<typeof vi.fn>;
     hasAnyRole: ReturnType<typeof vi.fn>;
@@ -112,6 +115,7 @@ describe('AppointmentList', () => {
       getMyPets: vi.fn().mockReturnValue(of([])),
     };
     veterinarianService = { getAll: vi.fn().mockReturnValue(of([])) };
+    identity = { externalId: signal<string | null>(null), errorStatus: signal<number | null>(null), load: vi.fn().mockReturnValue(of(undefined)) };
     authService = {
       hasRole: vi.fn().mockReturnValue(false),
       hasAnyRole: vi.fn().mockReturnValue(false),
@@ -125,6 +129,7 @@ describe('AppointmentList', () => {
         { provide: AppointmentService, useValue: appointmentService },
         { provide: PetService, useValue: petService },
         { provide: VeterinarianService, useValue: veterinarianService },
+        { provide: VeterinarianIdentityService, useValue: identity },
         { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
@@ -423,7 +428,7 @@ describe('AppointmentList', () => {
     const unlabeled = fixture.nativeElement.querySelector(
       '#filter-veterinarian option[value="vet-2"]',
     );
-    expect(labeled?.textContent?.trim()).toBe('Juan Pérez (MN-1234)');
+    expect(labeled?.textContent?.trim()).toBe('Juan Pérez');
     expect(unlabeled?.textContent?.trim()).toBe('Juan Pérez');
   });
 
@@ -560,15 +565,17 @@ describe('AppointmentList', () => {
     expect(confirmButton).toBeDefined();
   });
 
-  it('muestra Confirmar al veterinario asignado en turnos pendientes', () => {
+  it('muestra Confirmar al veterinario asignado cuando /me resuelve su externalId', () => {
     authService.hasRole.mockImplementation(
       (role: string) => role === 'ROLE_VETERINARIAN',
     );
     authService.email.mockReturnValue(veterinarian.email);
+    identity.externalId.set('vet-1');
     appointmentService.getAll.mockReturnValue(of([appointment()]));
 
     createComponent();
 
+    expect(identity.load).toHaveBeenCalledTimes(1);
     expect(fixture.nativeElement.textContent).toContain('Confirmar');
   });
 
@@ -577,11 +584,58 @@ describe('AppointmentList', () => {
       (role: string) => role === 'ROLE_VETERINARIAN',
     );
     authService.email.mockReturnValue('otro@veterinaria.com');
+    identity.externalId.set('vet-2');
     appointmentService.getAll.mockReturnValue(of([appointment()]));
 
     createComponent();
 
     expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+  });
+
+  it('oculta Confirmar mientras se verifica /me y no consulta por cada turno', () => {
+    authService.hasRole.mockImplementation((role: string) => role === 'ROLE_VETERINARIAN');
+    const pending = new Subject<void>();
+    identity.load.mockReturnValue(pending.asObservable());
+    appointmentService.getAll.mockReturnValue(of([appointment(), appointment({ externalId: 'appointment-2' })]));
+    createComponent();
+    expect(identity.load).toHaveBeenCalledTimes(1);
+    expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+    identity.externalId.set('vet-1');
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Confirmar');
+  });
+
+  it.each([403, 404])('con error %i de /me mantiene listado y Confirmar oculto', (status) => {
+    authService.hasRole.mockImplementation((role: string) => role === 'ROLE_VETERINARIAN');
+    identity.errorStatus.set(status);
+    appointmentService.getAll.mockReturnValue(of([appointment()]));
+    createComponent();
+    expect(fixture.nativeElement.textContent).toContain('Consulta general');
+    expect(fixture.nativeElement.textContent).not.toContain('Confirmar');
+    expect(fixture.nativeElement.textContent).toContain(status === 403 ? 'No tenés permisos' : 'No encontramos un perfil');
+  });
+
+  it('no atribuye un turno al veterinario actual si el anidado público no trae email', () => {
+    authService.hasRole.mockImplementation((role: string) => role === 'ROLE_VETERINARIAN');
+    authService.email.mockReturnValue('jperez@veterinaria.com');
+    const pending = appointment({ veterinarian: {
+      externalId: 'vet-1', firstName: 'Juan', lastName: 'Pérez',
+      workStartTime: '08:00', workEndTime: '16:00', workDays: ['MONDAY'],
+    } });
+    appointmentService.getAll.mockReturnValue(of([pending]));
+    identity.externalId.set('vet-1');
+    createComponent();
+    expect(component.canConfirm(pending)).toBe(true);
+    expect(fixture.nativeElement.textContent).toContain('Confirmar');
+  });
+
+  it('no ofrece Confirmar a veterinario asignado si el turno no está pendiente o su perfil está inactivo', () => {
+    authService.hasRole.mockImplementation((role: string) => role === 'ROLE_VETERINARIAN');
+    identity.externalId.set('vet-1');
+    appointmentService.getAll.mockReturnValue(of([]));
+    createComponent();
+    expect(component.canConfirm(appointment({ status: 'CONFIRMED' }))).toBe(false);
+    expect(component.canConfirm(appointment({ veterinarian: { ...veterinarian, active: false } }))).toBe(false);
   });
 
   it('no muestra Confirmar a clientes', () => {

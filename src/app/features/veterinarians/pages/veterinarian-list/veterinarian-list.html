@@ -38,6 +38,7 @@
           autocomplete="off"
         />
       </div>
+      @if (isAdmin()) {
       <div class="form-group">
         <label for="filter-license-number">Matrícula</label>
         <input
@@ -64,6 +65,7 @@
           <option value="INACTIVE">Inactivos</option>
         </select>
       </div>
+      }
     </div>
     <div class="filters-actions">
       <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading() || actionPending()">
@@ -78,7 +80,7 @@
         Limpiar filtros
       </button>
     </div>
-    @if (branchesLoadError()) {
+    @if (isAdmin() && branchesLoadError()) {
       <p class="filters-warning">
         No pudimos cargar las sucursales para el filtro. Podés seguir buscando por nombre, apellido o matrícula.
       </p>
@@ -118,19 +120,22 @@
         <tr>
           <th>Nombre</th>
           <th>Apellido</th>
+          @if (isAdmin()) {
           <th>Matrícula</th>
           <th>Teléfono</th>
           <th>Email</th>
           <th>Sucursal</th>
           <th>Estado</th>
+          }
           <th>Acciones</th>
         </tr>
       </thead>
       <tbody>
         @for (veterinarian of filteredVeterinarians(); track veterinarian.externalId) {
-          <tr [class.is-inactive]="!veterinarian.active">
+          <tr [class.is-inactive]="isAdmin() && veterinarian.active === false">
             <td>{{ veterinarian.firstName }}</td>
             <td>{{ veterinarian.lastName }}</td>
+            @if (isAdmin()) {
             <td>{{ veterinarian.licenseNumber }}</td>
             <td>{{ veterinarian.phone }}</td>
             <td>{{ veterinarian.email }}</td>
@@ -143,6 +148,7 @@
                 {{ veterinarian.active ? 'Activo' : 'Inactivo' }}
               </span>
             </td>
+            }
             <td class="actions-cell">
               <a
                 [routerLink]="['/veterinarians', veterinarian.externalId]"

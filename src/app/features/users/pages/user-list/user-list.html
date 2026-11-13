@@ -21,12 +21,13 @@
       <input
         id="user-search"
         type="search"
-        placeholder="Nombre, apellido o email"
+        [placeholder]="isAdmin() ? 'Nombre, apellido o email' : 'Nombre o apellido'"
         [value]="searchTerm()"
         (input)="updateSearch($event)"
       />
     </div>
 
+    @if (isAdmin()) {
     <div class="form-group">
       <label for="user-status">Estado</label>
       <select
@@ -39,6 +40,7 @@
         <option value="INACTIVE">Inactivos</option>
       </select>
     </div>
+    }
   </div>
 
   @if (loading()) {
@@ -65,14 +67,16 @@
   } @else {
     <table>
       <caption>
-        Usuarios registrados filtrados por nombre, apellido, email o estado
+        Usuarios registrados
       </caption>
       <thead>
         <tr>
           <th>Nombre</th>
           <th>Apellido</th>
+          @if (isAdmin()) {
           <th>Email</th>
           <th>Estado</th>
+          }
           <th>Acciones</th>
         </tr>
       </thead>
@@ -81,6 +85,7 @@
           <tr>
             <td>{{ user.firstName }}</td>
             <td>{{ user.lastName }}</td>
+            @if (isAdmin()) {
             <td>{{ user.email }}</td>
             <td>
               <span
@@ -90,11 +95,12 @@
                 {{ user.userState }}
               </span>
             </td>
+            }
             <td class="actions-cell">
               <a [routerLink]="['/users', user.externalId]" class="detail-link">
                 Ver detalle
               </a>
-              @if (canDeleteUsers() && user.userState === 'ACTIVE') {
+              @if (isAdmin() && canDeleteUsers() && user.userState === 'ACTIVE') {
                 <button
                   type="button"
                   class="btn btn-danger btn-sm"
@@ -108,7 +114,7 @@
                   }
                 </button>
               }
-              @if (canReactivateUsers() && user.userState === 'INACTIVE') {
+              @if (isAdmin() && canReactivateUsers() && user.userState === 'INACTIVE') {
                 <button
                   type="button"
                   class="btn btn-secondary btn-sm reactivate-button"

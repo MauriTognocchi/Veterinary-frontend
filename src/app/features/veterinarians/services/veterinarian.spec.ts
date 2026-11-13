@@ -63,6 +63,15 @@ describe('VeterinarianService', () => {
     expect(response).toEqual([veterinarian]);
   });
 
+  it('consulta el ID del veterinario autenticado sin solicitar datos personales', () => {
+    let response: { externalId: string } | undefined;
+    service.getMine().subscribe((value) => response = value);
+    const request = http.expectOne(`${baseUrl}/me`);
+    expect(request.request.method).toBe('GET');
+    request.flush({ externalId: 'vet-1' });
+    expect(response).toEqual({ externalId: 'vet-1' });
+  });
+
   it('envía los filtros como query params', () => {
     service
       .getAll({

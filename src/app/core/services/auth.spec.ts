@@ -59,6 +59,20 @@ describe('AuthService', () => {
     expect(service.isAuthenticated()).toBe(true);
   });
 
+  it('cambia la versión de sesión en logout y login para invalidar identidades cacheadas', () => {
+    const service = TestBed.inject(AuthService);
+    const start = service.sessionVersion();
+    service.clearSession();
+    expect(service.sessionVersion()).toBeGreaterThan(start);
+    const beforeLogin = service.sessionVersion();
+    service.login({ username: 'vet', password: 'password' }).subscribe();
+    http.expectOne('http://localhost:8080/api/auth/login').flush({
+      accessToken: createAccessToken(['ROLE_VETERINARIAN']), refreshToken: 'refresh',
+    });
+    expect(service.sessionVersion()).toBeGreaterThan(beforeLogin);
+    expect(service.hasRole('ROLE_VETERINARIAN')).toBe(true);
+  });
+
   it('separa roles y permisos e ignora roles desconocidos', () => {
     storage.setTokens(
       createAccessToken(['ROLE_CLIENT', 'ROLE_UNKNOWN', 'VIEW_PETS']),
@@ -173,6 +187,7 @@ describe('AuthService', () => {
   it('actualiza roles y permisos al renovar el token', () => {
     storage.setTokens(createAccessToken(['ROLE_CLIENT']), 'refresh-token');
     const service = TestBed.inject(AuthService);
+    const sessionVersion = service.sessionVersion();
     const renewedAccessToken = createAccessToken([
       'ROLE_VETERINARIAN',
       'VIEW_OWNERS',
@@ -190,6 +205,7 @@ describe('AuthService', () => {
     expect(service.permissions()).toEqual(['VIEW_OWNERS']);
     expect(storage.getAccessToken()).toBe(renewedAccessToken);
     expect(storage.getRefreshToken()).toBe('refresh-token');
+    expect(service.sessionVersion()).toBe(sessionVersion);
   });
 
   it('no renueva si el access token es decodificable', async () => {

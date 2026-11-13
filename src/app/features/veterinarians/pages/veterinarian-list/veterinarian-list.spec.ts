@@ -74,6 +74,7 @@ describe('VeterinarianList', () => {
   });
 
   it('carga los veterinarios y las sucursales al iniciar', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(of([veterinarian]));
     branchService.getAll.mockReturnValue(of([]));
 
@@ -93,6 +94,7 @@ describe('VeterinarianList', () => {
   });
 
   it('aplica los filtros al buscar', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(of([]));
     branchService.getAll.mockReturnValue(of([]));
 
@@ -120,6 +122,7 @@ describe('VeterinarianList', () => {
   });
 
   it('limpia los filtros y vuelve a consultar', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(of([]));
     branchService.getAll.mockReturnValue(of([]));
 
@@ -153,6 +156,7 @@ describe('VeterinarianList', () => {
   });
 
   it('identifica visualmente a los veterinarios inactivos', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(
       of([{ ...veterinarian, active: false }]),
     );
@@ -192,6 +196,7 @@ describe('VeterinarianList', () => {
   });
 
   it('no bloquea el listado si falla la carga de sucursales', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(of([veterinarian]));
     branchService.getAll.mockReturnValue(throwError(() => ({ status: 500 })));
 
@@ -228,6 +233,25 @@ describe('VeterinarianList', () => {
     expect(text).not.toContain('Editar');
     expect(text).not.toContain('Eliminar');
     expect(text).toContain('Ver detalle');
+  });
+
+  it('acepta DTO público sin consultar sucursales ni enviar matrícula aunque el formulario conserve un valor', () => {
+    vetService.getAll.mockReturnValue(of([{
+      externalId: 'vet-1', firstName: 'Juan', lastName: 'Pérez',
+      workStartTime: '08:00', workEndTime: '16:00', workDays: ['MONDAY'],
+    }]));
+    createComponent();
+    component.filtersForm.patchValue({ licenseNumber: 'MN-1234', branchExternalId: 'branch-1' });
+    component.loadVeterinarians();
+    fixture.detectChanges();
+    expect(branchService.getAll).not.toHaveBeenCalled();
+    expect(vetService.getAll).toHaveBeenLastCalledWith({
+      firstName: '', lastName: '', licenseNumber: undefined, branchExternalId: undefined,
+    });
+    expect(fixture.nativeElement.querySelector('#filter-license-number')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.status-badge')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('MN-1234');
+    expect(fixture.nativeElement.textContent).toContain('Juan');
   });
 
   it('no ofrece eliminar a un veterinario ya inactivo', () => {
@@ -275,6 +299,7 @@ describe('VeterinarianList', () => {
   });
 
   it('muestra el error cuando el veterinario ya está inactivo', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     vetService.getAll.mockReturnValue(of([veterinarian]));
     branchService.getAll.mockReturnValue(of([]));
     vetService.delete.mockReturnValue(throwError(() => ({ status: 409 })));

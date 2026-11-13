@@ -31,6 +31,11 @@
         this.authService.hasAnyRole(RECEPTIONIST_ADMIN_ROLES),
       );
 
+      canViewProfile(receptionist: ReceptionistResponse): boolean {
+        return this.isAdmin() ||
+          (this.authService.hasRole('ROLE_RECEPTIONIST') && typeof receptionist.active === 'boolean');
+      }
+
       receptionist = signal<ReceptionistResponse | null>(null);
       loading = signal<boolean>(true);
       error = signal<string | null>(null);
@@ -108,7 +113,7 @@
       deleteReceptionist(): void {
         const current = this.receptionist();
 
-        if (!current || this.deleting()) {
+        if (!this.isAdmin() || !current || this.deleting()) {
           return;
         }
 

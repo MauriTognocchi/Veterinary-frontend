@@ -32,10 +32,13 @@
           <dt>Apellido</dt>
           <dd>{{ user.lastName }}</dd>
         </div>
+        @if (canViewProfile(user)) {
         <div class="detail-row">
           <dt>Email</dt>
           <dd>{{ user.email }}</dd>
         </div>
+        }
+        @if (user.userState && isAdmin()) {
         <div class="detail-row">
           <dt>Estado</dt>
           <dd>
@@ -47,6 +50,7 @@
             </span>
           </dd>
         </div>
+        }
       </dl>
     }
   </div>

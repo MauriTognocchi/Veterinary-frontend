@@ -61,10 +61,14 @@
             <dl class="info-list">
               <dt>Nombre</dt>
               <dd>{{ v.veterinarian.firstName }} {{ v.veterinarian.lastName }}</dd>
-              <dt>Matrícula</dt>
-              <dd>{{ v.veterinarian.licenseNumber }}</dd>
-              <dt>Sucursal</dt>
-              <dd>{{ v.veterinarian.branch?.name ?? '—' }}</dd>
+              @if (isAdmin() && v.veterinarian.licenseNumber) {
+                <dt>Matrícula</dt>
+                <dd>{{ v.veterinarian.licenseNumber }}</dd>
+              }
+              @if (isAdmin() && v.veterinarian.branch) {
+                <dt>Sucursal</dt>
+                <dd>{{ v.veterinarian.branch.name }}</dd>
+              }
             </dl>
           </section>
 

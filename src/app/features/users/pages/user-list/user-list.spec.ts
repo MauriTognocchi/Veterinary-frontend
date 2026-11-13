@@ -14,7 +14,7 @@ describe('UserList', () => {
     deactivate: ReturnType<typeof vi.fn>;
     reactivate: ReturnType<typeof vi.fn>;
   };
-  let auth: { hasAnyPermission: ReturnType<typeof vi.fn> };
+  let auth: { hasAnyPermission: ReturnType<typeof vi.fn>; hasAnyRole: ReturnType<typeof vi.fn> };
 
   const users: UserResponse[] = [
     {
@@ -46,6 +46,18 @@ describe('UserList', () => {
     fixture.detectChanges();
   }
 
+  it('muestra DTOs públicos sin email ni estado y busca por nombre', () => {
+    auth.hasAnyRole.mockReturnValue(false);
+    service.getAll.mockReturnValue(of([{ externalId: 'user-1', firstName: 'Ana', lastName: 'Pérez' }]));
+    createComponent();
+    expect(fixture.nativeElement.textContent).toContain('Ana');
+    expect(fixture.nativeElement.querySelector('#user-status')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.state-badge')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Email');
+    component.updateSearch(inputEvent('ana'));
+    expect(component.filteredUsers()).toHaveLength(1);
+  });
+
   function inputEvent(value: string): Event {
     return { target: { value } } as unknown as Event;
   }
@@ -74,6 +86,7 @@ describe('UserList', () => {
     };
     auth = {
       hasAnyPermission: vi.fn().mockReturnValue(false),
+      hasAnyRole: vi.fn().mockReturnValue(true),
     };
 
     await TestBed.configureTestingModule({

@@ -413,8 +413,7 @@ import {
 
       veterinarianLabel(vet: VeterinarianResponse): string {
         const name = `${vet.firstName} ${vet.lastName}`.trim();
-        return vet.licenseNumber ? `${name} (${vet.licenseNumber})` :
-        name;
+         return name;
       }
     }
 

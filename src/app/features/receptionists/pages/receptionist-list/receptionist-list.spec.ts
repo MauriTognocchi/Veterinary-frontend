@@ -40,6 +40,18 @@ describe('ReceptionistList: reactivación', () => {
     fixture.detectChanges();
   }
 
+  it('muestra el listado público sin estado, datos de contacto ni carga de sucursales', () => {
+    const branch = vi.fn();
+    TestBed.overrideProvider(BranchService, { useValue: { getAll: branch } });
+    service.getAll.mockReturnValue(of([{ externalId: 'rec-1', firstName: 'Ana', lastName: 'García' }]));
+    create();
+    expect(branch).not.toHaveBeenCalled();
+    expect(fixture.nativeElement.textContent).toContain('Ana');
+    expect(fixture.nativeElement.querySelector('#filter-branch')).toBeNull();
+    expect(fixture.nativeElement.querySelector('.status-badge')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Teléfono');
+  });
+
   it('solo muestra Reactivar para perfil inactivo y rol ADMIN (UPDATE_USERS no alcanza)', () => {
     create();
     expect(fixture.nativeElement.querySelector('.reactivate-button')).toBeNull();

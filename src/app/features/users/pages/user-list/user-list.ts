@@ -28,6 +28,8 @@ export class UserList implements OnInit {
   private authService = inject(AuthService);
   private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
 
+  readonly isAdmin = computed(() => this.authService.hasAnyRole(['ROLE_ADMIN']));
+
   readonly canDeleteUsers = computed(() =>
     this.authService.hasAnyPermission(['DELETE_USERS']),
   );
@@ -57,12 +59,12 @@ export class UserList implements OnInit {
     const status = this.statusFilter();
 
     return this.users().filter((user) => {
-      const matchesStatus = status === 'ALL' || user.userState === status;
+      const matchesStatus = !this.isAdmin() || status === 'ALL' || user.userState === status;
       const matchesSearch =
         term.length === 0 ||
         user.firstName.toLowerCase().includes(term) ||
         user.lastName.toLowerCase().includes(term) ||
-        user.email.toLowerCase().includes(term);
+        (this.isAdmin() && (user.email?.toLowerCase().includes(term) ?? false));
 
       return matchesStatus && matchesSearch;
     });
@@ -129,7 +131,7 @@ export class UserList implements OnInit {
 
   deactivateUser(user: UserResponse): void {
     if (
-      !this.canDeleteUsers() ||
+      !this.isAdmin() || !this.canDeleteUsers() ||
       user.userState !== 'ACTIVE' ||
       this.actionPending()
     ) {
@@ -187,7 +189,7 @@ export class UserList implements OnInit {
 
   reactivateUser(user: UserResponse): void {
     if (
-      !this.canReactivateUsers() ||
+      !this.isAdmin() || !this.canReactivateUsers() ||
       user.userState !== 'INACTIVE' ||
       this.actionPending()
     ) {

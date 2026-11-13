@@ -16,6 +16,7 @@ import {
     '../../../veterinarians/models/veterinarian.model';
     import { VeterinarianService } from
     '../../../veterinarians/services/veterinarian';
+    import { VeterinarianIdentityService } from '../../../veterinarians/services/veterinarian-identity';
     import {
       AppointmentFilters,
       AppointmentResponse,
@@ -34,7 +35,8 @@ import {
       private fb = inject(FormBuilder);
       private appointmentService = inject(AppointmentService);
       private petService = inject(PetService);
-      private veterinarianService = inject(VeterinarianService);
+       private veterinarianService = inject(VeterinarianService);
+       readonly veterinarianIdentity = inject(VeterinarianIdentityService);
       private authService = inject(AuthService);
       private listHeading =
       viewChild<ElementRef<HTMLElement>>('listHeading');
@@ -58,7 +60,7 @@ import {
       private readonly isAdmin = computed(() =>
         this.authService.hasRole('ROLE_ADMIN'),
       );
-      private readonly isVeterinarian = computed(() =>
+       readonly isVeterinarian = computed(() =>
         this.authService.hasRole('ROLE_VETERINARIAN'),
       );
       private readonly isReceptionist = computed(() =>
@@ -88,9 +90,10 @@ import {
         reason: [''],
       });
 
-      ngOnInit(): void {
-        this.loadAppointments();
-        this.loadCatalogs();
+       ngOnInit(): void {
+         this.loadAppointments();
+         this.loadCatalogs();
+         if (this.isVeterinarian()) this.veterinarianIdentity.load().subscribe();
       }
 
       loadAppointments(): void {
@@ -207,16 +210,10 @@ import {
           return false;
         }
 
-        if (this.isVeterinarian()) {
-          const assignedVeterinarian = appointment.veterinarian;
-
-          return (
-            assignedVeterinarian?.active !== false &&
-            this.sameEmail(
-              assignedVeterinarian?.email,
-              this.authService.email(),
-            )
-          );
+         if (this.isVeterinarian()) {
+           const ownId = this.veterinarianIdentity.externalId();
+           return appointment.veterinarian?.active !== false &&
+             !!ownId && appointment.veterinarian?.externalId === ownId;
         }
 
         return this.isReceptionist();
@@ -224,20 +221,6 @@ import {
 
       canEdit(appointment: AppointmentResponse): boolean {
         return this.isAdmin() || this.isReceptionist();
-      }
-
-      private sameEmail(
-        first: string | null | undefined,
-        second: string | null | undefined,
-      ): boolean {
-        const normalizedFirst = first?.trim().toLowerCase();
-        const normalizedSecond = second?.trim().toLowerCase();
-
-        return Boolean(
-          normalizedFirst &&
-            normalizedSecond &&
-            normalizedFirst === normalizedSecond,
-        );
       }
 
       clearFilters(): void {
@@ -391,7 +374,6 @@ import {
 
       veterinarianLabel(veterinarian: VeterinarianResponse): string {
         const name = `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
-        const license = veterinarian.licenseNumber?.trim();
-        return license ? `${name} (${license})` : name;
+         return name;
       }
     }

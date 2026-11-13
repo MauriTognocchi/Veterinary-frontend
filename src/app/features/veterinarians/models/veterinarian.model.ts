@@ -13,14 +13,14 @@ export interface VeterinarianResponse {
   externalId: string;
   firstName: string;
   lastName: string;
-  licenseNumber: string;
-  phone: string;
-  email: string;
+  licenseNumber?: string;
+  phone?: string;
+  email?: string;
   workStartTime: string;
   workEndTime: string;
   workDays: VeterinarianWorkDay[] | null;
-  active: boolean;
-  branch: BranchResponse | null;
+  active?: boolean;
+  branch?: BranchResponse | null;
 }
 
 export interface VeterinarianUpdateRequest {

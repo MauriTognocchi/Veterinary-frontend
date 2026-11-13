@@ -125,6 +125,8 @@ export class AuthService {
 
   private refreshRequest$: Observable<RefreshResponse> | null = null;
   private sessionGeneration = 0;
+  private readonly _sessionVersion = signal(0);
+  readonly sessionVersion = this._sessionVersion.asReadonly();
 
   constructor() {
     this.applyAccessToken(
@@ -216,6 +218,7 @@ export class AuthService {
           }
 
           this.sessionGeneration++;
+          this._sessionVersion.update((version) => version + 1);
           this.refreshRequest$ = null;
           this.tokenStorage.setTokens(
             response.accessToken,
@@ -294,6 +297,7 @@ export class AuthService {
 
   clearSession(): void {
     this.sessionGeneration++;
+    this._sessionVersion.update((version) => version + 1);
     this.refreshRequest$ = null;
 
     this.tokenStorage.clearTokens();

@@ -13,7 +13,7 @@ describe('VeterinarianDetail', () => {
     getById: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
   };
-  let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
+  let authService: { hasAnyRole: ReturnType<typeof vi.fn>; hasRole: ReturnType<typeof vi.fn> };
   let router: { navigate: ReturnType<typeof vi.fn> };
 
   const veterinarian: VeterinarianResponse = {
@@ -46,7 +46,7 @@ describe('VeterinarianDetail', () => {
 
   beforeEach(async () => {
     service = { getById: vi.fn(), delete: vi.fn() };
-    authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
+    authService = { hasAnyRole: vi.fn().mockReturnValue(false), hasRole: vi.fn().mockReturnValue(true) };
     router = { navigate: vi.fn().mockResolvedValue(true) };
 
     const route = {
@@ -73,6 +73,7 @@ describe('VeterinarianDetail', () => {
   });
 
   it('carga y muestra los datos del veterinario', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     service.getById.mockReturnValue(of(veterinarian));
 
     createComponent();
@@ -99,7 +100,28 @@ describe('VeterinarianDetail', () => {
     expect(component.formatWorkDays([])).toBe('—');
   });
 
+  it('renderiza el detalle público al acceder por URL sin datos administrativos', () => {
+    service.getById.mockReturnValue(of({
+      externalId: 'vet-1', firstName: 'Juan', lastName: 'Pérez',
+      workStartTime: '08:00', workEndTime: '16:00', workDays: ['MONDAY'],
+    }));
+    createComponent();
+    expect(fixture.nativeElement.textContent).toContain('08:00 - 16:00');
+    expect(fixture.nativeElement.textContent).not.toContain('Matrícula');
+    expect(fixture.nativeElement.textContent).not.toContain('Sucursal');
+    expect(fixture.nativeElement.querySelector('.status-badge')).toBeNull();
+  });
+
+  it('reconoce el perfil propio completo aunque no se use email para identificarlo', () => {
+    service.getById.mockReturnValue(of({ ...veterinarian, email: undefined }));
+    createComponent();
+    expect(fixture.nativeElement.textContent).toContain('MN-1234');
+    expect(fixture.nativeElement.textContent).not.toContain('jperez@veterinaria.com');
+    expect(fixture.nativeElement.querySelector('.status-badge')).toBeNull();
+  });
+
   it('muestra el estado de veterinario sin sucursal', () => {
+    authService.hasAnyRole.mockReturnValue(true);
     service.getById.mockReturnValue(
       of({ ...veterinarian, branch: null, active: false }),
     );
