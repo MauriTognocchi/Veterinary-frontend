@@ -1,12 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { AuthService } from '../../../core/services/auth';
 import { Home } from './home';
 
 describe('Home', () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
-  let authService: { hasAnyPermission: ReturnType<typeof vi.fn> };
 
   function createComponent(): void {
     fixture = TestBed.createComponent(Home);
@@ -24,14 +22,9 @@ describe('Home', () => {
   }
 
   beforeEach(async () => {
-    authService = { hasAnyPermission: vi.fn().mockReturnValue(false) };
-
     await TestBed.configureTestingModule({
       imports: [Home],
-      providers: [
-        provideRouter([]),
-        { provide: AuthService, useValue: authService },
-      ],
+      providers: [provideRouter([])],
     }).compileComponents();
   });
 
@@ -41,47 +34,35 @@ describe('Home', () => {
     expect(component).toBeTruthy();
   });
 
-  it('muestra las acciones de propietarios con VIEW_OWNERS y CREATE_OWNERS', () => {
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('VIEW_OWNERS') ||
-      permissions.includes('CREATE_OWNERS'),
-    );
-
+  it('muestra el título y el texto de bienvenida', () => {
     createComponent();
 
-    expect(findLink('Ver propietarios')?.getAttribute('href')).toBe('/owners');
-    expect(findLink('Nuevo propietario')?.getAttribute('href')).toBe(
-      '/owners/new',
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('h2')?.textContent?.trim()).toBe(
+      '¡Cuidamos a quienes más querés!',
+    );
+    expect(element.querySelector('.lead')?.textContent?.trim()).toBe(
+      'Gestioná la salud de tus mascotas de manera sencilla y desde cualquier lugar.',
     );
   });
 
-  it('muestra solo Ver propietarios con VIEW_OWNERS', () => {
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('VIEW_OWNERS'),
-    );
-
+  it('navega a login y registro desde los botones', () => {
     createComponent();
 
-    expect(findLink('Ver propietarios')?.getAttribute('href')).toBe('/owners');
-    expect(findLink('Nuevo propietario')).toBeUndefined();
+    expect(findLink('INICIAR SESIÓN')?.getAttribute('href')).toBe('/login');
+    expect(findLink('REGISTRARSE')?.getAttribute('href')).toBe('/register');
   });
 
-  it('muestra solo Nuevo propietario con CREATE_OWNERS', () => {
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('CREATE_OWNERS'),
-    );
-
+  it('reserva el espacio para la imagen de perros y gatos', () => {
     createComponent();
 
-    expect(findLink('Ver propietarios')).toBeUndefined();
-    expect(findLink('Nuevo propietario')?.getAttribute('href')).toBe(
-      '/owners/new',
+    const element = fixture.nativeElement as HTMLElement;
+    const media = element.querySelector('.home-media');
+
+    expect(media?.getAttribute('role')).toBe('img');
+    expect(media?.getAttribute('aria-label')).toBe(
+      'Espacio reservado para una imagen de perros y gatos',
     );
-  });
-
-  it('oculta el bloque de acciones sin permisos de propietarios', () => {
-    createComponent();
-
-    expect(fixture.nativeElement.querySelector('.home-actions')).toBeNull();
   });
 });
