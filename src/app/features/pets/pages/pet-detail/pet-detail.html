@@ -158,7 +158,9 @@
                         <p class="visit-history-vet">
                           {{ visit.veterinarian.firstName }}
                           {{ visit.veterinarian.lastName }}
-                          <span>· Mat. {{ visit.veterinarian.licenseNumber }}</span>
+                          @if (isAdmin() && visit.veterinarian.licenseNumber) {
+                            <span>· Mat. {{ visit.veterinarian.licenseNumber }}</span>
+                          }
                         </p>
                         <p class="visit-history-observations">
                           {{ visit.observations || 'Sin observaciones registradas.' }}

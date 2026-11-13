@@ -54,6 +54,12 @@ export class VeterinarianDetail implements OnInit {
     this.authService.hasAnyRole(VETERINARIAN_ADMIN_ROLES),
   );
 
+  canViewProfile(veterinarian: VeterinarianResponse): boolean {
+    // El backend solo devuelve el DTO completo al administrador o al titular.
+    return this.isAdmin() ||
+      (this.authService.hasRole('ROLE_VETERINARIAN') && typeof veterinarian.active === 'boolean');
+  }
+
   veterinarian = signal<VeterinarianResponse | null>(null);
   loading = signal<boolean>(true);
   error = signal<string | null>(null);
@@ -135,7 +141,7 @@ export class VeterinarianDetail implements OnInit {
   deleteVeterinarian(): void {
     const currentVeterinarian = this.veterinarian();
 
-    if (!currentVeterinarian || this.deleting()) {
+    if (!this.isAdmin() || !currentVeterinarian || this.deleting()) {
       return;
     }
 

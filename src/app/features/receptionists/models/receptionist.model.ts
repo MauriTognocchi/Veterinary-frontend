@@ -4,10 +4,10 @@
       externalId: string;
       firstName: string;
       lastName: string;
-      phone: string;
-      email: string;
-      active: boolean;
-      branch: BranchResponse | null;
+      phone?: string;
+      email?: string;
+      active?: boolean;
+      branch?: BranchResponse | null;
     }
 
     export interface ReceptionistUpdateRequest {

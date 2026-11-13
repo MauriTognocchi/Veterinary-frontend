@@ -38,6 +38,7 @@
               autocomplete="off"
             />
           </div>
+          @if (isAdmin()) {
           <div class="form-group">
             <label for="filter-branch">Sucursal</label>
             <select id="filter-branch" formControlName="branchExternalId">
@@ -55,6 +56,7 @@
                 <option value="INACTIVE">Inactivos</option>
               </select>
             </div>
+          }
         </div>
         <div class="filters-actions">
           <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading() || actionPending()">
@@ -69,7 +71,7 @@
             Limpiar filtros
           </button>
         </div>
-        @if (branchesLoadError()) {
+        @if (isAdmin() && branchesLoadError()) {
           <p class="filters-warning">
             No pudimos cargar las sucursales para el filtro. Podés seguir buscando por nombre o apellido.
           </p>
@@ -109,18 +111,21 @@
             <tr>
               <th>Nombre</th>
               <th>Apellido</th>
+              @if (isAdmin()) {
               <th>Teléfono</th>
               <th>Email</th>
               <th>Sucursal</th>
               <th>Estado</th>
+              }
               <th>Acciones</th>
             </tr>
           </thead>
           <tbody>
             @for (receptionist of filteredReceptionists(); track receptionist.externalId) {
-              <tr [class.is-inactive]="!receptionist.active">
+              <tr [class.is-inactive]="isAdmin() && receptionist.active === false">
                 <td>{{ receptionist.firstName }}</td>
                 <td>{{ receptionist.lastName }}</td>
+                @if (isAdmin()) {
                 <td>{{ receptionist.phone }}</td>
                 <td>{{ receptionist.email }}</td>
                 <td>{{ receptionist.branch?.name ?? '—' }}</td>
@@ -132,6 +137,7 @@
                     {{ receptionist.active ? 'Activo' : 'Inactivo' }}
                   </span>
                 </td>
+                }
                 <td class="actions-cell">
                   <a
                     [routerLink]="['/receptionists', receptionist.externalId]"

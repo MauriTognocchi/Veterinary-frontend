@@ -9,6 +9,7 @@ import {
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { UserResponse } from '../../models/user.model';
 import { UserService } from '../../services/user';
+import { AuthService } from '../../../../core/services/auth';
 
 @Component({
   selector: 'app-user-detail',
@@ -20,7 +21,16 @@ import { UserService } from '../../services/user';
 export class UserDetail implements OnInit {
   private route = inject(ActivatedRoute);
   private userService = inject(UserService);
+  private authService = inject(AuthService);
   private detailHeading = viewChild<ElementRef<HTMLElement>>('detailHeading');
+
+  isAdmin(): boolean {
+    return this.authService.hasAnyRole(['ROLE_ADMIN']);
+  }
+
+  canViewProfile(user: UserResponse): boolean {
+    return this.isAdmin() || user.userState !== undefined;
+  }
 
   user = signal<UserResponse | null>(null);
   loading = signal<boolean>(true);

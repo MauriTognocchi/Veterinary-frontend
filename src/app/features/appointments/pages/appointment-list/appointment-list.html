@@ -11,6 +11,17 @@
       @if (actionError()) {
         <div class="alert alert-error" role="alert">{{ actionError() }}</div>
       }
+      @if (isVeterinarian() && veterinarianIdentity.errorStatus() !== null) {
+        <div class="alert alert-error" role="alert">
+          @if (veterinarianIdentity.errorStatus() === 404) {
+            No encontramos un perfil veterinario asociado a tu cuenta. No se pueden mostrar acciones de confirmación.
+          } @else if (veterinarianIdentity.errorStatus() === 403) {
+            No tenés permisos para consultar tu perfil veterinario. No se pueden mostrar acciones de confirmación.
+          } @else {
+            No pudimos verificar tu perfil veterinario. No se pueden mostrar acciones de confirmación.
+          }
+        </div>
+      }
     
       <form
         class="card filters-card"

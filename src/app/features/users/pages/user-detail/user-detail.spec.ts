@@ -8,11 +8,13 @@ import { of, Subject, throwError } from 'rxjs';
 import { UserResponse } from '../../models/user.model';
 import { UserService } from '../../services/user';
 import { UserDetail } from './user-detail';
+import { AuthService } from '../../../../core/services/auth';
 
 describe('UserDetail', () => {
   let fixture: ComponentFixture<UserDetail>;
   let component: UserDetail;
   let service: { getById: ReturnType<typeof vi.fn> };
+  let auth: { hasAnyRole: ReturnType<typeof vi.fn>; email: ReturnType<typeof vi.fn> };
 
   const user: UserResponse = {
     externalId: 'user-1',
@@ -30,6 +32,7 @@ describe('UserDetail', () => {
 
   beforeEach(async () => {
     service = { getById: vi.fn() };
+    auth = { hasAnyRole: vi.fn().mockReturnValue(true), email: vi.fn().mockReturnValue('ana@veterinaria.com') };
 
     await TestBed.configureTestingModule({
       imports: [UserDetail],
@@ -44,6 +47,7 @@ describe('UserDetail', () => {
           },
         },
         { provide: UserService, useValue: service },
+        { provide: AuthService, useValue: auth },
       ],
     }).compileComponents();
   });
@@ -82,6 +86,32 @@ describe('UserDetail', () => {
     createComponent();
 
     expect(fixture.nativeElement.textContent).toContain('INACTIVE');
+  });
+
+  it('permite abrir un usuario ajeno por URL mostrando únicamente el DTO público', () => {
+    auth.hasAnyRole.mockReturnValue(false);
+    service.getById.mockReturnValue(of({ externalId: 'user-1', firstName: 'Ana', lastName: 'Pérez' }));
+    createComponent();
+    expect(service.getById).toHaveBeenCalledWith('user-1');
+    expect(fixture.nativeElement.textContent).toContain('Ana');
+    expect(fixture.nativeElement.textContent).not.toContain('Email');
+    expect(fixture.nativeElement.querySelector('.state-badge')).toBeNull();
+  });
+
+  it('conserva el email del perfil propio sin mostrar badge administrativo', () => {
+    auth.hasAnyRole.mockReturnValue(false);
+    service.getById.mockReturnValue(of(user));
+    createComponent();
+    expect(fixture.nativeElement.textContent).toContain('ana@veterinaria.com');
+    expect(fixture.nativeElement.querySelector('.state-badge')).toBeNull();
+  });
+
+  it('reconoce el perfil propio completo sin comparar email', () => {
+    auth.hasAnyRole.mockReturnValue(false);
+    service.getById.mockReturnValue(of({ ...user, email: undefined }));
+    createComponent();
+    expect(component.canViewProfile(component.user()!)).toBe(true);
+    expect(fixture.nativeElement.querySelector('.state-badge')).toBeNull();
   });
 
   it('muestra no encontrado cuando el backend responde 404', () => {

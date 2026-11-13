@@ -70,6 +70,7 @@
               <dt>Apellido</dt>
               <dd>{{ receptionist.lastName }}</dd>
             </div>
+            @if (canViewProfile(receptionist)) {
             <div class="detail-row">
               <dt>Teléfono</dt>
               <dd>{{ receptionist.phone }}</dd>
@@ -82,6 +83,7 @@
               <dt>Sucursal</dt>
               <dd>{{ receptionist.branch?.name ?? 'Sin sucursal asignada' }}</dd>
             </div>
+            @if (isAdmin()) {
             <div class="detail-row">
               <dt>Estado</dt>
               <dd>
@@ -93,6 +95,8 @@
                 </span>
               </dd>
             </div>
+            }
+            }
           </dl>
         }
       </div>

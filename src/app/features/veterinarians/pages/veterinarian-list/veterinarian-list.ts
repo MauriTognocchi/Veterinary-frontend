@@ -52,7 +52,7 @@ export class VeterinarianList implements OnInit {
   statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
   readonly actionPending = computed(() => this.deletingId() !== null || this.reactivatingId() !== null);
   readonly filteredVeterinarians = computed(() => this.veterinarians().filter((vet) =>
-    this.statusFilter() === 'ALL' || vet.active === (this.statusFilter() === 'ACTIVE'),
+    !this.isAdmin() || this.statusFilter() === 'ALL' || vet.active === (this.statusFilter() === 'ACTIVE'),
   ));
 
   filtersForm = this.fb.nonNullable.group({
@@ -64,7 +64,7 @@ export class VeterinarianList implements OnInit {
 
   ngOnInit(): void {
     this.loadVeterinarians();
-    this.loadBranches();
+    if (this.isAdmin()) this.loadBranches();
   }
 
   loadVeterinarians(): void {
@@ -78,8 +78,8 @@ export class VeterinarianList implements OnInit {
     const filters: VeterinarianFilters = {
       firstName: raw.firstName,
       lastName: raw.lastName,
-      licenseNumber: raw.licenseNumber,
-      branchExternalId: raw.branchExternalId,
+      licenseNumber: this.isAdmin() ? raw.licenseNumber : undefined,
+      branchExternalId: this.isAdmin() ? raw.branchExternalId : undefined,
     };
 
     this.appliedFilters.set(
@@ -198,7 +198,7 @@ export class VeterinarianList implements OnInit {
   }
 
   deleteVeterinarian(veterinarian: VeterinarianResponse): void {
-    if (this.actionPending()) {
+    if (!this.isAdmin() || this.actionPending()) {
       return;
     }
 

@@ -52,7 +52,7 @@
       statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
       readonly actionPending = computed(() => this.deletingId() !== null || this.reactivatingId() !== null);
       readonly filteredReceptionists = computed(() => this.receptionists().filter((person) =>
-        this.statusFilter() === 'ALL' || person.active === (this.statusFilter() === 'ACTIVE'),
+        !this.isAdmin() || this.statusFilter() === 'ALL' || person.active === (this.statusFilter() === 'ACTIVE'),
       ));
 
       filtersForm = this.fb.nonNullable.group({
@@ -63,7 +63,7 @@
 
       ngOnInit(): void {
         this.loadReceptionists();
-        this.loadBranches();
+        if (this.isAdmin()) this.loadBranches();
       }
 
       loadReceptionists(): void {
@@ -77,7 +77,7 @@
         const filters: ReceptionistFilters = {
           firstName: raw.firstName,
           lastName: raw.lastName,
-          branchExternalId: raw.branchExternalId,
+          branchExternalId: this.isAdmin() ? raw.branchExternalId : undefined,
         };
 
         this.appliedFilters.set(
@@ -194,7 +194,7 @@
       }
 
       deleteReceptionist(receptionist: ReceptionistResponse): void {
-        if (this.actionPending()) {
+        if (!this.isAdmin() || this.actionPending()) {
           return;
         }
 
