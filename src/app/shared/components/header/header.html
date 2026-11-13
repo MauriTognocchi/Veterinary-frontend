@@ -24,32 +24,10 @@
                 <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
                 <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
             } @else {
-                @if (canViewOwners()) {
-                    <a routerLink="/owners" routerLinkActive="active">Propietarios</a>
-                }
                 <a routerLink="/pets" routerLinkActive="active">Mascotas</a>
                 <a routerLink="/appointments" routerLinkActive="active">Turnos</a>
-                @if (canViewVisits()) {
-                    <a routerLink="/visits" routerLinkActive="active">Visitas</a>
-                }
-                @if (canViewUsers()) {
-                    <a routerLink="/users" routerLinkActive="active">Usuarios</a>
-                }
+                <a routerLink="/visits" routerLinkActive="active">Visitas</a>
                 <a routerLink="/branches" routerLinkActive="active">Sucursales</a>
-                <a routerLink="/veterinarians" routerLinkActive="active">Veterinarios</a>
-                <a routerLink="/receptionists" routerLinkActive="active">Recepcionistas</a>
-                @if (canViewConditions()) {
-                    <a routerLink="/conditions" routerLinkActive="active">Condiciones</a>
-                }
-                @if (canViewStudies()) {
-                    <a routerLink="/studies" routerLinkActive="active">Estudios</a>
-                }
-                @if (canViewMedications()) {
-                    <a routerLink="/medications" routerLinkActive="active">Medicamentos</a>
-                }
-                @if (canCreateOwner()) {
-                    <a routerLink="/owners/new" routerLinkActive="active">Agregar Propietario</a>
-                }
                 <a href="#" (click)="$event.preventDefault(); logout()">Cerrar sesión</a>
             }
         } @else {

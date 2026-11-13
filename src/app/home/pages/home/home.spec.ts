@@ -4,6 +4,7 @@ import { of } from 'rxjs';
 import { AuthService } from '../../../core/services/auth';
 import { AppointmentService } from '../../../features/appointments/services/appointment';
 import { OwnerByPetService } from '../../../features/owners-by-pets/services/owner-by-pet';
+import { PetService } from '../../../features/pets/services/pet';
 import { Home } from './home';
 
 describe('Home', () => {
@@ -12,6 +13,7 @@ describe('Home', () => {
   let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
   let appointmentService: { getAll: ReturnType<typeof vi.fn> };
   let ownerByPetService: { getAll: ReturnType<typeof vi.fn> };
+  let petService: { getMyPets: ReturnType<typeof vi.fn> };
 
   function todayKey(): string {
     const today = new Date();
@@ -49,6 +51,7 @@ describe('Home', () => {
     authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
     appointmentService = { getAll: vi.fn().mockReturnValue(of([])) };
     ownerByPetService = { getAll: vi.fn().mockReturnValue(of([])) };
+    petService = { getMyPets: vi.fn().mockReturnValue(of([])) };
 
     await TestBed.configureTestingModule({
       imports: [Home],
@@ -57,6 +60,7 @@ describe('Home', () => {
         { provide: AuthService, useValue: authService },
         { provide: AppointmentService, useValue: appointmentService },
         { provide: OwnerByPetService, useValue: ownerByPetService },
+        { provide: PetService, useValue: petService },
       ],
     }).compileComponents();
   });
@@ -274,6 +278,96 @@ describe('Home', () => {
       expect(findLink('.vet-section-header', 'Ver todos')?.getAttribute('href')).toBe(
         '/appointments',
       );
+    });
+  });
+
+  describe('como propietario', () => {
+    beforeEach(() => {
+      authService.hasAnyRole.mockImplementation((roles: readonly string[]) =>
+        roles.includes('ROLE_CLIENT'),
+      );
+
+      petService.getMyPets.mockReturnValue(
+        of([
+          {
+            externalId: 'pet-1',
+            name: 'Michi',
+            birthDate: '2022-01-15',
+            active: true,
+            color: 'Gris',
+            animalType: { externalId: 'type-1', name: 'Gato' },
+            breed: {
+              externalId: 'breed-1',
+              name: 'Común',
+              animalType: { externalId: 'type-1', name: 'Gato' },
+            },
+          },
+          {
+            externalId: 'pet-2',
+            name: 'Rocco',
+            birthDate: '2020-06-10',
+            active: true,
+            color: 'Marrón',
+            animalType: { externalId: 'type-2', name: 'Perro' },
+            breed: {
+              externalId: 'breed-2',
+              name: 'Mestizo',
+              animalType: { externalId: 'type-2', name: 'Perro' },
+            },
+          },
+        ]),
+      );
+    });
+
+    it('muestra el título, el subtítulo y las mascotas del propietario', () => {
+      createComponent();
+
+      const element = fixture.nativeElement as HTMLElement;
+      const cards = Array.from(
+        element.querySelectorAll<HTMLElement>('.owner-pet-card'),
+      );
+
+      expect(element.querySelector('.owner-home-header h2')?.textContent?.trim()).toBe(
+        '¡Bienvenido!',
+      );
+      expect(element.querySelector('.owner-home-header p')?.textContent?.trim()).toBe(
+        'Este es tu espacio para gestionar y consultar tus mascotas',
+      );
+      expect(petService.getMyPets).toHaveBeenCalled();
+      expect(cards).toHaveLength(2);
+      expect(cards[0]?.textContent).toContain('Michi');
+      expect(cards[0]?.textContent).toContain('Gato');
+      expect(cards[1]?.textContent).toContain('Rocco');
+      expect(cards[1]?.textContent).toContain('Perro');
+      expect(
+        cards[0]?.querySelector<HTMLAnchorElement>('a')?.getAttribute('href'),
+      ).toBe('/pets/pet-1');
+      expect(
+        cards[1]?.querySelector<HTMLAnchorElement>('a')?.getAttribute('href'),
+      ).toBe('/pets/pet-2');
+      expect(
+        cards[0]?.querySelector('.owner-pet-photo.is-placeholder'),
+      ).not.toBeNull();
+    });
+
+    it('navega al listado de mascotas y a los accesos rápidos', () => {
+      createComponent();
+
+      expect(
+        findLink('.owner-section-header', 'Ver todas')?.getAttribute('href'),
+      ).toBe('/pets');
+      expect(
+        findLink('.quick-access-grid', 'SOLICITAR TURNO')?.getAttribute('href'),
+      ).toBe('/appointments/new');
+      expect(
+        findLink('.quick-access-grid', 'MIS TURNOS')?.getAttribute('href'),
+      ).toBe('/appointments');
+      expect(
+        findLink('.quick-access-grid', 'HISTORIAL CLÍNICO')?.getAttribute('href'),
+      ).toBe('/visits');
+      expect(
+        findLink('.quick-access-grid', 'SUCURSALES')?.getAttribute('href'),
+      ).toBe('/branches');
     });
   });
 });

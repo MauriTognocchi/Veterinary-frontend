@@ -10,6 +10,8 @@ import {
 import { AppointmentService } from '../../../features/appointments/services/appointment';
 import { OwnerByPetResponse } from '../../../features/owners-by-pets/models/owner-by-pet.model';
 import { OwnerByPetService } from '../../../features/owners-by-pets/services/owner-by-pet';
+import { PetResponse } from '../../../features/pets/models/pet.model';
+import { PetService } from '../../../features/pets/services/pet';
 
 interface AdminLink {
   readonly label: string;
@@ -32,6 +34,7 @@ export class Home implements OnInit {
   private readonly authService = inject(AuthService);
   private readonly appointmentService = inject(AppointmentService);
   private readonly ownerByPetService = inject(OwnerByPetService);
+  private readonly petService = inject(PetService);
 
   readonly isAdmin = computed(() =>
     this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
@@ -42,10 +45,16 @@ export class Home implements OnInit {
   readonly isReceptionist = computed(() =>
     this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
   );
+  readonly isClient = computed(() =>
+    this.authService.hasAnyRole(['ROLE_CLIENT']),
+  );
 
   readonly todayAppointments = signal<AppointmentResponse[]>([]);
   readonly loadingAppointments = signal(false);
   readonly appointmentsError = signal<string | null>(null);
+  readonly ownerPets = signal<PetResponse[]>([]);
+  readonly loadingPets = signal(false);
+  readonly petsError = signal<string | null>(null);
   private readonly ownerByPet = signal<OwnerByPetResponse[]>([]);
 
   private readonly statusLabels: Record<AppointmentStatus, string> = {
@@ -114,6 +123,29 @@ export class Home implements OnInit {
     },
   ];
 
+  readonly ownerQuickAccess: readonly QuickAccess[] = [
+    {
+      label: 'SOLICITAR TURNO',
+      description: 'Solicitar una nueva atención veterinaria',
+      path: '/appointments/new',
+    },
+    {
+      label: 'MIS TURNOS',
+      description: 'Consultar y filtrar mis turnos',
+      path: '/appointments',
+    },
+    {
+      label: 'HISTORIAL CLÍNICO',
+      description: 'Consultar las visitas de tus mascotas',
+      path: '/visits',
+    },
+    {
+      label: 'SUCURSALES',
+      description: 'Conocer nuestras sucursales',
+      path: '/branches',
+    },
+  ];
+
   readonly gestionLinks: readonly AdminLink[] = [
     { label: 'Propietarios', path: '/owners' },
     { label: 'Mascotas', path: '/pets' },
@@ -143,6 +175,46 @@ export class Home implements OnInit {
       this.loadTodayAppointments();
       this.loadOwnerRelations();
     }
+
+    if (this.isClient()) {
+      this.loadOwnerPets();
+    }
+  }
+
+  loadOwnerPets(): void {
+    this.loadingPets.set(true);
+    this.petsError.set(null);
+    this.ownerPets.set([]);
+
+    this.petService.getMyPets().subscribe({
+      next: (pets) => {
+        this.ownerPets.set(pets.filter((pet) => pet.active !== false));
+        this.loadingPets.set(false);
+      },
+      error: (err) => {
+        this.loadingPets.set(false);
+        this.petsError.set(this.petsErrorMessage(err?.status));
+      },
+    });
+  }
+
+  retryLoadPets(): void {
+    this.loadOwnerPets();
+  }
+
+  petPhotoUrl(pet: PetResponse): string | null {
+    const photoUrl = (pet as PetResponse & { photoUrl?: string | null })
+      .photoUrl;
+
+    return typeof photoUrl === 'string' && photoUrl.trim()
+      ? photoUrl.trim()
+      : null;
+  }
+
+  petTypeLabel(pet: PetResponse): string {
+    const typeName = pet.animalType?.name?.trim();
+
+    return typeName || 'Tipo no disponible';
   }
 
   loadTodayAppointments(): void {
@@ -238,6 +310,22 @@ export class Home implements OnInit {
     const day = String(today.getDate()).padStart(2, '0');
 
     return `${year}-${month}-${day}`;
+  }
+
+  private petsErrorMessage(status: number | undefined): string {
+    if (status === 401) {
+      return 'No tenés autorización para ver tus mascotas. Iniciá sesión nuevamente.';
+    }
+
+    if (status === 403) {
+      return 'No tenés permisos para ver tus mascotas.';
+    }
+
+    if (status === 0) {
+      return 'No pudimos conectar con el servidor. Revisá tu conexión e intentá nuevamente.';
+    }
+
+    return 'No pudimos cargar tus mascotas. Intentá nuevamente.';
   }
 
   private appointmentsErrorMessage(status: number | undefined): string {

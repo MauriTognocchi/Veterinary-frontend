@@ -22,27 +22,6 @@ export class Header {
   readonly isReceptionist = computed(() =>
     this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
   );
-  readonly canViewOwners = computed(() =>
-    this.authService.hasAnyPermission(['VIEW_OWNERS']),
-  );
-  readonly canCreateOwner = computed(() =>
-    this.authService.hasAnyPermission(['CREATE_OWNERS']),
-  );
-  readonly canViewUsers = computed(() =>
-    this.authService.hasAnyPermission(['VIEW_USERS']),
-  );
-  readonly canViewConditions = computed(() =>
-        this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
-      );
-  readonly canViewVisits = computed(() =>
-    this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
-  );
-  readonly canViewMedications = computed(() =>
-    this.authService.hasAnyPermission(['VIEW_MEDICATIONS']),
-  );
-   readonly canViewStudies = computed(() =>
-    this.authService.hasAnyPermission(['VIEW_CLINICAL_RECORDS']),
-  );
 
   logout(): void {
     this.authService.logout('manual');
