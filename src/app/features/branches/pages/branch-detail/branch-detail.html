@@ -2,28 +2,7 @@
   <div class="card card-accent branch-detail-card">
     <div class="branch-detail-header">
       <h2 #detailHeading tabindex="-1">Detalle de la sucursal</h2>
-      <div class="branch-detail-actions">
-        @if (branch(); as branch) {
-          @if (isAdmin()) {
-            <a [routerLink]="['/branches', branch.externalId, 'edit']" class="btn btn-primary btn-sm">
-              Editar
-            </a>
-            <button
-              type="button"
-              class="btn btn-danger btn-sm"
-              [disabled]="deleting()"
-              (click)="deleteBranch()"
-            >
-              @if (deleting()) {
-                Eliminando...
-              } @else {
-                Eliminar
-              }
-            </button>
-          }
-        }
-        <a routerLink="/branches" class="btn btn-secondary btn-sm">Volver al listado</a>
-      </div>
+      <a routerLink="/branches" class="btn btn-secondary btn-sm">Volver al listado</a>
     </div>
 
     @if (deleteError()) {
@@ -95,6 +74,32 @@
         </fieldset>
       } @else {
         <p class="no-address">Esta sucursal no tiene dirección registrada.</p>
+      }
+    }
+
+    @if (branch(); as branch) {
+      @if (isAdmin()) {
+        <div class="branch-detail-footer">
+          <div class="branch-detail-edit-actions">
+            <a [routerLink]="['/branches', branch.externalId, 'edit']" class="btn btn-primary">
+              Editar
+            </a>
+          </div>
+          <div class="branch-detail-danger-actions">
+            <button
+              type="button"
+              class="btn btn-danger"
+              [disabled]="deleting()"
+              (click)="deleteBranch()"
+            >
+              @if (deleting()) {
+                Eliminando...
+              } @else {
+                Eliminar
+              }
+            </button>
+          </div>
+        </div>
       }
     }
   </div>

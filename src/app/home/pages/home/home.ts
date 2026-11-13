@@ -26,6 +26,7 @@ interface QuickAccess {
 }
 
 @Component({
+  standalone: true,
   imports: [RouterLink],
   selector: 'app-home',
   styleUrl: './home.css',
