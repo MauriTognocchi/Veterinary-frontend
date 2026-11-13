@@ -20,7 +20,11 @@ import { BREED_ADMIN_ROLES } from './core/models/auth.model';
 import { PetList } from './features/pets/pages/pet-list/pet-list';
 import { PetForm } from './features/pets/pages/pet-form/pet-form';
 import { PetDetail } from './features/pets/pages/pet-detail/pet-detail';
-import { PET_VIEW_ROLES, PET_WRITE_ROLES } from './core/models/auth.model';
+import {
+  PET_CREATE_ROLES,
+  PET_VIEW_ROLES,
+  PET_WRITE_ROLES,
+} from './core/models/auth.model';
 import { BranchList } from './features/branches/pages/branch-list/branch-list';
 import { BranchForm } from './features/branches/pages/branch-form/branch-form';
 import { BranchDetail } from './features/branches/pages/branch-detail/branch-detail';
@@ -162,7 +166,7 @@ import { StudyForm } from './features/studies/pages/study-form/study-form';
         path: 'pets/new',
         component: PetForm,
         canActivate: [authGuard, roleGuard],
-        data: { roles: PET_WRITE_ROLES },
+        data: { roles: PET_CREATE_ROLES },
       },
       {
         path: 'pets/:externalId/edit',

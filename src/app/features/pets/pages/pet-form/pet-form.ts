@@ -1,7 +1,8 @@
-import {
+ import {
       Component,
       ElementRef,
       OnInit,
+      computed,
       inject,
       signal,
       viewChild,
@@ -13,6 +14,7 @@ import {
       Validators,
     } from '@angular/forms';
     import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+    import { AuthService } from '../../../../core/services/auth';
     import { AnimalTypeResponse } from '../../../animal-types/models/animal-type.model';
     import { AnimalTypeService } from '../../../animal-types/services/animal-type';
     import { BreedResponse } from '../../../breeds/models/breed.model';
@@ -37,10 +39,14 @@ import {
       private breedService = inject(BreedService);
       private ownerService = inject(OwnerService);
       private ownerByPetService = inject(OwnerByPetService);
+      private authService = inject(AuthService);
       private router = inject(Router);
       private route = inject(ActivatedRoute);
       private formHeading = viewChild<ElementRef<HTMLElement>>('formHeading');
     
+      readonly isClient = computed(() =>
+        this.authService.hasRole('ROLE_CLIENT'),
+      );
       editando = signal<boolean>(false);
       externalId = signal<string | null>(null);
       saving = signal<boolean>(false);
@@ -76,7 +82,7 @@ import {
         }
         // Si viene con el parámetro ?ownerId=... desde la ficha del dueño, lo preseleccionamos
         const preselectedOwnerId = this.route.snapshot.queryParamMap.get('ownerId');
-        if (preselectedOwnerId) {
+        if (!this.isClient() && preselectedOwnerId) {
           this.petForm.patchValue({ ownerExternalId: preselectedOwnerId });
         }
       }
@@ -86,9 +92,11 @@ import {
           next: (types) => this.animalTypes.set(types),
         });
 
-        this.ownerService.getAll().subscribe({
-          next: (owners) => this.owners.set(owners),
-        });
+        if (!this.isClient()) {
+          this.ownerService.getAll().subscribe({
+            next: (owners) => this.owners.set(owners),
+          });
+        }
       }
 
       onAnimalTypeChange(): void {
@@ -134,16 +142,20 @@ import {
             });
 
             // Buscar si ya tiene dueño asignado
-            this.ownerByPetService.getAll().subscribe({
-              next: (relations) => {
-                const rel = relations.find((r) => r.pet?.externalId === externalId);
-                if (rel?.owner?.externalId) {
-                  this.petForm.patchValue({ ownerExternalId: rel.owner.externalId });
-                }
-                this.loading.set(false);
-              },
-              error: () => this.loading.set(false),
-            });
+            if (this.isClient()) {
+              this.loading.set(false);
+            } else {
+              this.ownerByPetService.getAll().subscribe({
+                next: (relations) => {
+                  const rel = relations.find((r) => r.pet?.externalId === externalId);
+                  if (rel?.owner?.externalId) {
+                    this.petForm.patchValue({ ownerExternalId: rel.owner.externalId });
+                  }
+                  this.loading.set(false);
+                },
+                error: () => this.loading.set(false),
+              });
+            }
           },
           error: (err) => {
             this.loading.set(false);
@@ -201,7 +213,7 @@ import {
             const selectedOwnerId = raw.ownerExternalId;
     
             // Si se seleccionó dueño, guardamos la relación
-            if (selectedOwnerId) {
+            if (!this.isClient() && selectedOwnerId) {
               this.ownerByPetService.create({
                 ownerExternalId: selectedOwnerId,
                 petExternalId: savedPet.externalId,

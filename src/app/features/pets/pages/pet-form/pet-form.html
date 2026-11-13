@@ -75,17 +75,19 @@
               </div>
             </div>
     
-            <div class="form-group">
-              <label for="ownerExternalId">Propietario / Dueño (opcional)</label>
-              <select id="ownerExternalId" formControlName="ownerExternalId">
-                <option value="">Sin propietario asignado</option>
-                @for (owner of owners(); track owner.externalId) {
-                  <option [value]="owner.externalId">
-                    {{ owner.lastName }}, {{ owner.firstName }} (DNI: {{ owner.dni }})
-                  </option>
-                }
-              </select>
-            </div>
+            @if (!isClient()) {
+              <div class="form-group">
+                <label for="ownerExternalId">Propietario / Dueño (opcional)</label>
+                <select id="ownerExternalId" formControlName="ownerExternalId">
+                  <option value="">Sin propietario asignado</option>
+                  @for (owner of owners(); track owner.externalId) {
+                    <option [value]="owner.externalId">
+                      {{ owner.lastName }}, {{ owner.firstName }} (DNI: {{ owner.dni }})
+                    </option>
+                  }
+                </select>
+              </div>
+            }
     
             @if (error()) {
               <div class="alert alert-error" role="alert">{{ error() }}</div>

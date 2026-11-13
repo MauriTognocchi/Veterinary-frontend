@@ -36,6 +36,13 @@ describe('PetList', () => {
     fixture.detectChanges();
   }
 
+  function findCreateLink(): HTMLAnchorElement | undefined {
+    const element = fixture.nativeElement as HTMLElement;
+    return Array.from(
+      element.querySelectorAll<HTMLAnchorElement>('.pet-list-header a'),
+    ).find((link) => link.getAttribute('href') === '/pets/new');
+  }
+
   function findEditLink(): HTMLAnchorElement | undefined {
     const element = fixture.nativeElement as HTMLElement;
     return Array.from(
@@ -84,6 +91,32 @@ describe('PetList', () => {
 
     expect(findEditLink()?.getAttribute('href')).toBe('/pets/pet-1/edit');
     expect(findDeleteButton()).toBeUndefined();
+  });
+
+  it('permite al propietario registrar una mascota desde Mis mascotas', () => {
+    authService.hasRole.mockImplementation(
+      (role: string) => role === 'ROLE_CLIENT',
+    );
+    authService.hasAnyRole.mockImplementation((roles: string[]) =>
+      roles.includes('ROLE_CLIENT'),
+    );
+
+    createComponent();
+
+    expect(findCreateLink()?.textContent?.trim()).toBe('Registrar mascota');
+    expect(findDeleteButton()).toBeUndefined();
+    expect(findEditLink()).toBeUndefined();
+    expect(petService.getMyPets).toHaveBeenCalled();
+    expect(petService.getAll).not.toHaveBeenCalled();
+  });
+
+  it('mantiene el alta de mascotas para ADMIN y RECEPTIONIST', () => {
+    authService.hasAnyRole.mockReturnValue(true);
+
+    createComponent();
+
+    expect(findCreateLink()?.textContent?.trim()).toBe('Nueva mascota');
+    expect(findEditLink()?.getAttribute('href')).toBe('/pets/pet-1/edit');
   });
 
   it('oculta Editar sin permiso de escritura de mascotas', () => {
