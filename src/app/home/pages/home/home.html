@@ -9,10 +9,12 @@
       <h3 id="admin-gestion-title">Gestión</h3>
       <div class="admin-card-grid">
         @for (link of gestionLinks; track link.path) {
-          <a class="admin-card" [routerLink]="link.path">
-            <span>{{ link.label }}</span>
-            <span class="admin-card-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(link.path)) {
+            <a class="admin-card" [routerLink]="link.path">
+              <span>{{ link.label }}</span>
+              <span class="admin-card-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -21,10 +23,12 @@
       <h3 id="admin-personal-title">Personal</h3>
       <div class="admin-card-grid">
         @for (link of personalLinks; track link.path) {
-          <a class="admin-card" [routerLink]="link.path">
-            <span>{{ link.label }}</span>
-            <span class="admin-card-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(link.path)) {
+            <a class="admin-card" [routerLink]="link.path">
+              <span>{{ link.label }}</span>
+              <span class="admin-card-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -33,10 +37,12 @@
       <h3 id="admin-configuracion-title">Configuración</h3>
       <div class="admin-card-grid">
         @for (link of configuracionLinks; track link.path) {
-          <a class="admin-card" [routerLink]="link.path">
-            <span>{{ link.label }}</span>
-            <span class="admin-card-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(link.path)) {
+            <a class="admin-card" [routerLink]="link.path">
+              <span>{{ link.label }}</span>
+              <span class="admin-card-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -44,8 +50,12 @@
     <section class="admin-category" aria-labelledby="admin-acciones-title">
       <h3 id="admin-acciones-title">Acciones</h3>
       <div class="admin-actions">
-        <a routerLink="/users/new" class="btn btn-primary btn-lg">Registrar empleado</a>
-        <a routerLink="/owners/new/account" class="btn btn-secondary btn-lg">Agregar propietario</a>
+        @if (canAccess('/users/new')) {
+          <a routerLink="/users/new" class="btn btn-primary btn-lg">Registrar usuario</a>
+        }
+        @if (canAccess('/owners/new/account')) {
+          <a routerLink="/owners/new/account" class="btn btn-secondary btn-lg">Agregar propietario</a>
+        }
       </div>
     </section>
   </section>
@@ -59,9 +69,9 @@
     <section class="vet-section" aria-labelledby="today-appointments-title">
       <div class="vet-section-header">
         <h3 id="today-appointments-title">TURNOS DE HOY</h3>
-        <a routerLink="/appointments" class="btn btn-secondary btn-sm">
-          Ver todos
-        </a>
+        @if (canAccess('/appointments')) {
+          <a routerLink="/appointments" class="btn btn-secondary btn-sm">Ver todos</a>
+        }
       </div>
 
       @if (loadingAppointments()) {
@@ -114,12 +124,10 @@
                   </span>
                 </td>
                 <td data-label="Acción">
-                  <a
-                    [routerLink]="['/appointments', appointment.externalId, 'edit']"
-                    class="btn btn-secondary btn-sm"
-                  >
-                    Ver
-                  </a>
+                  @if (canAccess('/appointments/:externalId/edit')) {
+                    <a [routerLink]="['/appointments', appointment.externalId, 'edit']"
+                      class="btn btn-secondary btn-sm">Ver</a>
+                  }
                 </td>
               </tr>
             }
@@ -132,11 +140,13 @@
       <h3 id="quick-access-title">ACCESOS RÁPIDOS</h3>
       <div class="quick-access-grid">
         @for (access of quickAccess; track access.path) {
-          <a class="quick-access-card" [routerLink]="access.path">
-            <span class="quick-access-label">{{ access.label }}</span>
-            <span class="quick-access-text">{{ access.description }}</span>
-            <span class="quick-access-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(access.path)) {
+            <a class="quick-access-card" [routerLink]="access.path">
+              <span class="quick-access-label">{{ access.label }}</span>
+              <span class="quick-access-text">{{ access.description }}</span>
+              <span class="quick-access-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -151,9 +161,9 @@
     <section class="reception-section" aria-labelledby="reception-today-title">
       <div class="reception-section-header">
         <h3 id="reception-today-title">TURNOS DE HOY</h3>
-        <a routerLink="/appointments" class="btn btn-secondary btn-sm">
-          Ver todos
-        </a>
+        @if (canAccess('/appointments')) {
+          <a routerLink="/appointments" class="btn btn-secondary btn-sm">Ver todos</a>
+        }
       </div>
 
       @if (loadingAppointments()) {
@@ -204,12 +214,10 @@
                   {{ veterinarianName(appointment.veterinarian) }}
                 </td>
                 <td data-label="Acción">
-                  <a
-                    [routerLink]="['/appointments', appointment.externalId, 'edit']"
-                    class="btn btn-secondary btn-sm"
-                  >
-                    Ver
-                  </a>
+                  @if (canAccess('/appointments/:externalId/edit')) {
+                    <a [routerLink]="['/appointments', appointment.externalId, 'edit']"
+                      class="btn btn-secondary btn-sm">Ver</a>
+                  }
                 </td>
               </tr>
             }
@@ -222,11 +230,13 @@
       <h3 id="reception-actions-title">ACCIONES FRECUENTES</h3>
       <div class="reception-card-grid">
         @for (action of receptionistActions; track action.label) {
-          <a class="reception-card" [routerLink]="action.path">
-            <span class="reception-card-label">{{ action.label }}</span>
-            <span class="reception-card-text">{{ action.description }}</span>
-            <span class="reception-card-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(action.path)) {
+            <a class="reception-card" [routerLink]="action.path">
+              <span class="reception-card-label">{{ action.label }}</span>
+              <span class="reception-card-text">{{ action.description }}</span>
+              <span class="reception-card-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -235,11 +245,13 @@
       <h3 id="reception-queries-title">CONSULTAS</h3>
       <div class="reception-card-grid">
         @for (query of receptionistQueries; track query.label) {
-          <a class="reception-card" [routerLink]="query.path">
-            <span class="reception-card-label">{{ query.label }}</span>
-            <span class="reception-card-text">{{ query.description }}</span>
-            <span class="reception-card-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(query.path)) {
+            <a class="reception-card" [routerLink]="query.path">
+              <span class="reception-card-label">{{ query.label }}</span>
+              <span class="reception-card-text">{{ query.description }}</span>
+              <span class="reception-card-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
@@ -254,7 +266,9 @@
     <section class="owner-section" aria-labelledby="owner-pets-title">
       <div class="owner-section-header">
         <h3 id="owner-pets-title">MIS MASCOTAS</h3>
-        <a routerLink="/pets" class="btn btn-secondary btn-sm">Ver todas</a>
+        @if (canAccess('/pets')) {
+          <a routerLink="/pets" class="btn btn-secondary btn-sm">Ver todas</a>
+        }
       </div>
 
       @if (loadingPets()) {
@@ -330,14 +344,33 @@
       <h3 id="owner-quick-title">ACCESOS RÁPIDOS</h3>
       <div class="quick-access-grid">
         @for (access of ownerQuickAccess; track access.label) {
-          <a class="quick-access-card" [routerLink]="access.path">
-            <span class="quick-access-label">{{ access.label }}</span>
-            <span class="quick-access-text">{{ access.description }}</span>
-            <span class="quick-access-arrow" aria-hidden="true">→</span>
-          </a>
+          @if (canAccess(access.path)) {
+            <a class="quick-access-card" [routerLink]="access.path">
+              <span class="quick-access-label">{{ access.label }}</span>
+              <span class="quick-access-text">{{ access.description }}</span>
+              <span class="quick-access-arrow" aria-hidden="true">→</span>
+            </a>
+          }
         }
       </div>
     </section>
+  </section>
+} @else if (isAuthenticated() && hasManagementAccess()) {
+  <section class="limited-home">
+    <h2>Secciones disponibles</h2>
+    <div class="admin-card-grid">
+      @for (link of managementLinks; track link.path) {
+        @if (canAccess(link.path)) {
+          <a class="admin-card" [routerLink]="link.path">{{ link.label }}</a>
+        }
+      }
+    </div>
+  </section>
+} @else if (isAuthenticated()) {
+  <section class="limited-home">
+    <h2>Sin acceso a gestión</h2>
+    <p class="state-message" role="status">Tu cuenta no tiene acceso a las secciones de gestión. Contactá al administrador</p>
+    <button type="button" class="btn btn-secondary" (click)="logout()">Cerrar sesión</button>
   </section>
 } @else {
   <section class="home-hero">

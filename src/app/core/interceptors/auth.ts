@@ -1,18 +1,8 @@
-import {
-  HttpContextToken,
-  HttpErrorResponse,
-  HttpInterceptorFn,
-} from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { catchError, switchMap, throwError } from 'rxjs';
 import { AuthService } from '../services/auth';
 import { TokenStorageService } from '../services/token-storage.service';
-
-/**
- * Marca la petición que ya fue reintentada después de un refresh.
- * Evita loops infinitos si el reintento también devuelve 401.
- */
-const RETRIED_AFTER_REFRESH = new HttpContextToken<boolean>(() => false);
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const tokenStorage = inject(TokenStorageService);
@@ -39,41 +29,39 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   return next(requestWithToken).pipe(
     catchError((error: unknown) => {
       const is401 = error instanceof HttpErrorResponse && error.status === 401;
-      const alreadyRetried = req.context.get(RETRIED_AFTER_REFRESH);
-
-      // Si no es 401, o ya reintentamos esta petición, no hacemos nada.
-      if (!is401 || alreadyRetried) {
+      if (!is401) {
         return throwError(() => error);
       }
 
       return authService.refresh().pipe(
+        catchError((refreshError: unknown) => {
+          if (tokenStorage.getAccessToken() === accessToken) {
+            authService.logout('expired');
+          }
+          return throwError(() => refreshError);
+        }),
         switchMap(() => {
           const newToken = tokenStorage.getAccessToken();
 
           const retryReq = req.clone({
-            context: req.context.set(RETRIED_AFTER_REFRESH, true),
             setHeaders: newToken
               ? { Authorization: `Bearer ${newToken}` }
               : {},
           });
 
-          return next(retryReq);
-        }),
-        catchError((refreshError: unknown) => {
-          // Solo cerramos sesión si el backend rechazó el refresh token
-          // (401/403) o si ya no hay refresh token guardado. Un 5xx o un
-          // error de red es transitorio y no invalida la sesión.
-          const refreshRejected =
-            refreshError instanceof HttpErrorResponse &&
-            (refreshError.status === 401 || refreshError.status === 403);
-
-          const hasRefreshToken = tokenStorage.getRefreshToken() !== null;
-
-          if (refreshRejected || !hasRefreshToken) {
-            authService.logout('expired');
-          }
-
-          return throwError(() => refreshError);
+          return next(retryReq).pipe(
+            catchError((retryError: unknown) => {
+              if (
+                retryError instanceof HttpErrorResponse &&
+                retryError.status === 401
+              ) {
+                if (tokenStorage.getAccessToken() === newToken) {
+                  authService.logout('expired');
+                }
+              }
+              return throwError(() => retryError);
+            }),
+          );
         }),
       );
     }),

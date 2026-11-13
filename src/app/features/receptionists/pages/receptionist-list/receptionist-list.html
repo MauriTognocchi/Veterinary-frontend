@@ -11,6 +11,12 @@
       @if (deleteError()) {
         <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
       }
+      @if (reactivateError()) {
+        <div class="alert alert-error" role="alert">{{ reactivateError() }}</div>
+      }
+      @if (success()) {
+        <div class="alert alert-success" role="status">{{ success() }}</div>
+      }
 
       <form class="card filters-card" [formGroup]="filtersForm" (ngSubmit)="loadReceptionists()">
         <div class="form-grid">
@@ -39,17 +45,25 @@
               @for (branch of branches(); track branch.externalId) {
                 <option [value]="branch.externalId">{{ branch.name }}</option>
               }
-            </select>
-          </div>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="filter-receptionist-status">Estado del perfil</label>
+              <select id="filter-receptionist-status" [value]="statusFilter()" (change)="updateStatusFilter($event)">
+                <option value="ALL">Todos</option>
+                <option value="ACTIVE">Activos</option>
+                <option value="INACTIVE">Inactivos</option>
+              </select>
+            </div>
         </div>
         <div class="filters-actions">
-          <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading()">
+          <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading() || actionPending()">
             Buscar
           </button>
           <button
             type="button"
             class="btn btn-secondary btn-sm"
-            [disabled]="loading()"
+            [disabled]="loading() || actionPending()"
             (click)="clearFilters()"
           >
             Limpiar filtros
@@ -81,9 +95,9 @@
             </div>
           }
         </div>
-      } @else if (receptionists().length === 0) {
+      } @else if (filteredReceptionists().length === 0) {
         <div class="state-message" role="status">
-          @if (appliedFilters()) {
+          @if (appliedFilters() || statusFilter() !== 'ALL') {
             No encontramos recepcionistas con los filtros aplicados.
           } @else {
             No hay recepcionistas registrados.
@@ -103,7 +117,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (receptionist of receptionists(); track receptionist.externalId) {
+            @for (receptionist of filteredReceptionists(); track receptionist.externalId) {
               <tr [class.is-inactive]="!receptionist.active">
                 <td>{{ receptionist.firstName }}</td>
                 <td>{{ receptionist.lastName }}</td>
@@ -136,13 +150,22 @@
                       <button
                         type="button"
                         class="btn btn-danger btn-sm"
-                        [disabled]="deletingId() !== null"
+                        [disabled]="actionPending()"
                         (click)="deleteReceptionist(receptionist)"
                       >
                         @if (deletingId() === receptionist.externalId) {
                           Eliminando...
                         } @else {
                           Eliminar
+                        }
+                      </button>
+                    } @else {
+                      <button type="button" class="btn btn-secondary btn-sm reactivate-button"
+                        [disabled]="actionPending()" (click)="reactivateReceptionist(receptionist)">
+                        @if (reactivatingId() === receptionist.externalId) {
+                          Reactivando...
+                        } @else {
+                          Reactivar
                         }
                       </button>
                     }

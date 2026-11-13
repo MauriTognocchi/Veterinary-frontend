@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router } from '@angular/router';
-import { of, throwError } from 'rxjs';
+import { of, Subject, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
 import { BranchService } from '../../../branches/services/branch';
 import { VeterinarianResponse } from '../../models/veterinarian.model';
@@ -13,9 +13,10 @@ describe('VeterinarianList', () => {
   let vetService: {
     getAll: ReturnType<typeof vi.fn>;
     delete: ReturnType<typeof vi.fn>;
+    reactivate: ReturnType<typeof vi.fn>;
   };
   let branchService: { getAll: ReturnType<typeof vi.fn> };
-  let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
+  let authService: { hasAnyRole: ReturnType<typeof vi.fn>; hasAnyPermission: ReturnType<typeof vi.fn> };
 
   const veterinarian: VeterinarianResponse = {
     externalId: 'vet-1',
@@ -46,9 +47,9 @@ describe('VeterinarianList', () => {
   }
 
   beforeEach(async () => {
-    vetService = { getAll: vi.fn(), delete: vi.fn() };
+    vetService = { getAll: vi.fn(), delete: vi.fn(), reactivate: vi.fn() };
     branchService = { getAll: vi.fn() };
-    authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
+    authService = { hasAnyRole: vi.fn().mockReturnValue(false), hasAnyPermission: vi.fn().mockReturnValue(false) };
 
     await TestBed.configureTestingModule({
       imports: [VeterinarianList],
@@ -289,5 +290,70 @@ describe('VeterinarianList', () => {
       'El veterinario ya está inactivo.',
     );
     expect(component.deletingId()).toBeNull();
+  });
+
+  describe('reactivación del perfil', () => {
+    const inactive = { ...veterinarian, active: false };
+
+    beforeEach(() => {
+      vetService.getAll.mockReturnValue(of([inactive]));
+      branchService.getAll.mockReturnValue(of([]));
+    });
+
+    it('ofrece Reactivar solo a ADMIN con perfil inactivo, no por UPDATE_USERS', () => {
+      authService.hasAnyPermission.mockReturnValue(true);
+      createComponent();
+      expect(fixture.nativeElement.querySelector('.reactivate-button')).toBeNull();
+      expect(component.isAdmin()).toBe(false);
+      expect(authService.hasAnyRole).toHaveBeenCalledWith(['ROLE_ADMIN']);
+      authService.hasAnyRole.mockReturnValue(true);
+      fixture = TestBed.createComponent(VeterinarianList);
+      component = fixture.componentInstance;
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.reactivate-button')).not.toBeNull();
+      component.veterinarians.set([veterinarian]);
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('.reactivate-button')).toBeNull();
+    });
+
+    it('cancela sin solicitar y bloquea doble clic; usa DTO y respeta filtro', () => {
+      authService.hasAnyRole.mockReturnValue(true);
+      const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+      createComponent();
+      component.reactivateVeterinarian(inactive);
+      expect(vetService.reactivate).not.toHaveBeenCalled();
+      confirm.mockReturnValue(true);
+      const pending = new Subject<VeterinarianResponse>();
+      vetService.reactivate.mockReturnValue(pending);
+      component.updateStatusFilter({ target: { value: 'INACTIVE' } } as unknown as Event);
+      component.reactivateVeterinarian(inactive);
+      component.reactivateVeterinarian(inactive);
+      expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Juan Pérez'));
+      expect(vetService.reactivate).toHaveBeenCalledExactlyOnceWith('vet-1');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.textContent).toContain('Reactivando...');
+      expect(fixture.nativeElement.querySelector('.reactivate-button').disabled).toBe(true);
+      pending.next({ ...veterinarian, firstName: 'Juana' });
+      pending.complete();
+      fixture.detectChanges();
+      expect(component.veterinarians()[0].firstName).toBe('Juana');
+      expect(component.filteredVeterinarians()).toEqual([]);
+      expect(fixture.nativeElement.textContent).toContain('Se reactivó el perfil veterinario de Juana Pérez');
+      expect(component.reactivatingId()).toBeNull();
+    });
+
+    it.each([409, 404, 401, 403])('mantiene el perfil y permite reintentar tras %i', (status) => {
+      authService.hasAnyRole.mockReturnValue(true);
+      vi.spyOn(window, 'confirm').mockReturnValue(true);
+      vetService.reactivate.mockReturnValue(throwError(() => ({ status, error: status === 409 ? { message: 'La cuenta asociada está inactiva.' } : {} })));
+      createComponent();
+      component.reactivateVeterinarian(inactive);
+      expect(component.veterinarians()).toEqual([inactive]);
+      expect(component.reactivatingId()).toBeNull();
+      expect(component.reactivateError()).toBeTruthy();
+      if (status === 409) expect(component.reactivateError()).toBe('La cuenta asociada está inactiva.');
+      component.reactivateVeterinarian(inactive);
+      expect(vetService.reactivate).toHaveBeenCalledTimes(2);
+    });
   });
 });

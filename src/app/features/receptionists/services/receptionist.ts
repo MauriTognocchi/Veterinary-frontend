@@ -58,4 +58,11 @@ import { HttpClient, HttpParams } from '@angular/common/http';
           `${this.baseUrl}/api/receptionists/${encodeURIComponent(externalId)}`,
         );
       }
+ 
+      reactivate(externalId: string): Observable<ReceptionistResponse> {
+        return this.http.patch<ReceptionistResponse>(
+          `${this.baseUrl}/api/receptionists/${encodeURIComponent(externalId)}/reactivate`,
+          null,
+        );
+      }
     }

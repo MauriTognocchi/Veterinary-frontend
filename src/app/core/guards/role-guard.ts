@@ -1,8 +1,8 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { map } from 'rxjs';
-import { UserPermission, UserRole } from '../models/auth.model';
 import { AuthService } from '../services/auth';
+import { hasRequiredRouteAccess } from './route-access';
 
 export const roleGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
@@ -16,23 +16,7 @@ export const roleGuard: CanActivateFn = (route, state) => {
         });
       }
 
-      const requiredRoles =
-        (route.data?.['roles'] as readonly UserRole[] | undefined) ?? [];
-      const requiredPermissions =
-        (route.data?.['permissions'] as readonly UserPermission[] | undefined) ??
-        [];
-
-      if (requiredRoles.length === 0 && requiredPermissions.length === 0) {
-        return true;
-      }
-
-      const hasRequiredRole =
-        requiredRoles.length === 0 || authService.hasAnyRole(requiredRoles);
-      const hasRequiredPermission =
-        requiredPermissions.length === 0 ||
-        authService.hasAnyPermission(requiredPermissions);
-
-      if (hasRequiredRole && hasRequiredPermission) {
+      if (hasRequiredRouteAccess(authService, route.data)) {
         return true;
       }
 
