@@ -27,27 +27,31 @@
     
             <div class="form-row">
               <div class="form-group">
-                <label for="animalTypeName">Tipo de animal</label>
-                <select id="animalTypeName" formControlName="animalTypeName">
+                <label for="animalTypeId">Tipo de animal</label>
+                <select
+                  id="animalTypeId"
+                  formControlName="animalTypeId"
+                  (change)="onAnimalTypeChange()"
+                >
                   <option value="">Seleccionar tipo...</option>
                   @for (type of animalTypes(); track type.externalId) {
-                    <option [value]="type.name">{{ type.name }}</option>
+                    <option [value]="type.externalId">{{ type.name }}</option>
                   }
                 </select>
-                @if (petForm.get('animalTypeName')?.touched && petForm.get('animalTypeName')?.invalid) {
+                @if (petForm.get('animalTypeId')?.touched && petForm.get('animalTypeId')?.invalid) {
                   <small class="field-error">Seleccioná un tipo de animal.</small>
                 }
               </div>
-    
+
               <div class="form-group">
-                <label for="breedName">Raza</label>
-                <select id="breedName" formControlName="breedName">
+                <label for="breedId">Raza</label>
+                <select id="breedId" formControlName="breedId">
                   <option value="">Seleccionar raza...</option>
-                  @for (b of breeds(); track b.externalId) {
-                    <option [value]="b.name">{{ b.name }}</option>
+                  @for (b of filteredBreeds(); track b.externalId) {
+                    <option [value]="b.externalId">{{ b.name }}</option>
                   }
                 </select>
-                @if (petForm.get('breedName')?.touched && petForm.get('breedName')?.invalid) {
+                @if (petForm.get('breedId')?.touched && petForm.get('breedId')?.invalid) {
                   <small class="field-error">Seleccioná una raza.</small>
                 }
               </div>

@@ -1,20 +1,22 @@
 import {
-      Component,
-      ElementRef,
-      OnInit,
-      inject,
-      signal,
-      viewChild,
-    } from '@angular/core';
-    import {
-      FormBuilder,
-      FormGroup,
-      ReactiveFormsModule,
-      Validators,
-    } from '@angular/forms';
-    import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-    import { BreedRequest } from '../../models/breed.model';
-    import { BreedService } from '../../services/breed';
+  Component,
+  ElementRef,
+  OnInit,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { AnimalTypeResponse } from '../../../animal-types/models/animal-type.model';
+import { AnimalTypeService } from '../../../animal-types/services/animal-type';
+import { BreedRequest } from '../../models/breed.model';
+import { BreedService } from '../../services/breed';
     
     @Component({
       selector: 'app-breed-form',
@@ -26,10 +28,11 @@ import {
     export class BreedForm implements OnInit {
       private fb = inject(FormBuilder);
       private breedService = inject(BreedService);
+      private animalTypeService = inject(AnimalTypeService);
       private router = inject(Router);
       private route = inject(ActivatedRoute);
       private formHeading = viewChild<ElementRef<HTMLElement>>('formHeading');
-    
+
       editando = signal<boolean>(false);
       externalId = signal<string | null>(null);
       saving = signal<boolean>(false);
@@ -38,7 +41,9 @@ import {
       loadError = signal<string | null>(null);
       loadErrorRetryable = signal<boolean>(false);
       notFound = signal<boolean>(false);
-    
+
+      animalTypes = signal<AnimalTypeResponse[]>([]);
+
       breedForm: FormGroup = this.fb.group({
         name: [
           '',
@@ -48,11 +53,16 @@ import {
             Validators.maxLength(50),
           ],
         ],
+        animalTypeId: ['', [Validators.required]],
       });
     
       ngOnInit(): void {
+        this.animalTypeService.getAll().subscribe({
+          next: (types) => this.animalTypes.set(types),
+        });
+
         const externalId = this.route.snapshot.paramMap.get('externalId');
-    
+
         if (externalId) {
           this.externalId.set(externalId);
           this.editando.set(true);
@@ -68,7 +78,10 @@ import {
     
         this.breedService.getById(externalId).subscribe({
           next: (breed) => {
-            this.breedForm.patchValue({ name: breed.name });
+            this.breedForm.patchValue({
+              name: breed.name,
+              animalTypeId: breed.animalType?.externalId || '',
+            });
             this.loading.set(false);
           },
           error: (err) => {
@@ -121,9 +134,10 @@ import {
         this.error.set(null);
         this.breedForm.disable();
     
-        const raw = this.breedForm.getRawValue() as { name: string };
+        const raw = this.breedForm.getRawValue() as { name: string; animalTypeId: string };
         const breed: BreedRequest = {
           name: raw.name.trim(),
+          animalTypeId: raw.animalTypeId,
         };
     
         const externalId = this.externalId();
