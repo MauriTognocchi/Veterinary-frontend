@@ -1,8 +1,12 @@
-export interface BreedRequest {
-      name: string;
-    }
+import { AnimalTypeResponse } from '../../animal-types/models/animal-type.model';
 
-    export interface BreedResponse {
-      externalId: string;
-      name: string;
-    }
+export interface BreedRequest {
+  name: string;
+  animalTypeId: string;
+}
+
+export interface BreedResponse {
+  externalId: string;
+  name: string;
+  animalType: AnimalTypeResponse;
+}

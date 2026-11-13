@@ -50,7 +50,11 @@ describe('AppointmentList', () => {
     active: true,
     color: 'Marrón',
     animalType: { externalId: 'animal-type-1', name: 'Perro' },
-    breed: { externalId: 'breed-1', name: 'Labrador' },
+    breed: {
+      externalId: 'breed-1',
+      name: 'Labrador',
+      animalType: { externalId: 'animal-type-1', name: 'Perro' },
+    },
     visitsCount: 2,
     lastVisitDate: '2026-01-15',
     activeAppointments: 1,

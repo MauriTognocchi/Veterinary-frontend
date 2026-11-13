@@ -58,10 +58,12 @@ import {
         name: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(50)]],
         birthDate: ['', [Validators.required]],
         color: ['', [Validators.required, Validators.pattern(/\S/), Validators.maxLength(30)]],
-        animalTypeName: ['', [Validators.required]],
-        breedName: ['', [Validators.required]],
+        animalTypeId: ['', [Validators.required]],
+        breedId: ['', [Validators.required]],
         ownerExternalId: [''], // Selector de dueño
       });
+
+      filteredBreeds = signal<BreedResponse[]>([]);
     
       ngOnInit(): void {
         this.loadCatalogs();
@@ -83,14 +85,25 @@ import {
         this.animalTypeService.getAll().subscribe({
           next: (types) => this.animalTypes.set(types),
         });
-    
-        this.breedService.getAll().subscribe({
-          next: (breeds) => this.breeds.set(breeds),
-        });
-    
+
         this.ownerService.getAll().subscribe({
           next: (owners) => this.owners.set(owners),
         });
+      }
+
+      onAnimalTypeChange(): void {
+        const animalTypeId = this.petForm.get('animalTypeId')?.value;
+        if (animalTypeId) {
+          this.breedService.getByAnimalTypeId(animalTypeId).subscribe({
+            next: (breeds) => {
+              this.filteredBreeds.set(breeds);
+              this.petForm.patchValue({ breedId: '' });
+            },
+          });
+        } else {
+          this.filteredBreeds.set([]);
+          this.petForm.patchValue({ breedId: '' });
+        }
       }
     
       loadPet(externalId: string): void {
@@ -98,17 +111,28 @@ import {
         this.loadError.set(null);
         this.loadErrorRetryable.set(false);
         this.notFound.set(false);
-    
+
         this.petService.getById(externalId).subscribe({
           next: (pet) => {
+            const animalTypeId = pet.animalType?.externalId || '';
+
+            // Cargar las razas filtradas para el tipo de animal de esta mascota
+            if (animalTypeId) {
+              this.breedService.getByAnimalTypeId(animalTypeId).subscribe({
+                next: (breeds) => {
+                  this.filteredBreeds.set(breeds);
+                },
+              });
+            }
+
             this.petForm.patchValue({
               name: pet.name,
               birthDate: pet.birthDate || '',
               color: pet.color,
-              animalTypeName: pet.animalType?.name || '',
-              breedName: pet.breed?.name || '',
+              animalTypeId: animalTypeId,
+              breedId: pet.breed?.externalId || '',
             });
-    
+
             // Buscar si ya tiene dueño asignado
             this.ownerByPetService.getAll().subscribe({
               next: (relations) => {
@@ -161,8 +185,8 @@ import {
           name: raw.name.trim(),
           birthDate: raw.birthDate,
           color: raw.color.trim(),
-          animalType: { name: raw.animalTypeName },
-          breed: { name: raw.breedName },
+          animalTypeId: raw.animalTypeId,
+          breedId: raw.breedId,
         };
     
         const externalId = this.externalId();

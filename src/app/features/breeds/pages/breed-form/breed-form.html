@@ -35,6 +35,24 @@
         } @else {
           <form [formGroup]="breedForm" (ngSubmit)="onSubmit()">
             <div class="form-group">
+              <label for="animalTypeId">Tipo de animal</label>
+              <select id="animalTypeId" formControlName="animalTypeId">
+                <option value="">Seleccionar tipo...</option>
+                @for (type of animalTypes(); track type.externalId) {
+                  <option [value]="type.externalId">{{ type.name }}</option>
+                }
+              </select>
+              @if (
+                breedForm.get('animalTypeId')?.touched &&
+                breedForm.get('animalTypeId')?.invalid
+              ) {
+                <small class="field-error">
+                  Seleccioná un tipo de animal.
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
               <label for="name">Nombre</label>
               <input
                 id="name"

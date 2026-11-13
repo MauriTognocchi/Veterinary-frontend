@@ -11,7 +11,13 @@
       getAll(): Observable<BreedResponse[]> {
         return this.http.get<BreedResponse[]>(`${this.baseUrl}/api/breeds`);
       }
-    
+
+      getByAnimalTypeId(animalTypeId: string): Observable<BreedResponse[]> {
+        return this.http.get<BreedResponse[]>(
+          `${this.baseUrl}/api/breeds/animal-type/${encodeURIComponent(animalTypeId)}`,
+        );
+      }
+
       getById(externalId: string): Observable<BreedResponse> {
         return this.http.get<BreedResponse>(
           `${this.baseUrl}/api/breeds/${encodeURIComponent(externalId)}`,

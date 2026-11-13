@@ -31,7 +31,11 @@ describe('PetDetail', () => {
     active: true,
     color: 'Marrón',
     animalType: { externalId: 'animal-type-1', name: 'Perro' },
-    breed: { externalId: 'breed-1', name: 'Labrador' },
+    breed: {
+      externalId: 'breed-1',
+      name: 'Labrador',
+      animalType: { externalId: 'animal-type-1', name: 'Perro' },
+    },
   };
 
   const veterinarian = {
