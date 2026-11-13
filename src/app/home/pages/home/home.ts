@@ -39,6 +39,9 @@ export class Home implements OnInit {
   readonly isVeterinarian = computed(() =>
     this.authService.hasAnyRole(['ROLE_VETERINARIAN']),
   );
+  readonly isReceptionist = computed(() =>
+    this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
+  );
 
   readonly todayAppointments = signal<AppointmentResponse[]>([]);
   readonly loadingAppointments = signal(false);
@@ -51,6 +54,47 @@ export class Home implements OnInit {
     COMPLETED: 'Completado',
     CANCELLED: 'Cancelado',
   };
+
+  readonly receptionistActions: readonly QuickAccess[] = [
+    {
+      label: 'NUEVO TURNO',
+      description: 'Registrar turno',
+      path: '/appointments/new',
+    },
+    {
+      label: 'CREAR PROPIETARIO',
+      description: 'Registrar propietario',
+      path: '/owners/new',
+    },
+    {
+      label: 'NUEVA MASCOTA',
+      description: 'Registrar mascota',
+      path: '/pets/new',
+    },
+    {
+      label: 'BUSCAR MASCOTA',
+      description: 'Consultar pacientes',
+      path: '/pets',
+    },
+    {
+      label: 'BUSCAR PROPIETARIO',
+      description: 'Consultar información',
+      path: '/owners',
+    },
+  ];
+
+  readonly receptionistQueries: readonly QuickAccess[] = [
+    {
+      label: 'SUCURSALES',
+      description: 'Consultar sucursales',
+      path: '/branches',
+    },
+    {
+      label: 'VETERINARIOS',
+      description: 'Consultar profesionales',
+      path: '/veterinarians',
+    },
+  ];
 
   readonly quickAccess: readonly QuickAccess[] = [
     {
@@ -92,7 +136,10 @@ export class Home implements OnInit {
   ];
 
   ngOnInit(): void {
-    if (this.isVeterinarian() && !this.isAdmin()) {
+    if (
+      (this.isVeterinarian() || this.isReceptionist()) &&
+      !this.isAdmin()
+    ) {
       this.loadTodayAppointments();
       this.loadOwnerRelations();
     }
@@ -162,6 +209,18 @@ export class Home implements OnInit {
     const time = appointmentDate?.split('T')[1];
 
     return time ? time.slice(0, 5) : '—';
+  }
+
+  veterinarianName(
+    veterinarian: AppointmentResponse['veterinarian'],
+  ): string {
+    if (!veterinarian) {
+      return 'No disponible';
+    }
+
+    const name = `${veterinarian.firstName} ${veterinarian.lastName}`.trim();
+
+    return name || 'No disponible';
   }
 
   statusLabel(status: AppointmentStatus): string {

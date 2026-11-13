@@ -141,6 +141,109 @@
       </div>
     </section>
   </section>
+} @else if (isReceptionist()) {
+  <section class="reception-home">
+    <header class="reception-home-header">
+      <h2>¡Buen día!</h2>
+      <p>Panel de recepción</p>
+    </header>
+
+    <section class="reception-section" aria-labelledby="reception-today-title">
+      <div class="reception-section-header">
+        <h3 id="reception-today-title">TURNOS DE HOY</h3>
+        <a routerLink="/appointments" class="btn btn-secondary btn-sm">
+          Ver todos
+        </a>
+      </div>
+
+      @if (loadingAppointments()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando turnos...
+        </div>
+      } @else if (appointmentsError()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ appointmentsError() }}</p>
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoad()"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      } @else if (todayAppointments().length === 0) {
+        <div class="state-message" role="status">
+          No hay turnos programados para hoy
+        </div>
+      } @else {
+        <table class="reception-appointments-table">
+          <thead>
+            <tr>
+              <th>Hora</th>
+              <th>Mascota</th>
+              <th>Propietario</th>
+              <th>Veterinario</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (appointment of todayAppointments(); track appointment.externalId) {
+              <tr>
+                <td data-label="Hora">
+                  {{ formatTime(appointment.appointmentDate) }}
+                </td>
+                <td data-label="Mascota">
+                  {{ appointment.pet?.name ?? 'No disponible' }}
+                </td>
+                <td data-label="Propietario">
+                  {{ ownerName(appointment.pet?.externalId) }}
+                </td>
+                <td data-label="Veterinario">
+                  {{ veterinarianName(appointment.veterinarian) }}
+                </td>
+                <td data-label="Acción">
+                  <a
+                    [routerLink]="['/appointments', appointment.externalId, 'edit']"
+                    class="btn btn-secondary btn-sm"
+                  >
+                    Ver
+                  </a>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>
+
+    <section class="reception-section" aria-labelledby="reception-actions-title">
+      <h3 id="reception-actions-title">ACCIONES FRECUENTES</h3>
+      <div class="reception-card-grid">
+        @for (action of receptionistActions; track action.label) {
+          <a class="reception-card" [routerLink]="action.path">
+            <span class="reception-card-label">{{ action.label }}</span>
+            <span class="reception-card-text">{{ action.description }}</span>
+            <span class="reception-card-arrow" aria-hidden="true">→</span>
+          </a>
+        }
+      </div>
+    </section>
+
+    <section class="reception-section" aria-labelledby="reception-queries-title">
+      <h3 id="reception-queries-title">CONSULTAS</h3>
+      <div class="reception-card-grid">
+        @for (query of receptionistQueries; track query.label) {
+          <a class="reception-card" [routerLink]="query.path">
+            <span class="reception-card-label">{{ query.label }}</span>
+            <span class="reception-card-text">{{ query.description }}</span>
+            <span class="reception-card-arrow" aria-hidden="true">→</span>
+          </a>
+        }
+      </div>
+    </section>
+  </section>
 } @else {
   <section class="home-hero">
     <div class="home-content">

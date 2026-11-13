@@ -255,7 +255,8 @@
   }
 }
 
-.vet-home {
+.vet-home,
+.reception-home {
   display: flex;
   flex-direction: column;
   gap: clamp(1.5rem, 4vw, 2.5rem);
@@ -263,7 +264,8 @@
   min-width: 0;
 }
 
-.vet-home-header {
+.vet-home-header,
+.reception-home-header {
   padding: clamp(1.75rem, 4vw, 2.75rem);
   color: #ffffff;
   background: linear-gradient(120deg, var(--violet-800), var(--violet-600) 60%, var(--violet-500));
@@ -271,18 +273,21 @@
   box-shadow: var(--shadow-md);
 }
 
-.vet-home-header h2 {
+.vet-home-header h2,
+.reception-home-header h2 {
   margin-bottom: 0.5rem;
   color: #ffffff;
   font-size: clamp(1.6rem, 4vw, 2.35rem);
 }
 
-.vet-home-header p {
+.vet-home-header p,
+.reception-home-header p {
   color: var(--violet-100);
   font-size: clamp(0.95rem, 2vw, 1.1rem);
 }
 
-.vet-section {
+.vet-section,
+.reception-section {
   display: flex;
   flex-direction: column;
   gap: 1rem;
@@ -295,7 +300,8 @@
   box-shadow: var(--shadow-sm);
 }
 
-.vet-section-header {
+.vet-section-header,
+.reception-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -303,7 +309,8 @@
   gap: 1rem;
 }
 
-.vet-section h3 {
+.vet-section h3,
+.reception-section h3 {
   padding-left: 0.65rem;
   color: var(--violet-900);
   font-size: 0.8rem;
@@ -313,7 +320,8 @@
   border-left: 4px solid var(--violet-500);
 }
 
-.vet-appointments-table {
+.vet-appointments-table,
+.reception-appointments-table {
   width: 100%;
   min-width: 0;
 }
@@ -347,13 +355,15 @@
   color: #991b1b;
 }
 
-.quick-access-grid {
+.quick-access-grid,
+.reception-card-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 1rem;
 }
 
-.quick-access-card {
+.quick-access-card,
+.reception-card {
   position: relative;
   display: flex;
   flex-direction: column;
@@ -369,18 +379,21 @@
     background-color 0.15s ease;
 }
 
-.quick-access-label {
+.quick-access-label,
+.reception-card-label {
   font-size: 0.82rem;
   font-weight: 700;
   letter-spacing: 0.06em;
 }
 
-.quick-access-text {
+.quick-access-text,
+.reception-card-text {
   color: var(--muted);
   font-size: 0.92rem;
 }
 
-.quick-access-arrow {
+.quick-access-arrow,
+.reception-card-arrow {
   position: absolute;
   top: 50%;
   right: 1.1rem;
@@ -390,7 +403,8 @@
   transform: translateY(-50%);
 }
 
-.quick-access-card:hover {
+.quick-access-card:hover,
+.reception-card:hover {
   background-color: var(--violet-100);
   border-color: var(--violet-300);
   box-shadow: var(--shadow-md);
@@ -398,23 +412,31 @@
 }
 
 @media (max-width: 900px) {
-  .quick-access-grid {
+  .quick-access-grid,
+  .reception-card-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
 @media (max-width: 720px) {
   .vet-appointments-table,
+  .reception-appointments-table,
   .vet-appointments-table thead,
+  .reception-appointments-table thead,
   .vet-appointments-table tbody,
+  .reception-appointments-table tbody,
   .vet-appointments-table tr,
+  .reception-appointments-table tr,
   .vet-appointments-table th,
-  .vet-appointments-table td {
+  .reception-appointments-table th,
+  .vet-appointments-table td,
+  .reception-appointments-table td {
     display: block;
     width: 100%;
   }
 
-  .vet-appointments-table {
+  .vet-appointments-table,
+  .reception-appointments-table {
     overflow: visible;
     white-space: normal;
     background-color: transparent;
@@ -422,7 +444,8 @@
     box-shadow: none;
   }
 
-  .vet-appointments-table thead {
+  .vet-appointments-table thead,
+  .reception-appointments-table thead {
     position: absolute;
     width: 1px;
     height: 1px;
@@ -434,13 +457,15 @@
     border: 0;
   }
 
-  .vet-appointments-table tbody {
+  .vet-appointments-table tbody,
+  .reception-appointments-table tbody {
     display: flex;
     flex-direction: column;
     gap: 0.75rem;
   }
 
-  .vet-appointments-table tr {
+  .vet-appointments-table tr,
+  .reception-appointments-table tr {
     padding: 0.25rem 0.9rem;
     background-color: var(--surface);
     border: 1px solid var(--border);
@@ -448,7 +473,8 @@
     box-shadow: var(--shadow-sm);
   }
 
-  .vet-appointments-table td {
+  .vet-appointments-table td,
+  .reception-appointments-table td {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -459,11 +485,13 @@
     border-top: 1px solid var(--border);
   }
 
-  .vet-appointments-table td:first-child {
+  .vet-appointments-table td:first-child,
+  .reception-appointments-table td:first-child {
     border-top: none;
   }
 
-  .vet-appointments-table td::before {
+  .vet-appointments-table td::before,
+  .reception-appointments-table td::before {
     content: attr(data-label);
     flex-shrink: 0;
     color: var(--muted);
@@ -474,31 +502,37 @@
     text-transform: uppercase;
   }
 
-  .vet-appointments-table td[data-label="Acción"] .btn {
+  .vet-appointments-table td[data-label="Acción"] .btn,
+  .reception-appointments-table td[data-label="Acción"] .btn {
     margin-left: auto;
   }
 }
 
 @media (max-width: 640px) {
-  .quick-access-grid {
+  .quick-access-grid,
+  .reception-card-grid {
     grid-template-columns: 1fr;
   }
 
-  .vet-section-header {
+  .vet-section-header,
+  .reception-section-header {
     align-items: stretch;
   }
 
-  .vet-section-header .btn {
+  .vet-section-header .btn,
+  .reception-section-header .btn {
     width: 100%;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quick-access-card {
+  .quick-access-card,
+  .reception-card {
     transition: none;
   }
 
-  .quick-access-card:hover {
+  .quick-access-card:hover,
+  .reception-card:hover {
     transform: none;
   }
 }
