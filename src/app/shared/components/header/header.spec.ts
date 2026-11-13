@@ -1,6 +1,7 @@
 import { signal, WritableSignal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { routes } from '../../../app.routes';
 import { AuthService } from '../../../core/services/auth';
 import { Header } from './header';
 
@@ -40,7 +41,7 @@ describe('Header', () => {
     await TestBed.configureTestingModule({
       imports: [Header],
       providers: [
-        provideRouter([]),
+        provideRouter(routes),
         { provide: AuthService, useValue: authService },
       ],
     }).compileComponents();
@@ -71,7 +72,7 @@ describe('Header', () => {
     expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
     expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
     expect(findNavLink('Cerrar sesión')).toBeDefined();
-    expect(findNavLink('Mascotas')).toBeUndefined();
+    expect(findNavLink('Mascotas')?.getAttribute('href')).toBe('/pets');
     expect(findNavLink('Iniciar sesión')).toBeUndefined();
   });
 
@@ -80,6 +81,9 @@ describe('Header', () => {
     authService.hasAnyRole.mockImplementation((roles: string[]) =>
       roles.includes('ROLE_VETERINARIAN'),
     );
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_CLINICAL_RECORDS'),
+    );
 
     createComponent();
 
@@ -87,8 +91,8 @@ describe('Header', () => {
     expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
     expect(findNavLink('Visitas')?.getAttribute('href')).toBe('/visits');
     expect(findNavLink('Cerrar sesión')).toBeDefined();
-    expect(findNavLink('Mascotas')).toBeUndefined();
-    expect(findNavLink('Propietarios')).toBeUndefined();
+    expect(findNavLink('Mascotas')?.getAttribute('href')).toBe('/pets');
+    expect(findNavLink('Propietarios')?.getAttribute('href')).toBe('/owners');
     expect(findNavLink('Iniciar sesión')).toBeUndefined();
   });
 
@@ -96,6 +100,9 @@ describe('Header', () => {
     authService.isAuthenticated.set(true);
     authService.hasAnyRole.mockImplementation((roles: string[]) =>
       roles.includes('ROLE_CLIENT'),
+    );
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_CLINICAL_RECORDS') || permissions.includes('VIEW_BRANCHES'),
     );
 
     createComponent();
@@ -138,5 +145,40 @@ describe('Header', () => {
     expect(findNavLink('Cerrar sesión')).toBeDefined();
     expect(findNavLink('Iniciar sesión')).toBeUndefined();
     expect(findNavLink('Registrarse')).toBeUndefined();
+    authService.isAuthenticated.set(false);
+    fixture.detectChanges();
+    expect(findNavLink('Cerrar sesión')).toBeUndefined();
+    expect(findNavLink('Iniciar sesión')).toBeDefined();
+  });
+
+  it('no infiere CLIENT ni muestra enlaces sin permisos con sesión válida sin roles', () => {
+    authService.isAuthenticated.set(true);
+    createComponent();
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
+    for (const label of ['Mascotas', 'Turnos', 'Visitas', 'Sucursales', 'Propietarios']) {
+      expect(findNavLink(label)).toBeUndefined();
+    }
+    expect(findNavLink('Iniciar sesión')).toBeUndefined();
+    expect(findNavLink('Registrarse')).toBeUndefined();
+  });
+
+  it('conserva solamente enlaces autorizados para roles y permisos vigentes', () => {
+    authService.isAuthenticated.set(true);
+    authService.hasAnyRole.mockImplementation((roles: string[]) => roles.includes('ROLE_RECEPTIONIST'));
+    createComponent();
+    expect(findNavLink('Turnos')).toBeDefined();
+    expect(findNavLink('Propietarios')).toBeDefined();
+    expect(findNavLink('Mascotas')).toBeDefined();
+    expect(findNavLink('Visitas')).toBeUndefined();
+    expect(findNavLink('Sucursales')).toBeUndefined();
+
+    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
+      permissions.includes('VIEW_CLINICAL_RECORDS'),
+    );
+    authService.isAuthenticated.set(false);
+    authService.isAuthenticated.set(true);
+    fixture.detectChanges();
+    expect(findNavLink('Visitas')).toBeDefined();
+    expect(findNavLink('Sucursales')).toBeUndefined();
   });
 });

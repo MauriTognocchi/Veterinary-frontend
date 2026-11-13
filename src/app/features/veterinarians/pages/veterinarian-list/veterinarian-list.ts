@@ -46,6 +46,14 @@ export class VeterinarianList implements OnInit {
   branchesLoadError = signal<boolean>(false);
   deletingId = signal<string | null>(null);
   deleteError = signal<string | null>(null);
+  reactivatingId = signal<string | null>(null);
+  reactivateError = signal<string | null>(null);
+  success = signal<string | null>(null);
+  statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+  readonly actionPending = computed(() => this.deletingId() !== null || this.reactivatingId() !== null);
+  readonly filteredVeterinarians = computed(() => this.veterinarians().filter((vet) =>
+    this.statusFilter() === 'ALL' || vet.active === (this.statusFilter() === 'ACTIVE'),
+  ));
 
   filtersForm = this.fb.nonNullable.group({
     firstName: [''],
@@ -60,6 +68,7 @@ export class VeterinarianList implements OnInit {
   }
 
   loadVeterinarians(): void {
+    if (this.actionPending()) return;
     this.loading.set(true);
     this.error.set(null);
     this.loadErrorRetryable.set(false);
@@ -133,6 +142,8 @@ export class VeterinarianList implements OnInit {
   }
 
   clearFilters(): void {
+    if (this.actionPending()) return;
+    this.statusFilter.set('ALL');
     this.filtersForm.reset({
       firstName: '',
       lastName: '',
@@ -148,8 +159,46 @@ export class VeterinarianList implements OnInit {
     this.listHeading()?.nativeElement.focus();
   }
 
+  updateStatusFilter(event: Event): void {
+    this.statusFilter.set((event.target as HTMLSelectElement).value as 'ALL' | 'ACTIVE' | 'INACTIVE');
+  }
+
+  reactivateVeterinarian(veterinarian: VeterinarianResponse): void {
+    if (!this.isAdmin() || veterinarian.active !== false || this.actionPending()) return;
+    if (!window.confirm(`¿Reactivar al veterinario "${veterinarian.firstName} ${veterinarian.lastName}"?`)) return;
+
+    this.reactivatingId.set(veterinarian.externalId);
+    this.reactivateError.set(null);
+    this.deleteError.set(null);
+    this.success.set(null);
+    this.veterinarianService.reactivate(veterinarian.externalId).subscribe({
+      next: (updated) => {
+        this.veterinarians.update((list) => list.map((item) =>
+          item.externalId === veterinarian.externalId ? updated : item,
+        ));
+        this.reactivatingId.set(null);
+        this.success.set(`Se reactivó el perfil veterinario de ${updated.firstName} ${updated.lastName}.`);
+      },
+      error: (err) => {
+        this.reactivatingId.set(null);
+        const message = typeof err?.error?.message === 'string' ? err.error.message.trim() : '';
+        if (err?.status === 409) {
+          this.reactivateError.set(message || 'No se pudo reactivar el perfil. Puede estar ya activo, o la cuenta asociada estar inactiva, tener credenciales deshabilitadas o presentar una inconsistencia.');
+        } else if (err?.status === 404) {
+          this.reactivateError.set(message || 'El veterinario ya no existe.');
+        } else if (err?.status === 401) {
+          this.reactivateError.set('No tenés autorización para reactivar veterinarios. Iniciá sesión nuevamente.');
+        } else if (err?.status === 403) {
+          this.reactivateError.set('No tenés permisos para reactivar veterinarios.');
+        } else {
+          this.reactivateError.set('No pudimos reactivar al veterinario. Intentá nuevamente.');
+        }
+      },
+    });
+  }
+
   deleteVeterinarian(veterinarian: VeterinarianResponse): void {
-    if (this.deletingId() !== null) {
+    if (this.actionPending()) {
       return;
     }
 

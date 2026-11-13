@@ -2,6 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import {
   catchError,
+  defer,
   finalize,
   map,
   Observable,
@@ -33,7 +34,7 @@ interface AccessTokenClaims {
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   const parts = token.split('.');
 
-  if (parts.length < 2) {
+  if (parts.length !== 3 || !parts[2]) {
     return null;
   }
 
@@ -47,7 +48,21 @@ function decodeJwtPayload(token: string): Record<string, unknown> | null {
         .join(''),
     );
 
-    return JSON.parse(json) as Record<string, unknown>;
+    const payload: unknown = JSON.parse(json);
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return null;
+    }
+    const claims = payload as Record<string, unknown>;
+    if (
+      typeof claims['sub'] !== 'string' ||
+      !claims['sub'].trim() ||
+      typeof claims['exp'] !== 'number' ||
+      claims['exp'] * 1000 <= Date.now() ||
+      !Array.isArray(claims['roles'])
+    ) {
+      return null;
+    }
+    return claims;
   } catch {
     return null;
   }
@@ -96,10 +111,7 @@ export class AuthService {
   private tokenStorage = inject(TokenStorageService);
   private router = inject (Router);
 
-  private readonly _isAuthenticated = signal(
-    this.tokenStorage.getAccessToken() !== null ||
-      this.tokenStorage.getRefreshToken() !== null,
-  );
+  private readonly _isAuthenticated = signal(this.hasDecodableAccessToken());
 
   readonly isAuthenticated = this._isAuthenticated.asReadonly();
 
@@ -115,7 +127,9 @@ export class AuthService {
   private sessionGeneration = 0;
 
   constructor() {
-    this.applyAccessToken(this.tokenStorage.getAccessToken());
+    this.applyAccessToken(
+      this.hasDecodableAccessToken() ? this.tokenStorage.getAccessToken() : null,
+    );
   }
 
   hasRole(role: UserRole): boolean {
@@ -146,28 +160,36 @@ export class AuthService {
    * Si falta o es inválido, reutiliza el refresh token existente.
    */
   ensureSession(): Observable<boolean> {
-    if (!this._isAuthenticated()) {
-      return of(false);
-    }
-
     if (this.hasDecodableAccessToken()) {
+      if (!this._isAuthenticated()) {
+        this.applyAccessToken(this.tokenStorage.getAccessToken());
+        this._isAuthenticated.set(true);
+      }
       return of(true);
     }
 
+    if (!this.tokenStorage.getRefreshToken()) {
+      this.clearSession();
+      return of(false);
+    }
+
+    const generation = this.sessionGeneration;
     return this.refresh().pipe(
       map(() => {
         const authenticated =
           this._isAuthenticated() && this.hasDecodableAccessToken();
 
-        if (!authenticated) {
+        if (!authenticated && generation === this.sessionGeneration) {
           this.clearSession();
         }
 
         return authenticated;
       }),
       catchError(() => {
-        this.clearSession();
-        return of(false);
+        if (generation === this.sessionGeneration) {
+          this.clearSession();
+        }
+        return of(this._isAuthenticated() && this.hasDecodableAccessToken());
       }),
     );
   }
@@ -179,11 +201,17 @@ export class AuthService {
   }
 
   login(credentials: LoginRequest): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.baseUrl}/api/auth/login`, credentials)
-      .pipe(
+    return defer(() => {
+      // El formulario de login no debe heredar una sesión anterior, aunque falle el intento.
+      this.clearSession();
+      const generation = this.sessionGeneration;
+      return this.http.post<LoginResponse>(`${this.baseUrl}/api/auth/login`, credentials).pipe(
         tap((response) => {
-          if (!response?.accessToken || !response?.refreshToken) {
+          if (
+            !response?.accessToken ||
+            !response?.refreshToken ||
+            decodeJwtPayload(response.accessToken) === null
+          ) {
             throw new Error('Respuesta de login inválida');
           }
 
@@ -196,7 +224,14 @@ export class AuthService {
           this.applyAccessToken(response.accessToken);
           this._isAuthenticated.set(true);
         }),
+        catchError((error: unknown) => {
+          if (generation === this.sessionGeneration) {
+            this.clearSession();
+          }
+          return throwError(() => error);
+        }),
       );
+    });
   }
 
   /**
@@ -229,7 +264,10 @@ export class AuthService {
             return;
           }
 
-          if (!response?.accessToken) {
+          if (
+            !response?.accessToken ||
+            decodeJwtPayload(response.accessToken) === null
+          ) {
             throw new Error('Refresh sin accessToken');
           }
 

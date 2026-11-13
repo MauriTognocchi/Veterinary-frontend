@@ -62,4 +62,11 @@ export class VeterinarianService {
       `${this.baseUrl}/api/veterinarians/${encodeURIComponent(externalId)}`,
     );
   }
+
+  reactivate(externalId: string): Observable<VeterinarianResponse> {
+    return this.http.patch<VeterinarianResponse>(
+      `${this.baseUrl}/api/veterinarians/${encodeURIComponent(externalId)}/reactivate`,
+      null,
+    );
+  }
 }

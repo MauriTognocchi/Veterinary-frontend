@@ -176,4 +176,15 @@ describe('VeterinarianService', () => {
 
     expect(status).toBe(409);
   });
+
+  it('reactiva por PATCH sin cuerpo, codifica el ID y devuelve el perfil completo', () => {
+    const updated = { ...veterinarian, active: true, firstName: 'Nuevo' };
+    let response: VeterinarianResponse | undefined;
+    service.reactivate('vet/1').subscribe((value) => response = value);
+    const request = http.expectOne(`${baseUrl}/vet%2F1/reactivate`);
+    expect(request.request.method).toBe('PATCH');
+    expect(request.request.body).toBeNull();
+    request.flush(updated);
+    expect(response).toEqual(updated);
+  });
 });

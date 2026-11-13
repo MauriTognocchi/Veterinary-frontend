@@ -46,6 +46,14 @@
       branchesLoadError = signal<boolean>(false);
       deletingId = signal<string | null>(null);
       deleteError = signal<string | null>(null);
+      reactivatingId = signal<string | null>(null);
+      reactivateError = signal<string | null>(null);
+      success = signal<string | null>(null);
+      statusFilter = signal<'ALL' | 'ACTIVE' | 'INACTIVE'>('ALL');
+      readonly actionPending = computed(() => this.deletingId() !== null || this.reactivatingId() !== null);
+      readonly filteredReceptionists = computed(() => this.receptionists().filter((person) =>
+        this.statusFilter() === 'ALL' || person.active === (this.statusFilter() === 'ACTIVE'),
+      ));
 
       filtersForm = this.fb.nonNullable.group({
         firstName: [''],
@@ -59,6 +67,7 @@
       }
 
       loadReceptionists(): void {
+        if (this.actionPending()) return;
         this.loading.set(true);
         this.error.set(null);
         this.loadErrorRetryable.set(false);
@@ -130,6 +139,8 @@
       }
 
       clearFilters(): void {
+        if (this.actionPending()) return;
+        this.statusFilter.set('ALL');
         this.filtersForm.reset({
           firstName: '',
           lastName: '',
@@ -144,8 +155,46 @@
         this.listHeading()?.nativeElement.focus();
       }
 
+      updateStatusFilter(event: Event): void {
+        this.statusFilter.set((event.target as HTMLSelectElement).value as 'ALL' | 'ACTIVE' | 'INACTIVE');
+      }
+
+      reactivateReceptionist(receptionist: ReceptionistResponse): void {
+        if (!this.isAdmin() || receptionist.active !== false || this.actionPending()) return;
+        if (!window.confirm(`¿Reactivar al recepcionista "${receptionist.firstName} ${receptionist.lastName}"?`)) return;
+
+        this.reactivatingId.set(receptionist.externalId);
+        this.reactivateError.set(null);
+        this.deleteError.set(null);
+        this.success.set(null);
+        this.receptionistService.reactivate(receptionist.externalId).subscribe({
+          next: (updated) => {
+            this.receptionists.update((list) => list.map((item) =>
+              item.externalId === receptionist.externalId ? updated : item,
+            ));
+            this.reactivatingId.set(null);
+            this.success.set(`Se reactivó el perfil de recepcionista de ${updated.firstName} ${updated.lastName}.`);
+          },
+          error: (err) => {
+            this.reactivatingId.set(null);
+            const message = typeof err?.error?.message === 'string' ? err.error.message.trim() : '';
+            if (err?.status === 409) {
+              this.reactivateError.set(message || 'No se pudo reactivar el perfil. Puede estar ya activo, o la cuenta asociada estar inactiva, tener credenciales deshabilitadas o presentar una inconsistencia.');
+            } else if (err?.status === 404) {
+              this.reactivateError.set(message || 'El recepcionista ya no existe.');
+            } else if (err?.status === 401) {
+              this.reactivateError.set('No tenés autorización para reactivar recepcionistas. Iniciá sesión nuevamente.');
+            } else if (err?.status === 403) {
+              this.reactivateError.set('No tenés permisos para reactivar recepcionistas.');
+            } else {
+              this.reactivateError.set('No pudimos reactivar al recepcionista. Intentá nuevamente.');
+            }
+          },
+        });
+      }
+
       deleteReceptionist(receptionist: ReceptionistResponse): void {
-        if (this.deletingId() !== null) {
+        if (this.actionPending()) {
           return;
         }
 

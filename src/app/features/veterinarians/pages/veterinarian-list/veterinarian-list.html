@@ -11,6 +11,12 @@
   @if (deleteError()) {
     <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
   }
+  @if (reactivateError()) {
+    <div class="alert alert-error" role="alert">{{ reactivateError() }}</div>
+  }
+  @if (success()) {
+    <div class="alert alert-success" role="status">{{ success() }}</div>
+  }
 
   <form class="card filters-card" [formGroup]="filtersForm" (ngSubmit)="loadVeterinarians()">
     <div class="form-grid">
@@ -50,15 +56,23 @@
           }
         </select>
       </div>
+      <div class="form-group">
+        <label for="filter-veterinarian-status">Estado del perfil</label>
+        <select id="filter-veterinarian-status" [value]="statusFilter()" (change)="updateStatusFilter($event)">
+          <option value="ALL">Todos</option>
+          <option value="ACTIVE">Activos</option>
+          <option value="INACTIVE">Inactivos</option>
+        </select>
+      </div>
     </div>
     <div class="filters-actions">
-      <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading()">
+      <button type="submit" class="btn btn-primary btn-sm" [disabled]="loading() || actionPending()">
         Buscar
       </button>
       <button
         type="button"
         class="btn btn-secondary btn-sm"
-        [disabled]="loading()"
+        [disabled]="loading() || actionPending()"
         (click)="clearFilters()"
       >
         Limpiar filtros
@@ -90,9 +104,9 @@
         </div>
       }
     </div>
-  } @else if (veterinarians().length === 0) {
+  } @else if (filteredVeterinarians().length === 0) {
     <div class="state-message" role="status">
-      @if (appliedFilters()) {
+      @if (appliedFilters() || statusFilter() !== 'ALL') {
         No encontramos veterinarios con los filtros aplicados.
       } @else {
         No hay veterinarios registrados.
@@ -113,7 +127,7 @@
         </tr>
       </thead>
       <tbody>
-        @for (veterinarian of veterinarians(); track veterinarian.externalId) {
+        @for (veterinarian of filteredVeterinarians(); track veterinarian.externalId) {
           <tr [class.is-inactive]="!veterinarian.active">
             <td>{{ veterinarian.firstName }}</td>
             <td>{{ veterinarian.lastName }}</td>
@@ -147,13 +161,22 @@
                   <button
                     type="button"
                     class="btn btn-danger btn-sm"
-                    [disabled]="deletingId() !== null"
+                    [disabled]="actionPending()"
                     (click)="deleteVeterinarian(veterinarian)"
                   >
                     @if (deletingId() === veterinarian.externalId) {
                       Eliminando...
                     } @else {
                       Eliminar
+                    }
+                  </button>
+                } @else {
+                  <button type="button" class="btn btn-secondary btn-sm reactivate-button"
+                    [disabled]="actionPending()" (click)="reactivateVeterinarian(veterinarian)">
+                    @if (reactivatingId() === veterinarian.externalId) {
+                      Reactivando...
+                    } @else {
+                      Reactivar
                     }
                   </button>
                 }

@@ -1,6 +1,8 @@
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { of } from 'rxjs';
+import { routes } from '../../../app.routes';
 import { AuthService } from '../../../core/services/auth';
 import { AppointmentService } from '../../../features/appointments/services/appointment';
 import { OwnerByPetService } from '../../../features/owners-by-pets/services/owner-by-pet';
@@ -10,7 +12,13 @@ import { Home } from './home';
 describe('Home', () => {
   let component: Home;
   let fixture: ComponentFixture<Home>;
-  let authService: { hasAnyRole: ReturnType<typeof vi.fn> };
+  let authService: {
+    isAuthenticated: ReturnType<typeof signal<boolean>>;
+    hasAnyRole: ReturnType<typeof vi.fn>;
+    hasAnyPermission: ReturnType<typeof vi.fn>;
+    ensureSession: ReturnType<typeof vi.fn>;
+    logout: ReturnType<typeof vi.fn>;
+  };
   let appointmentService: { getAll: ReturnType<typeof vi.fn> };
   let ownerByPetService: { getAll: ReturnType<typeof vi.fn> };
   let petService: { getMyPets: ReturnType<typeof vi.fn> };
@@ -48,7 +56,13 @@ describe('Home', () => {
   }
 
   beforeEach(async () => {
-    authService = { hasAnyRole: vi.fn().mockReturnValue(false) };
+    authService = {
+      isAuthenticated: signal(false),
+      hasAnyRole: vi.fn().mockReturnValue(false),
+      hasAnyPermission: vi.fn().mockReturnValue(false),
+      ensureSession: vi.fn().mockReturnValue(of(true)),
+      logout: vi.fn(),
+    };
     appointmentService = { getAll: vi.fn().mockReturnValue(of([])) };
     ownerByPetService = { getAll: vi.fn().mockReturnValue(of([])) };
     petService = { getMyPets: vi.fn().mockReturnValue(of([])) };
@@ -56,7 +70,7 @@ describe('Home', () => {
     await TestBed.configureTestingModule({
       imports: [Home],
       providers: [
-        provideRouter([]),
+        provideRouter(routes),
         { provide: AuthService, useValue: authService },
         { provide: AppointmentService, useValue: appointmentService },
         { provide: OwnerByPetService, useValue: ownerByPetService },
@@ -109,9 +123,55 @@ describe('Home', () => {
     });
   });
 
+  describe('sesión sin rol profesional', () => {
+    beforeEach(() => authService.isAuthenticated.set(true));
+
+    it('sin permisos de gestión no muestra login ni enlaces de gestión y ofrece cerrar sesión', () => {
+      createComponent();
+      const element = fixture.nativeElement as HTMLElement;
+      expect(element.textContent).toContain('Tu cuenta no tiene acceso a las secciones de gestión. Contactá al administrador');
+      expect(findLink('.home-actions', 'INICIAR SESIÓN')).toBeUndefined();
+      expect(findLink('.home-actions', 'REGISTRARSE')).toBeUndefined();
+      expect(element.querySelector('.limited-home a')).toBeNull();
+      (element.querySelector('.limited-home button') as HTMLButtonElement).click();
+      expect(authService.logout).toHaveBeenCalledWith('manual');
+      expect(appointmentService.getAll).not.toHaveBeenCalled();
+      expect(petService.getMyPets).not.toHaveBeenCalled();
+    });
+
+    it('una navegación real hacia Visitas termina en forbidden por el guard, sin llamar al backend', async () => {
+      createComponent();
+      const router = TestBed.inject(Router);
+      await router.navigateByUrl('/visits');
+      expect(router.url).toBe('/forbidden?returnUrl=%2Fvisits');
+      expect(authService.ensureSession).toHaveBeenCalled();
+      expect(appointmentService.getAll).not.toHaveBeenCalled();
+    });
+
+    it('con permiso de ruta pero sin rol profesional muestra solo la sección permitida', () => {
+      authService.hasAnyPermission.mockImplementation((permissions: readonly string[]) =>
+        permissions.includes('VIEW_BRANCHES'),
+      );
+      createComponent();
+      expect(findLink('.limited-home', 'Sucursales')?.getAttribute('href')).toBe('/branches');
+      expect(findLink('.limited-home', 'Visitas')).toBeUndefined();
+      expect(findLink('.home-actions', 'INICIAR SESIÓN')).toBeUndefined();
+    });
+
+    it('mantiene la vista CLIENT si ese rol todavía existe, sin inventar VETERINARIAN', () => {
+      authService.hasAnyRole.mockImplementation((roles: readonly string[]) => roles.includes('ROLE_CLIENT'));
+      createComponent();
+      expect(fixture.nativeElement.querySelector('.owner-home')).not.toBeNull();
+      expect(fixture.nativeElement.querySelector('.vet-home')).toBeNull();
+      expect(findLink('.home-actions', 'INICIAR SESIÓN')).toBeUndefined();
+    });
+  });
+
   describe('como administrador', () => {
     beforeEach(() => {
+      authService.isAuthenticated.set(true);
       authService.hasAnyRole.mockReturnValue(true);
+      authService.hasAnyPermission.mockReturnValue(true);
     });
 
     it('muestra el título y el subtítulo del panel', () => {
@@ -176,7 +236,11 @@ describe('Home', () => {
 
   describe('como veterinario', () => {
     beforeEach(() => {
+      authService.isAuthenticated.set(true);
       authService.hasAnyRole.mockImplementation(vetRoleOnly);
+      authService.hasAnyPermission.mockImplementation((permissions: readonly string[]) =>
+        permissions.includes('VIEW_CLINICAL_RECORDS'),
+      );
     });
 
     it('muestra el título y el subtítulo del home', () => {
@@ -241,11 +305,8 @@ describe('Home', () => {
       expect(rows[0]?.textContent).toContain('Firulais');
       expect(rows[0]?.textContent).toContain('Juan Pérez');
       expect(rows[0]?.textContent).toContain('Confirmado');
-      expect(
-        rows[0]
-          ?.querySelector<HTMLAnchorElement>('a')
-          ?.getAttribute('href'),
-      ).toBe('/appointments/appointment-today/edit');
+      // La edición de turnos exige ADMIN o RECEPTIONIST; no ofrecerla al veterinario.
+      expect(rows[0]?.querySelector('a')).toBeNull();
     });
 
     it('muestra el mensaje vacío cuando no hay turnos para hoy', () => {
@@ -283,8 +344,12 @@ describe('Home', () => {
 
   describe('como propietario', () => {
     beforeEach(() => {
+      authService.isAuthenticated.set(true);
       authService.hasAnyRole.mockImplementation((roles: readonly string[]) =>
         roles.includes('ROLE_CLIENT'),
+      );
+      authService.hasAnyPermission.mockImplementation((permissions: readonly string[]) =>
+        permissions.includes('VIEW_CLINICAL_RECORDS') || permissions.includes('VIEW_BRANCHES'),
       );
 
       petService.getMyPets.mockReturnValue(

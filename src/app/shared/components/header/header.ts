@@ -1,6 +1,6 @@
-import { Component, computed, inject } from '@angular/core';
-import { RouterLink, RouterLinkActive } from '@angular/router';
-import { ANIMAL_TYPE_ADMIN_ROLES } from '../../../core/models/auth.model';
+import { Component, inject } from '@angular/core';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { canNavigateTo } from '../../../core/guards/route-access';
 import { AuthService } from '../../../core/services/auth';
 
 @Component({
@@ -11,17 +11,13 @@ import { AuthService } from '../../../core/services/auth';
 })
 export class Header {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   readonly isLoggedIn = this.authService.isAuthenticated;
-  readonly isAdmin = computed(() =>
-    this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
-  );
-  readonly isVeterinarian = computed(() =>
-    this.authService.hasAnyRole(['ROLE_VETERINARIAN']),
-  );
-  readonly isReceptionist = computed(() =>
-    this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
-  );
+
+  canAccess(path: string): boolean {
+    return canNavigateTo(this.authService, this.router, path);
+  }
 
   logout(): void {
     this.authService.logout('manual');

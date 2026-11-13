@@ -1,8 +1,9 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { catchError, of } from 'rxjs';
 import { ANIMAL_TYPE_ADMIN_ROLES } from '../../../core/models/auth.model';
 import { AuthService } from '../../../core/services/auth';
+import { canNavigateTo } from '../../../core/guards/route-access';
 import {
   AppointmentResponse,
   AppointmentStatus,
@@ -32,21 +33,23 @@ interface QuickAccess {
 })
 export class Home implements OnInit {
   private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
+  readonly isAuthenticated = this.authService.isAuthenticated;
   private readonly appointmentService = inject(AppointmentService);
   private readonly ownerByPetService = inject(OwnerByPetService);
   private readonly petService = inject(PetService);
 
   readonly isAdmin = computed(() =>
-    this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
+    this.isAuthenticated() && this.authService.hasAnyRole(ANIMAL_TYPE_ADMIN_ROLES),
   );
   readonly isVeterinarian = computed(() =>
-    this.authService.hasAnyRole(['ROLE_VETERINARIAN']),
+    this.isAuthenticated() && this.authService.hasAnyRole(['ROLE_VETERINARIAN']),
   );
   readonly isReceptionist = computed(() =>
-    this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
+    this.isAuthenticated() && this.authService.hasAnyRole(['ROLE_RECEPTIONIST']),
   );
   readonly isClient = computed(() =>
-    this.authService.hasAnyRole(['ROLE_CLIENT']),
+    this.isAuthenticated() && this.authService.hasAnyRole(['ROLE_CLIENT']),
   );
 
   readonly todayAppointments = signal<AppointmentResponse[]>([]);
@@ -165,21 +168,41 @@ export class Home implements OnInit {
 
   readonly configuracionLinks: readonly AdminLink[] = [
     { label: 'Sucursales', path: '/branches' },
+    { label: 'Condiciones', path: '/conditions' },
+    { label: 'Estudios', path: '/studies' },
     { label: 'Medicamentos', path: '/medications' },
     { label: 'Tipos de animales', path: '/animal-types' },
     { label: 'Razas', path: '/breeds' },
   ];
 
+  readonly managementLinks: readonly AdminLink[] = [
+    { label: 'Turnos', path: '/appointments' },
+    ...this.gestionLinks,
+    ...this.personalLinks,
+    ...this.configuracionLinks,
+  ];
+  readonly hasManagementAccess = computed(() =>
+    this.managementLinks.some((link) => this.canAccess(link.path)),
+  );
+
+  canAccess(path: string): boolean {
+    return canNavigateTo(this.authService, this.router, path);
+  }
+
+  logout(): void {
+    this.authService.logout('manual');
+  }
+
   ngOnInit(): void {
     if (
       (this.isVeterinarian() || this.isReceptionist()) &&
-      !this.isAdmin()
+      !this.isAdmin() && this.canAccess('/appointments')
     ) {
       this.loadTodayAppointments();
       this.loadOwnerRelations();
     }
 
-    if (this.isClient()) {
+    if (this.isClient() && this.canAccess('/pets')) {
       this.loadOwnerPets();
     }
   }

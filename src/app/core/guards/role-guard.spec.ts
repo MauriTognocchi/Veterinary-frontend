@@ -9,6 +9,7 @@ import {
 import { firstValueFrom, Observable, of } from 'rxjs';
 import { AuthService } from '../services/auth';
 import { roleGuard } from './role-guard';
+import { routes } from '../../app.routes';
 
 describe('roleGuard', () => {
   let authService: {
@@ -123,6 +124,19 @@ describe('roleGuard', () => {
       commands: ['/forbidden'],
       extras: { queryParams: { returnUrl: '/owners/new' } },
     });
+  });
+
+  it('Visitas redirige por guard sin hacer una petición al backend cuando falta VIEW_CLINICAL_RECORDS', async () => {
+    authService.ensureSession.mockReturnValue(of(true));
+    authService.hasAnyPermission.mockReturnValue(false);
+    const visits = routes.find((route) => route.path === 'visits');
+    expect(visits?.data).toEqual({ permissions: ['VIEW_CLINICAL_RECORDS'] });
+    const result = await executeGuard({ data: visits?.data } as ActivatedRouteSnapshot);
+    expect(result).toEqual({
+      commands: ['/forbidden'],
+      extras: { queryParams: { returnUrl: '/owners/new' } },
+    });
+    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_CLINICAL_RECORDS']);
   });
 
   it('permite rutas autenticadas sin metadata de roles o permisos', async () => {

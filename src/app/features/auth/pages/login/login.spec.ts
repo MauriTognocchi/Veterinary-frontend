@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { of, throwError } from 'rxjs';
 import { AuthService } from '../../../../core/services/auth';
@@ -40,7 +41,7 @@ describe('Login', () => {
     navigate: ReturnType<typeof vi.fn>;
     navigateByUrl: ReturnType<typeof vi.fn>;
   };
-  let authService: { login: ReturnType<typeof vi.fn> };
+  let authService: { login: ReturnType<typeof vi.fn>; isAuthenticated: ReturnType<typeof signal<boolean>>; clearSession: ReturnType<typeof vi.fn> };
   let queryParams: Record<string, string | null>;
 
   function createComponent(): void {
@@ -63,7 +64,7 @@ describe('Login', () => {
       navigate: vi.fn().mockResolvedValue(true),
       navigateByUrl: vi.fn().mockResolvedValue(true),
     };
-    authService = { login: vi.fn() };
+    authService = { login: vi.fn(), isAuthenticated: signal(true), clearSession: vi.fn() };
 
     const route = {
       snapshot: {
@@ -98,6 +99,28 @@ describe('Login', () => {
       expect(router.navigateByUrl).not.toHaveBeenCalled();
     },
   );
+
+  it('explica un 401 de cuenta deshabilitada sin navegar ni perder el formulario', () => {
+    createComponent();
+    authService.login.mockReturnValue(throwError(() => ({ status: 401, error: { message: 'Cuenta deshabilitada' } })));
+    submitValidLogin();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('[role="alert"]')?.textContent).toContain('cuenta está desactivada');
+    expect(component.loginForm.getRawValue()).toEqual({ username: 'admin', password: 'secreto' });
+    expect(component.loginForm.enabled).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('no navega si el servicio entrega una respuesta sin sesión establecida', () => {
+    authService.isAuthenticated.set(false);
+    createComponent();
+    authService.login.mockReturnValue(of({ accessToken: 'access', refreshToken: 'refresh' }));
+    submitValidLogin();
+    expect(authService.clearSession).toHaveBeenCalled();
+    expect(component.error()).toBeTruthy();
+    expect(component.loginForm.enabled).toBe(true);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
 
   it('navega al returnUrl seguro después de un login exitoso', () => {
     queryParams['returnUrl'] = '/owners/42';

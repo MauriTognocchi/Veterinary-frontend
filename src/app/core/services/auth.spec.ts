@@ -17,7 +17,7 @@ function encodePart(value: Record<string, unknown>): string {
 }
 
 function createAccessToken(roles: string[]): string {
-  return `${encodePart({ alg: 'HS256', typ: 'JWT' })}.${encodePart({ roles })}.signature`;
+  return `${encodePart({ alg: 'HS256', typ: 'JWT' })}.${encodePart({ sub: 'test@example.com', roles, exp: Math.floor(Date.now() / 1000) + 3600 })}.signature`;
 }
 
 describe('AuthService', () => {
@@ -82,6 +82,66 @@ describe('AuthService', () => {
 
     expect(service.roles()).toEqual([]);
     expect(service.permissions()).toEqual([]);
+    expect(service.isAuthenticated()).toBe(false);
+  });
+
+  it('no toma como sesión un refresh token aislado ni un access token expirado', () => {
+    sessionStorage.setItem('refreshToken', 'refresh-token');
+    const service = TestBed.inject(AuthService);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.roles()).toEqual([]);
+  });
+
+  it('no restaura un access token expirado ni sus roles', () => {
+    storage.setTokens(`${encodePart({ alg: 'HS256' })}.${encodePart({ roles: ['ROLE_ADMIN'], exp: 1 })}.signature`, 'refresh');
+    const service = TestBed.inject(AuthService);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.roles()).toEqual([]);
+  });
+
+  it('login rechazado sin sesión previa no guarda tokens ni roles', () => {
+    const service = TestBed.inject(AuthService);
+    let errorStatus: number | undefined;
+    service.login({ username: 'vet', password: 'wrong' }).subscribe({ error: (err) => errorStatus = err.status });
+    http.expectOne('http://localhost:8080/api/auth/login').flush(
+      { message: 'Bad credentials' }, { status: 401, statusText: 'Unauthorized' },
+    );
+    expect(errorStatus).toBe(401);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.email()).toBeNull();
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(storage.getRefreshToken()).toBeNull();
+  });
+
+  it('login rechazado limpia tokens residuales antes de la respuesta y no reactiva la sesión', () => {
+    storage.setTokens(createAccessToken(['ROLE_ADMIN', 'VIEW_USERS']), 'old-refresh');
+    const service = TestBed.inject(AuthService);
+    expect(service.isAuthenticated()).toBe(true);
+    let status: number | undefined;
+    service.login({ username: 'vet', password: 'wrong' }).subscribe({ error: (err) => status = err.status });
+    expect(service.isAuthenticated()).toBe(false);
+    expect(storage.getAccessToken()).toBeNull();
+    http.expectOne('http://localhost:8080/api/auth/login').flush(
+      { message: 'Bad credentials' }, { status: 401, statusText: 'Unauthorized' },
+    );
+    expect(status).toBe(401);
+    expect(service.email()).toBeNull();
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(storage.getRefreshToken()).toBeNull();
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('un 200 sin ambos tokens válidos no crea sesión', () => {
+    const service = TestBed.inject(AuthService);
+    let error: unknown;
+    service.login({ username: 'vet', password: 'password' }).subscribe({ error: (err) => error = err });
+    http.expectOne('http://localhost:8080/api/auth/login').flush({ accessToken: 'invalid', refreshToken: 'refresh' });
+    expect(error).toBeInstanceOf(Error);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(storage.getAccessToken()).toBeNull();
   });
 
   it('actualiza roles y permisos al iniciar sesión', () => {
@@ -289,5 +349,43 @@ describe('AuthService', () => {
     expect(service.roles()).toEqual(['ROLE_ADMIN']);
     expect(service.permissions()).toEqual(['VIEW_OWNERS']);
     expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('acepta una cuenta activa autenticada sin autoridades de gestión sin inventar CLIENT', () => {
+    const service = TestBed.inject(AuthService);
+    const accessToken = createAccessToken([]);
+    service.login({ username: 'vet-activo', password: 'secreto' }).subscribe();
+    http.expectOne('http://localhost:8080/api/auth/login').flush({
+      accessToken,
+      refreshToken: 'refresh-token',
+    });
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.email()).toBe('test@example.com');
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(service.hasRole('ROLE_CLIENT')).toBe(false);
+    expect(storage.getAccessToken()).toBe(accessToken);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('un refresh anterior fallido no borra un login nuevo', async () => {
+    storage.setTokens('token-invalido', 'refresh-anterior');
+    const service = TestBed.inject(AuthService);
+    const previousSession = firstValueFrom(service.ensureSession());
+    const refreshRequest = http.expectOne('http://localhost:8080/api/auth/refresh');
+
+    const newToken = createAccessToken(['ROLE_ADMIN']);
+    service.login({ username: 'admin', password: 'secreto' }).subscribe();
+    http.expectOne('http://localhost:8080/api/auth/login').flush({
+      accessToken: newToken,
+      refreshToken: 'refresh-nuevo',
+    });
+    refreshRequest.flush({}, { status: 401, statusText: 'Unauthorized' });
+
+    await expect(previousSession).resolves.toBe(true);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(service.roles()).toEqual(['ROLE_ADMIN']);
+    expect(storage.getAccessToken()).toBe(newToken);
+    expect(storage.getRefreshToken()).toBe('refresh-nuevo');
   });
 });

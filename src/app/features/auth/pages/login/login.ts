@@ -46,8 +46,18 @@ export class Login {
     const { username, password } = this.loginForm.getRawValue();
 
     this.authService.login({ username, password }).subscribe({
-      next: () => {
+      next: (response) => {
         this.loading.set(false);
+        if (
+          !response?.accessToken ||
+          !response?.refreshToken ||
+          !this.authService.isAuthenticated()
+        ) {
+          this.authService.clearSession();
+          this.loginForm.enable();
+          this.error.set('No pudimos iniciar sesión. Intentá nuevamente.');
+          return;
+        }
 
         const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
 
@@ -62,7 +72,14 @@ export class Login {
         this.loginForm.enable();
 
         if (err?.status === 401) {
-          this.error.set('Credenciales incorrectas.');
+          const backendMessage = [err?.error?.message, err?.error?.error]
+            .filter((value): value is string => typeof value === 'string')
+            .join(' ').toLowerCase();
+          this.error.set(
+            /deshabilitad|desactivad|inactiv|disabled|inactive/.test(backendMessage)
+              ? 'La cuenta está desactivada o deshabilitada. Contactá a un administrador.'
+              : 'Credenciales incorrectas.',
+          );
         } else if (err?.status === 403) {
           this.error.set('No tenés permisos para acceder.');
         } else if (err?.status === 0) {

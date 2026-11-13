@@ -15,8 +15,9 @@ import { TokenStorageService } from '../services/token-storage.service';
 import { authInterceptor } from './auth';
 
 const REFRESH_URL = 'http://localhost:8080/api/auth/refresh';
-const OLD_ACCESS_TOKEN = 'old-access-token';
-const NEW_ACCESS_TOKEN = 'new-access-token';
+const token = (roles: string[]) => `header.${btoa(JSON.stringify({ sub: 'test@example.com', roles, exp: Math.floor(Date.now() / 1000) + 3600 }))}.signature`;
+const OLD_ACCESS_TOKEN = token(['ROLE_VETERINARIAN', 'VIEW_OWNERS']);
+const NEW_ACCESS_TOKEN = token(['ROLE_ADMIN', 'VIEW_OWNERS']);
 const REFRESH_TOKEN = 'refresh-token';
 
 describe('authInterceptor', () => {
@@ -144,7 +145,7 @@ describe('authInterceptor', () => {
   );
 
   it.each([500, 0])(
-    'conserva la sesión cuando el refresh falla con estado %i',
+    'limpia la sesión cuando el refresh no permite recuperar un 401 (estado %i)',
     (status) => {
       const service = startSession();
       let error: unknown;
@@ -165,10 +166,15 @@ describe('authInterceptor', () => {
         refresh.flush({}, { status, statusText: 'Server Error' });
       }
 
-      expect(storage.getAccessToken()).toBe(OLD_ACCESS_TOKEN);
-      expect(storage.getRefreshToken()).toBe(REFRESH_TOKEN);
-      expect(service.isAuthenticated()).toBe(true);
-      expect(router.navigate).not.toHaveBeenCalled();
+      expect(storage.getAccessToken()).toBeNull();
+      expect(storage.getRefreshToken()).toBeNull();
+      expect(service.isAuthenticated()).toBe(false);
+      expect(service.email()).toBeNull();
+      expect(service.roles()).toEqual([]);
+      expect(service.permissions()).toEqual([]);
+      expect(router.navigate).toHaveBeenCalledWith(['/login'], {
+        queryParams: { reason: 'expired' },
+      });
       expect((error as HttpErrorResponse).status).toBe(status);
     },
   );
@@ -176,7 +182,7 @@ describe('authInterceptor', () => {
   it.each([403, 500, 0])(
     'no renueva ante un error %i en la petición original',
     (status) => {
-      startSession();
+      const service = startSession();
       let error: unknown;
 
       httpClient.get('/api/owners').subscribe({
@@ -193,6 +199,7 @@ describe('authInterceptor', () => {
 
       http.expectNone(REFRESH_URL);
       expect(storage.getAccessToken()).toBe(OLD_ACCESS_TOKEN);
+      expect(service.isAuthenticated()).toBe(true);
       expect(router.navigate).not.toHaveBeenCalled();
       expect((error as HttpErrorResponse).status).toBe(status);
     },
@@ -258,5 +265,52 @@ describe('authInterceptor', () => {
       queryParams: { reason: 'expired' },
     });
     expect((error as HttpErrorResponse).status).toBe(401);
+  });
+
+  it('no cierra sesión si el reintento devuelve 403', () => {
+    const service = startSession();
+    let error: unknown;
+    httpClient.get('/api/owners').subscribe({ error: (value) => error = value });
+    http.expectOne('/api/owners').flush({}, { status: 401, statusText: 'Unauthorized' });
+    http.expectOne(REFRESH_URL).flush({ accessToken: NEW_ACCESS_TOKEN });
+    http.expectOne('/api/owners').flush({}, { status: 403, statusText: 'Forbidden' });
+    http.expectNone(REFRESH_URL);
+    expect((error as HttpErrorResponse).status).toBe(403);
+    expect(service.isAuthenticated()).toBe(true);
+    expect(storage.getAccessToken()).toBe(NEW_ACCESS_TOKEN);
+    expect(router.navigate).not.toHaveBeenCalled();
+  });
+
+  it('expulsa al usuario y no reintenta cuando una petición protegida devuelve 401 sin refresh token', () => {
+    storage.setTokens(OLD_ACCESS_TOKEN, REFRESH_TOKEN);
+    const service = TestBed.inject(AuthService);
+    sessionStorage.removeItem('refreshToken');
+    let error: unknown;
+    httpClient.get('/api/owners').subscribe({ error: (value) => error = value });
+    http.expectOne('/api/owners').flush({}, { status: 401, statusText: 'Unauthorized' });
+    http.expectNone(REFRESH_URL);
+    expect(error).toBeInstanceOf(Error);
+    expect(service.isAuthenticated()).toBe(false);
+    expect(service.email()).toBeNull();
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(service.roles()).toEqual([]);
+    expect(service.permissions()).toEqual([]);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(router.navigate).toHaveBeenCalledWith(['/login'], { queryParams: { reason: 'expired' } });
+  });
+
+  it('no renueva ni agrega Authorization al login con una sesión residual', () => {
+    const service = startSession();
+    let error: unknown;
+    service.login({ username: 'other', password: 'wrong' }).subscribe({ error: (value) => error = value });
+    const request = http.expectOne('http://localhost:8080/api/auth/login');
+    expect(request.request.headers.has('Authorization')).toBe(false);
+    request.flush({ message: 'Bad credentials' }, { status: 401, statusText: 'Unauthorized' });
+    http.expectNone(REFRESH_URL);
+    expect((error as HttpErrorResponse).status).toBe(401);
+    expect(storage.getAccessToken()).toBeNull();
+    expect(service.isAuthenticated()).toBe(false);
+    expect(router.navigate).not.toHaveBeenCalled();
   });
 });
