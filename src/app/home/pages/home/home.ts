@@ -107,6 +107,11 @@ export class Home implements OnInit {
 
   readonly quickAccess: readonly QuickAccess[] = [
     {
+      label: 'ESTUDIOS',
+      description: 'Gestionar estudios clínicos',
+      path: '/studies',
+    },
+    {
       label: 'BUSCAR MASCOTA',
       description: 'Consultar pacientes',
       path: '/pets',
@@ -160,8 +165,6 @@ export class Home implements OnInit {
 
   readonly configuracionLinks: readonly AdminLink[] = [
     { label: 'Sucursales', path: '/branches' },
-    { label: 'Condiciones', path: '/conditions' },
-    { label: 'Estudios', path: '/studies' },
     { label: 'Medicamentos', path: '/medications' },
     { label: 'Tipos de animales', path: '/animal-types' },
     { label: 'Razas', path: '/breeds' },
