@@ -10,6 +10,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 1.5rem;
+    min-width: 0;
     padding: 1rem var(--layout-gutter);
     background: linear-gradient(120deg, var(--violet-800), var(--violet-600) 55%, var(--violet-500));
     border-bottom: 3px solid var(--violet-300);
@@ -19,6 +20,7 @@
 
 .brand {
     display: flex;
+    flex: 1 1 auto;
     align-items: center;
     gap: 0.9rem;
     min-width: 0;
@@ -50,6 +52,7 @@
     font-size: clamp(1rem, 2.2vw, 1.35rem);
     font-weight: 700;
     line-height: 1.25;
+    overflow-wrap: break-word;
 }
 
 .brand-subtitle {
@@ -63,9 +66,13 @@
 
 .main-nav {
     display: flex;
+    flex: 0 1 auto;
     align-items: center;
+    justify-content: flex-end;
     flex-wrap: wrap;
     gap: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
 }
 
 .main-nav a {
@@ -101,6 +108,7 @@
     }
 
     .main-nav {
+        justify-content: flex-start;
         width: 100%;
     }
 }

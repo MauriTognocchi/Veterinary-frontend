@@ -1,19 +1,28 @@
 <section class="home-hero">
-  <p class="eyebrow">Clínica Veterinaria</p>
-  <h2>Gestión de turnos simple y ordenada</h2>
-  <p class="lead">
-    Administrá propietarios, mascotas y turnos desde un solo lugar. Todo lo que tu clínica
-    necesita para brindar un mejor cuidado.
-  </p>
+  <div class="home-content">
+    <p class="eyebrow">Clínica Veterinaria</p>
+    <h2>¡Cuidamos a quienes más querés!</h2>
+    <p class="lead">
+      Gestioná la salud de tus mascotas de manera sencilla y desde cualquier lugar.
+    </p>
 
-  @if (canViewOwners() || canCreateOwner()) {
     <div class="home-actions">
-      @if (canViewOwners()) {
-        <a routerLink="/owners" class="primary-button">Ver propietarios</a>
-      }
-      @if (canCreateOwner()) {
-        <a routerLink="/owners/new" class="secondary-button">Nuevo propietario</a>
-      }
+      <a routerLink="/login" class="btn btn-primary btn-lg">INICIAR SESIÓN</a>
+      <a routerLink="/register" class="btn btn-secondary btn-lg">REGISTRARSE</a>
     </div>
-  }
+  </div>
+
+  <div
+    class="home-media"
+    role="img"
+    aria-label="Espacio reservado para una imagen de perros y gatos"
+  >
+    <svg class="home-media-icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
+      <ellipse cx="20" cy="20" rx="6" ry="8" />
+      <ellipse cx="32" cy="14" rx="6" ry="8" />
+      <ellipse cx="44" cy="20" rx="6" ry="8" />
+      <path d="M32 26c-8 0-16 8-16 16 0 6 5 9 10 9 3 0 4-1 6-1s3 1 6 1c5 0 10-3 10-9 0-8-8-16-16-16z" />
+    </svg>
+    <span class="home-media-caption">Imagen de perros y gatos</span>
+  </div>
 </section>

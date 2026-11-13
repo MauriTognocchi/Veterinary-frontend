@@ -56,7 +56,18 @@ describe('Header', () => {
     expect(component).toBeTruthy();
   });
 
+  it('muestra la navegación pública sin sesión', () => {
+    createComponent();
+
+    expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
+    expect(findNavLink('Iniciar sesión')?.getAttribute('href')).toBe('/login');
+    expect(findNavLink('Registrarse')?.getAttribute('href')).toBe('/register');
+    expect(findNavLink('Mascotas')).toBeUndefined();
+    expect(findNavLink('Sucursales')).toBeUndefined();
+  });
+
   it('muestra el enlace de tipos de animales solo para administradores', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyRole.mockReturnValue(true);
 
     createComponent();
@@ -65,12 +76,15 @@ describe('Header', () => {
   });
 
   it('oculta el enlace de tipos de animales para usuarios no administradores', () => {
+    authService.isAuthenticated.set(true);
+
     createComponent();
 
     expect(findAnimalTypesLink()).toBeUndefined();
   });
 
   it('muestra Propietarios con VIEW_OWNERS y Agregar Propietario con CREATE_OWNERS', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
       permissions.includes('VIEW_OWNERS') ||
       permissions.includes('CREATE_OWNERS'),
@@ -91,6 +105,7 @@ describe('Header', () => {
   });
 
   it('muestra Propietarios con VIEW_OWNERS sin mostrar Agregar Propietario', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
       permissions.includes('VIEW_OWNERS'),
     );
@@ -102,6 +117,7 @@ describe('Header', () => {
   });
 
   it('muestra Agregar Propietario con CREATE_OWNERS aunque no tenga VIEW_OWNERS', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
       permissions.includes('CREATE_OWNERS'),
     );
@@ -115,6 +131,8 @@ describe('Header', () => {
   });
 
   it('oculta Propietarios sin VIEW_OWNERS ni CREATE_OWNERS', () => {
+    authService.isAuthenticated.set(true);
+
     createComponent();
 
     expect(findNavLink('Propietarios')).toBeUndefined();
@@ -124,6 +142,7 @@ describe('Header', () => {
   });
 
   it('muestra Usuarios con el permiso VIEW_USERS', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyPermission.mockReturnValue(true);
 
     createComponent();
@@ -133,12 +152,15 @@ describe('Header', () => {
   });
 
   it('oculta Usuarios sin el permiso VIEW_USERS', () => {
+    authService.isAuthenticated.set(true);
+
     createComponent();
 
     expect(findNavLink('Usuarios')).toBeUndefined();
   });
 
   it('muestra Visitas y Medicamentos según sus permisos', () => {
+    authService.isAuthenticated.set(true);
     authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
       permissions.includes('VIEW_CLINICAL_RECORDS') ||
       permissions.includes('VIEW_MEDICATIONS'),
@@ -153,9 +175,21 @@ describe('Header', () => {
   });
 
   it('oculta Visitas y Medicamentos sin sus permisos', () => {
+    authService.isAuthenticated.set(true);
+
     createComponent();
 
     expect(findNavLink('Visitas')).toBeUndefined();
     expect(findNavLink('Medicamentos')).toBeUndefined();
+  });
+
+  it('muestra Cerrar sesión y oculta login cuando hay sesión', () => {
+    authService.isAuthenticated.set(true);
+
+    createComponent();
+
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
+    expect(findNavLink('Iniciar sesión')).toBeUndefined();
+    expect(findNavLink('Registrarse')).toBeUndefined();
   });
 });
