@@ -72,8 +72,8 @@ export class Home implements OnInit {
     },
     {
       label: 'CREAR PROPIETARIO',
-      description: 'Registrar propietario',
-      path: '/owners/new',
+      description: 'Registrar propietario con acceso al sistema',
+      path: '/owners/new/account',
     },
     {
       label: 'NUEVA MASCOTA',

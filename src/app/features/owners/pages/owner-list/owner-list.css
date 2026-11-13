@@ -20,6 +20,12 @@
   font-size: clamp(1.4rem, 3vw, 1.75rem);
 }
 
+.owner-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .detail-link {
   color: var(--violet-700);
   font-size: 0.85rem;

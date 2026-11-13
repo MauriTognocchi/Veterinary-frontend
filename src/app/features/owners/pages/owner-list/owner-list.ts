@@ -8,6 +8,7 @@ import {
   viewChild,
 } from '@angular/core';
 import { RouterLink } from '@angular/router';
+import { OWNER_WRITE_ROLES } from '../../../../core/models/auth.model';
 import { AuthService } from '../../../../core/services/auth';
 import { OwnerService } from '../../services/owner';
 import { OwnerResponse } from '../../models/owner.model';
@@ -24,8 +25,8 @@ export class OwnerList implements OnInit {
   private authService = inject(AuthService);
   private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
 
-  readonly canCreateOwner = computed(() =>
-    this.authService.hasAnyPermission(['CREATE_OWNERS']),
+  readonly canCreateOwnerAccount = computed(() =>
+    this.authService.hasAnyRole(OWNER_WRITE_ROLES),
   );
   readonly canDeleteOwners = computed(() =>
     this.authService.hasAnyPermission(['DELETE_OWNERS']),

@@ -9,6 +9,16 @@ export interface OwnerRequest {
   address: AddressRequest | null;
 }
 
+export interface OwnerWithCredentialsRequest {
+  firstName: string;
+  lastName: string;
+  phone: string;
+  email: string;
+  dni: string;
+  address: AddressRequest;
+  password: string;
+}
+
 export interface OwnerResponse {
   externalId: string;
   firstName: string;

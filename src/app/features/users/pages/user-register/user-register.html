@@ -1,62 +1,76 @@
 <section class="user-register-container">
   <div class="card card-accent user-register-card">
-    <h2>Registrar usuario</h2>
+    <h2>{{ isOwnerMode() ? 'Registrar propietario' : 'Registrar usuario' }}</h2>
     <p class="intro">
-      Creá un veterinario o recepcionista con acceso al sistema.
+      @if (isOwnerMode()) {
+        Creá un propietario con acceso al sistema. La contraseña se acuerda
+        presencialmente con el cliente.
+      } @else {
+        Creá un veterinario o recepcionista con acceso al sistema.
+      }
     </p>
 
     @if (success()) {
       <div class="alert alert-success" role="status">{{ success() }}</div>
+      @if (isOwnerMode()) {
+        <div class="success-actions">
+          <a routerLink="/owners" class="btn btn-primary">
+            Volver al listado de propietarios
+          </a>
+        </div>
+      }
     }
 
     <form [formGroup]="userForm" (ngSubmit)="onSubmit()" [attr.aria-busy]="saving()">
       <div class="form-grid">
-        <div class="form-group">
-          <label for="role">Rol</label>
-          <select id="role" formControlName="role">
-            <option value="VETERINARIAN">Veterinario/a</option>
-            <option value="RECEPTIONIST">Recepcionista</option>
-          </select>
-        </div>
-
-        <div class="form-group">
-          <label for="branchExternalId">Sucursal</label>
-          @if (loadingBranches()) {
-            <span class="field-hint" role="status">Cargando sucursales...</span>
-          } @else if (branchesError()) {
-            <div class="alert alert-error" role="alert">
-              <p>{{ branchesError() }}</p>
-              @if (branchesErrorRetryable()) {
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  (click)="loadBranches()"
-                >
-                  Reintentar
-                </button>
-              }
-            </div>
-          } @else {
-            <select id="branchExternalId" formControlName="branchExternalId">
-              <option value="" disabled>Seleccioná una sucursal</option>
-              @for (branch of branches(); track branch.externalId) {
-                <option [value]="branch.externalId">{{ branch.name }}</option>
-              }
+        @if (!isOwnerMode()) {
+          <div class="form-group">
+            <label for="role">Rol</label>
+            <select id="role" formControlName="role">
+              <option value="VETERINARIAN">Veterinario/a</option>
+              <option value="RECEPTIONIST">Recepcionista</option>
             </select>
-            @if (branches().length === 0) {
-              <small class="field-error">
-                No hay sucursales disponibles. Creá una
-                <a routerLink="/branches/new">sucursal</a> primero.
-              </small>
+          </div>
+
+          <div class="form-group">
+            <label for="branchExternalId">Sucursal</label>
+            @if (loadingBranches()) {
+              <span class="field-hint" role="status">Cargando sucursales...</span>
+            } @else if (branchesError()) {
+              <div class="alert alert-error" role="alert">
+                <p>{{ branchesError() }}</p>
+                @if (branchesErrorRetryable()) {
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    (click)="loadBranches()"
+                  >
+                    Reintentar
+                  </button>
+                }
+              </div>
+            } @else {
+              <select id="branchExternalId" formControlName="branchExternalId">
+                <option value="" disabled>Seleccioná una sucursal</option>
+                @for (branch of branches(); track branch.externalId) {
+                  <option [value]="branch.externalId">{{ branch.name }}</option>
+                }
+              </select>
+              @if (branches().length === 0) {
+                <small class="field-error">
+                  No hay sucursales disponibles. Creá una
+                  <a routerLink="/branches/new">sucursal</a> primero.
+                </small>
+              }
+              @if (
+                userForm.get('branchExternalId')?.touched &&
+                userForm.get('branchExternalId')?.invalid
+              ) {
+                <small class="field-error">La sucursal es obligatoria.</small>
+              }
             }
-            @if (
-              userForm.get('branchExternalId')?.touched &&
-              userForm.get('branchExternalId')?.invalid
-            ) {
-              <small class="field-error">La sucursal es obligatoria.</small>
-            }
-          }
-        </div>
+          </div>
+        }
 
         <div class="form-group">
           <label for="firstName">Nombre</label>
@@ -124,14 +138,37 @@
           }
         </div>
 
+        @if (isOwnerMode()) {
+          <div class="form-group">
+            <label for="dni">DNI</label>
+            <input id="dni" type="text" formControlName="dni" />
+            @if (userForm.get('dni')?.touched && userForm.get('dni')?.invalid) {
+              <small class="field-error">
+                El DNI es obligatorio (7 a 15 caracteres).
+              </small>
+            }
+          </div>
+        }
+
         <div class="form-group full-width">
           <label for="password">Contraseña</label>
-          <input
-            id="password"
-            type="password"
-            formControlName="password"
-            autocomplete="new-password"
-          />
+          <div class="password-input">
+            <input
+              id="password"
+              [type]="showPassword() ? 'text' : 'password'"
+              formControlName="password"
+              autocomplete="new-password"
+            />
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm password-toggle"
+              (click)="togglePasswordVisibility()"
+              [attr.aria-pressed]="showPassword()"
+              aria-controls="password"
+            >
+              {{ showPassword() ? 'Ocultar' : 'Mostrar' }}
+            </button>
+          </div>
           @if (
             userForm.get('password')?.touched &&
             userForm.get('password')?.invalid
@@ -140,8 +177,86 @@
               La contraseña es obligatoria (mínimo 6 caracteres).
             </small>
           }
+          @if (isOwnerMode()) {
+            <small class="field-hint">
+              Acordá la contraseña con el cliente antes de registrarlo.
+            </small>
+          }
         </div>
       </div>
+
+      @if (isOwnerMode()) {
+        <fieldset class="form-fieldset" formGroupName="address">
+          <legend>Dirección</legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="street">Calle</label>
+              <input id="street" type="text" formControlName="street" />
+              @if (
+                addressGroup.get('street')?.touched &&
+                addressGroup.get('street')?.invalid
+              ) {
+                <small class="field-error">
+                  La calle es obligatoria (máximo 100 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="number">Número</label>
+              <input id="number" type="text" formControlName="number" />
+              @if (
+                addressGroup.get('number')?.touched &&
+                addressGroup.get('number')?.invalid
+              ) {
+                <small class="field-error">
+                  El número es obligatorio (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="city">Ciudad</label>
+              <input id="city" type="text" formControlName="city" />
+              @if (
+                addressGroup.get('city')?.touched &&
+                addressGroup.get('city')?.invalid
+              ) {
+                <small class="field-error">
+                  La ciudad es obligatoria (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="province">Provincia</label>
+              <input id="province" type="text" formControlName="province" />
+              @if (
+                addressGroup.get('province')?.touched &&
+                addressGroup.get('province')?.invalid
+              ) {
+                <small class="field-error">
+                  La provincia es obligatoria (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="country">País</label>
+              <input id="country" type="text" formControlName="country" />
+              @if (
+                addressGroup.get('country')?.touched &&
+                addressGroup.get('country')?.invalid
+              ) {
+                <small class="field-error">
+                  El país es obligatorio (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+          </div>
+        </fieldset>
+      }
 
       @if (isVeterinarian()) {
         <fieldset class="form-fieldset">
@@ -211,7 +326,9 @@
       }
 
       <div class="actions">
-        <a routerLink="/" class="btn btn-secondary">Cancelar</a>
+        <a [routerLink]="isOwnerMode() ? '/owners' : '/'" class="btn btn-secondary">
+          Cancelar
+        </a>
         <button
           type="submit"
           class="btn btn-primary"
@@ -219,6 +336,8 @@
         >
           @if (saving()) {
             Registrando...
+          } @else if (isOwnerMode()) {
+            Registrar propietario
           } @else {
             Registrar usuario
           }

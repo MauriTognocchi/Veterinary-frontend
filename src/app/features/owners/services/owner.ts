@@ -1,7 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { OwnerRequest, OwnerResponse } from '../models/owner.model';
+import {
+  OwnerRequest,
+  OwnerResponse,
+  OwnerWithCredentialsRequest,
+} from '../models/owner.model';
 
 @Injectable({ providedIn: 'root' })
 export class OwnerService {
@@ -23,6 +27,15 @@ export class OwnerService {
 
   create(owner: OwnerRequest): Observable<OwnerResponse> {
     return this.http.post<OwnerResponse>(`${this.baseUrl}/api/owners`, owner);
+  }
+
+  createWithCredentials(
+    owner: OwnerWithCredentialsRequest,
+  ): Observable<OwnerResponse> {
+    return this.http.post<OwnerResponse>(
+      `${this.baseUrl}/api/owners/with-credentials`,
+      owner,
+    );
   }
 
   update(externalId: string, owner: OwnerRequest): Observable<OwnerResponse> {

@@ -1,6 +1,9 @@
 import { routes } from './app.routes';
 import { ANIMAL_TYPE_ADMIN_ROLES } from './core/models/auth.model';
-import { USER_ADMIN_ROLES } from './core/models/auth.model';
+import {
+  OWNER_WRITE_ROLES,
+  USER_ADMIN_ROLES,
+} from './core/models/auth.model';
 import { authGuard } from './core/guards/auth-guard';
 import { roleGuard } from './core/guards/role-guard';
 import { AnimalTypeForm } from './features/animal-types/pages/animal-type-form/animal-type-form';
@@ -75,6 +78,18 @@ describe('rutas de registro', () => {
     expect(route?.component).toBe(OwnerForm);
     expect(route?.canActivate).toEqual([authGuard, roleGuard]);
     expect(route?.data?.['permissions']).toEqual(['CREATE_OWNERS']);
+  });
+
+  it('permite crear propietarios con cuenta a ADMIN y RECEPTIONIST', () => {
+    const route = routes.find((item) => item.path === 'owners/new/account');
+
+    expect(route?.component).toBe(UserRegister);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(OWNER_WRITE_ROLES);
+    expect(route?.data?.['roles']).toContain('ROLE_ADMIN');
+    expect(route?.data?.['roles']).toContain('ROLE_RECEPTIONIST');
+    expect(route?.data?.['mode']).toBe('OWNER');
+    expect(route?.data?.['permissions']).toBeUndefined();
   });
 
   it('permite editar propietarios con el permiso UPDATE_OWNERS', () => {
