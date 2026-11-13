@@ -8,7 +8,10 @@
       viewChild,
     } from '@angular/core';
     import { RouterLink } from '@angular/router';
-    import { PET_WRITE_ROLES } from '../../../../core/models/auth.model';
+    import {
+      PET_CREATE_ROLES,
+      PET_WRITE_ROLES,
+    } from '../../../../core/models/auth.model';
     import { AuthService } from '../../../../core/services/auth';
     import { PetResponse } from '../../models/pet.model';
     import { PetService } from '../../services/pet';
@@ -25,8 +28,11 @@
       private authService = inject(AuthService);
       private listHeading = viewChild<ElementRef<HTMLElement>>('listHeading');
 
-      private readonly isClient = computed(() =>
+      readonly isClient = computed(() =>
         this.authService.hasRole('ROLE_CLIENT'),
+      );
+      readonly canCreate = computed(() =>
+        this.authService.hasAnyRole(PET_CREATE_ROLES),
       );
       readonly canWrite = computed(() =>
         !this.isClient() && this.authService.hasAnyRole(PET_WRITE_ROLES),

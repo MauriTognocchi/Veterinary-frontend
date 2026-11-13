@@ -1,9 +1,9 @@
  <section class="pet-list">
       <div class="pet-list-header">
         <h2 #listHeading tabindex="-1">Mascotas</h2>
-        @if (canWrite()) {
+        @if (canCreate()) {
           <a routerLink="/pets/new" class="btn btn-primary">
-            Nueva mascota
+            {{ isClient() ? 'Registrar mascota' : 'Nueva mascota' }}
           </a>
         }
       </div>

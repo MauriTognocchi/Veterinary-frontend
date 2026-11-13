@@ -18,6 +18,11 @@ import { VisitForm } from './features/visits/pages/visit-form/visit-form';
 import { VisitDetail } from './features/visits/pages/visit-detail/visit-detail';
 import { MedicationList } from './features/medications/pages/medication-list/medication-list';
 import { MedicationForm } from './features/medications/pages/medication-form/medication-form';
+import {
+  PET_CREATE_ROLES,
+  PET_WRITE_ROLES,
+} from './core/models/auth.model';
+import { PetForm } from './features/pets/pages/pet-form/pet-form';
 
 const ANIMAL_TYPE_ROUTES = [
   {
@@ -105,6 +110,28 @@ describe('rutas de administración de usuarios', () => {
     expect(route?.canActivate).toEqual([authGuard, roleGuard]);
     expect(route?.data?.['roles']).toEqual(USER_ADMIN_ROLES);
     expect(route?.data?.['permissions']).toBeUndefined();
+  });
+});
+
+describe('rutas de mascotas', () => {
+  it('permite crear mascotas a ADMIN, RECEPTIONIST y OWNER', () => {
+    const route = routes.find((item) => item.path === 'pets/new');
+
+    expect(route?.component).toBe(PetForm);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(PET_CREATE_ROLES);
+    expect(route?.data?.['roles']).toContain('ROLE_CLIENT');
+  });
+
+  it('mantiene la edición limitada a ADMIN y RECEPTIONIST', () => {
+    const route = routes.find(
+      (item) => item.path === 'pets/:externalId/edit',
+    );
+
+    expect(route?.component).toBe(PetForm);
+    expect(route?.canActivate).toEqual([authGuard, roleGuard]);
+    expect(route?.data?.['roles']).toEqual(PET_WRITE_ROLES);
+    expect(route?.data?.['roles']).not.toContain('ROLE_CLIENT');
   });
 });
 
