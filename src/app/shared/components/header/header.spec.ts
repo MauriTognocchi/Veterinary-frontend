@@ -92,115 +92,42 @@ describe('Header', () => {
     expect(findNavLink('Iniciar sesión')).toBeUndefined();
   });
 
-  it('mantiene la navegación completa para usuarios que no son administradores', () => {
+  it('muestra la navegación del propietario', () => {
     authService.isAuthenticated.set(true);
+    authService.hasAnyRole.mockImplementation((roles: string[]) =>
+      roles.includes('ROLE_CLIENT'),
+    );
 
     createComponent();
 
     expect(findNavLink('Home')?.getAttribute('href')).toBe('/');
     expect(findNavLink('Mascotas')?.getAttribute('href')).toBe('/pets');
     expect(findNavLink('Turnos')?.getAttribute('href')).toBe('/appointments');
-    expect(findNavLink('Cerrar sesión')).toBeDefined();
-  });
-
-  it('muestra Propietarios con VIEW_OWNERS y Agregar Propietario con CREATE_OWNERS', () => {
-    authService.isAuthenticated.set(true);
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('VIEW_OWNERS') ||
-      permissions.includes('CREATE_OWNERS'),
-    );
-
-    createComponent();
-
-    expect(authService.hasAnyPermission).toHaveBeenCalledWith([
-      'VIEW_OWNERS',
-    ]);
-    expect(authService.hasAnyPermission).toHaveBeenCalledWith([
-      'CREATE_OWNERS',
-    ]);
-    expect(findNavLink('Propietarios')?.getAttribute('href')).toBe('/owners');
-    expect(findNavLink('Agregar Propietario')?.getAttribute('href')).toBe(
-      '/owners/new',
-    );
-  });
-
-  it('muestra Propietarios con VIEW_OWNERS sin mostrar Agregar Propietario', () => {
-    authService.isAuthenticated.set(true);
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('VIEW_OWNERS'),
-    );
-
-    createComponent();
-
-    expect(findNavLink('Propietarios')?.getAttribute('href')).toBe('/owners');
-    expect(findNavLink('Agregar Propietario')).toBeUndefined();
-  });
-
-  it('muestra Agregar Propietario con CREATE_OWNERS aunque no tenga VIEW_OWNERS', () => {
-    authService.isAuthenticated.set(true);
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('CREATE_OWNERS'),
-    );
-
-    createComponent();
-
-    expect(findNavLink('Propietarios')).toBeUndefined();
-    expect(findNavLink('Agregar Propietario')?.getAttribute('href')).toBe(
-      '/owners/new',
-    );
-  });
-
-  it('oculta Propietarios sin VIEW_OWNERS ni CREATE_OWNERS', () => {
-    authService.isAuthenticated.set(true);
-
-    createComponent();
-
-    expect(findNavLink('Propietarios')).toBeUndefined();
-    expect(findNavLink('Agregar Propietario')).toBeUndefined();
-    expect(findNavLink('Mascotas')).toBeDefined();
-    expect(findNavLink('Sucursales')).toBeDefined();
-  });
-
-  it('muestra Usuarios con el permiso VIEW_USERS', () => {
-    authService.isAuthenticated.set(true);
-    authService.hasAnyPermission.mockReturnValue(true);
-
-    createComponent();
-
-    expect(authService.hasAnyPermission).toHaveBeenCalledWith(['VIEW_USERS']);
-    expect(findNavLink('Usuarios')?.getAttribute('href')).toBe('/users');
-  });
-
-  it('oculta Usuarios sin el permiso VIEW_USERS', () => {
-    authService.isAuthenticated.set(true);
-
-    createComponent();
-
-    expect(findNavLink('Usuarios')).toBeUndefined();
-  });
-
-  it('muestra Visitas y Medicamentos según sus permisos', () => {
-    authService.isAuthenticated.set(true);
-    authService.hasAnyPermission.mockImplementation((permissions: string[]) =>
-      permissions.includes('VIEW_CLINICAL_RECORDS') ||
-      permissions.includes('VIEW_MEDICATIONS'),
-    );
-
-    createComponent();
-
     expect(findNavLink('Visitas')?.getAttribute('href')).toBe('/visits');
-    expect(findNavLink('Medicamentos')?.getAttribute('href')).toBe(
-      '/medications',
-    );
+    expect(findNavLink('Sucursales')?.getAttribute('href')).toBe('/branches');
+    expect(findNavLink('Cerrar sesión')).toBeDefined();
+    expect(findNavLink('Propietarios')).toBeUndefined();
+    expect(findNavLink('Veterinarios')).toBeUndefined();
+    expect(findNavLink('Recepcionistas')).toBeUndefined();
+    expect(findNavLink('Usuarios')).toBeUndefined();
+    expect(findNavLink('Condiciones')).toBeUndefined();
+    expect(findNavLink('Estudios')).toBeUndefined();
+    expect(findNavLink('Medicamentos')).toBeUndefined();
   });
 
-  it('oculta Visitas y Medicamentos sin sus permisos', () => {
+  it('cierra sesión con el mecanismo existente desde la navegación del propietario', () => {
     authService.isAuthenticated.set(true);
+    authService.hasAnyRole.mockImplementation((roles: string[]) =>
+      roles.includes('ROLE_CLIENT'),
+    );
 
     createComponent();
 
-    expect(findNavLink('Visitas')).toBeUndefined();
-    expect(findNavLink('Medicamentos')).toBeUndefined();
+    const logoutLink = findNavLink('Cerrar sesión');
+
+    logoutLink?.dispatchEvent(new MouseEvent('click'));
+
+    expect(authService.logout).toHaveBeenCalledWith('manual');
   });
 
   it('muestra Cerrar sesión y oculta login cuando hay sesión', () => {

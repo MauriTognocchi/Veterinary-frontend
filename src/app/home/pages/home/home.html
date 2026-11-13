@@ -244,6 +244,101 @@
       </div>
     </section>
   </section>
+} @else if (isClient()) {
+  <section class="owner-home">
+    <header class="owner-home-header">
+      <h2>¡Bienvenido!</h2>
+      <p>Este es tu espacio para gestionar y consultar tus mascotas</p>
+    </header>
+
+    <section class="owner-section" aria-labelledby="owner-pets-title">
+      <div class="owner-section-header">
+        <h3 id="owner-pets-title">MIS MASCOTAS</h3>
+        <a routerLink="/pets" class="btn btn-secondary btn-sm">Ver todas</a>
+      </div>
+
+      @if (loadingPets()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando mascotas...
+        </div>
+      } @else if (petsError()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ petsError() }}</p>
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoadPets()"
+            >
+              Reintentar
+            </button>
+          </div>
+        </div>
+      } @else if (ownerPets().length === 0) {
+        <div class="state-message" role="status">
+          Todavía no tenés mascotas registradas.
+        </div>
+      } @else {
+        <div class="owner-pets-grid">
+          @for (pet of ownerPets(); track pet.externalId) {
+            <article class="owner-pet-card">
+              @if (petPhotoUrl(pet); as photoUrl) {
+                <img
+                  class="owner-pet-photo"
+                  [src]="photoUrl"
+                  [alt]="'Foto de ' + pet.name"
+                  loading="lazy"
+                />
+              } @else {
+                <div
+                  class="owner-pet-photo is-placeholder"
+                  role="img"
+                  [attr.aria-label]="'Foto no disponible de ' + pet.name"
+                >
+                  <svg
+                    class="owner-pet-photo-icon"
+                    viewBox="0 0 64 64"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <ellipse cx="20" cy="20" rx="6" ry="8" />
+                    <ellipse cx="32" cy="14" rx="6" ry="8" />
+                    <ellipse cx="44" cy="20" rx="6" ry="8" />
+                    <path d="M32 26c-8 0-16 8-16 16 0 6 5 9 10 9 3 0 4-1 6-1s3 1 6 1c5 0 10-3 10-9 0-8-8-16-16-16z" />
+                  </svg>
+                  <span>Foto no disponible</span>
+                </div>
+              }
+
+              <div class="owner-pet-body">
+                <h4>{{ pet.name }}</h4>
+                <p class="owner-pet-type">{{ petTypeLabel(pet) }}</p>
+                <a
+                  [routerLink]="['/pets', pet.externalId]"
+                  class="btn btn-primary btn-sm"
+                >
+                  Ver perfil
+                </a>
+              </div>
+            </article>
+          }
+        </div>
+      }
+    </section>
+
+    <section class="owner-section" aria-labelledby="owner-quick-title">
+      <h3 id="owner-quick-title">ACCESOS RÁPIDOS</h3>
+      <div class="quick-access-grid">
+        @for (access of ownerQuickAccess; track access.label) {
+          <a class="quick-access-card" [routerLink]="access.path">
+            <span class="quick-access-label">{{ access.label }}</span>
+            <span class="quick-access-text">{{ access.description }}</span>
+            <span class="quick-access-arrow" aria-hidden="true">→</span>
+          </a>
+        }
+      </div>
+    </section>
+  </section>
 } @else {
   <section class="home-hero">
     <div class="home-content">
