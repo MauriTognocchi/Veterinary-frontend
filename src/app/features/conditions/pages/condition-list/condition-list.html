@@ -1,0 +1,85 @@
+ <section class="condition-list">
+      <div class="condition-list-header">
+        <h2 #listHeading tabindex="-1">Condiciones Médicas</h2>
+        @if (canCreate()) {
+          <a routerLink="/conditions/new" class="btn btn-primary">
+            Nueva condición
+          </a>
+        }
+      </div>
+    
+      @if (deleteError()) {
+        <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+      }
+    
+      @if (loading()) {
+        <div class="state-message is-loading" role="status" aria-live="polite">
+          Cargando condiciones médicas...
+        </div>
+      } @else if (error()) {
+        <div class="alert alert-error" role="alert">
+          <p>{{ error() }}</p>
+          @if (loadErrorRetryable()) {
+            <div class="state-actions">
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                (click)="retryLoad()"
+              >
+                Reintentar
+              </button>
+            </div>
+          }
+        </div>
+      } @else if (conditions().length === 0) {
+        <div class="state-message" role="status">
+          No hay condiciones médicas registradas.
+        </div>
+      } @else {
+        <table>
+          <thead>
+            <tr>
+              <th>Nombre</th>
+              <th>Descripción</th>
+              @if (canEdit() || isAdmin()) {
+                <th>Acciones</th>
+              }
+            </tr>
+          </thead>
+          <tbody>
+            @for (condition of conditions(); track condition.externalId) {
+              <tr>
+                <td><strong>{{ condition.name }}</strong></td>
+                <td>{{ condition.description }}</td>
+                @if (canEdit() || isAdmin()) {
+                  <td class="actions-cell">
+                    @if (canEdit()) {
+                      <a
+                        [routerLink]="['/conditions', condition.externalId, 'edit']"
+                        class="edit-link"
+                      >
+                        Editar
+                      </a>
+                    }
+                    @if (isAdmin()) {
+                      <button
+                        type="button"
+                        class="btn btn-danger btn-sm"
+                        [disabled]="deletingId() !== null"
+                        (click)="deleteCondition(condition)"
+                      >
+                        @if (deletingId() === condition.externalId) {
+                          Eliminando...
+                        } @else {
+                          Eliminar
+                        }
+                      </button>
+                    }
+                  </td>
+                }
+              </tr>
+            }
+          </tbody>
+        </table>
+      }
+    </section>

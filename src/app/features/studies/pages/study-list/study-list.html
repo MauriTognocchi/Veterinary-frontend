@@ -1,0 +1,106 @@
+<section class="study-list">
+  <div class="study-list-header">
+    <h2 #listHeading tabindex="-1">Catálogo de Estudios</h2>
+    @if (canCreate()) {
+      <a routerLink="/studies/new" class="btn btn-primary">
+        + Nuevo estudio
+      </a>
+    }
+  </div>
+
+  @if (deleteError()) {
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+  }
+
+  @if (!loading() && !error() && studies().length > 0) {
+    <div class="study-search">
+      <input
+        type="search"
+        aria-label="Buscar estudios por nombre o descripción"
+        placeholder="Buscar por nombre o descripción..."
+        [value]="search()"
+        (input)="onSearch($event)"
+      />
+      @if (search()) {
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          (click)="clearSearch()"
+        >
+          Limpiar
+        </button>
+      }
+    </div>
+  }
+
+  @if (loading()) {
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando estudios...
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (studies().length === 0) {
+    <div class="state-message" role="status">
+      No hay estudios registrados en el catálogo.
+    </div>
+  } @else if (filteredStudies().length === 0) {
+    <div class="state-message" role="status">
+      No hay estudios que coincidan con la búsqueda.
+    </div>
+  } @else {
+    <table>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Descripción</th>
+          @if (canEdit() || canDelete()) {
+            <th>Acciones</th>
+          }
+        </tr>
+      </thead>
+      <tbody>
+        @for (study of filteredStudies(); track study.externalId) {
+          <tr>
+            <td><strong>{{ study.name }}</strong></td>
+            <td class="study-description">{{ study.description || '—' }}</td>
+            @if (canEdit() || canDelete()) {
+              <td class="actions-cell">
+                @if (canEdit()) {
+                  <a
+                    [routerLink]="['/studies', study.externalId, 'edit']"
+                    class="edit-link"
+                  >
+                    Editar
+                  </a>
+                }
+                @if (canDelete()) {
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    [disabled]="deletingId() !== null"
+                    (click)="deleteStudy(study)"
+                  >
+                    @if (deletingId() === study.externalId) {
+                      Eliminando...
+                    } @else {
+                      Eliminar
+                    }
+                  </button>
+                }
+              </td>
+            }
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

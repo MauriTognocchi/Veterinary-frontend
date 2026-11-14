@@ -1,0 +1,79 @@
+<section class="login-container">
+  <div class="card card-accent login-card">
+    <div class="login-header">
+      <h2>Iniciar sesión</h2>
+      <p>Accedé al sistema de gestión de la clínica.</p>
+    </div>
+
+    @if (registered) {
+      <div class="alert alert-success" role="status">
+        Tu cuenta se creó correctamente. Iniciá sesión para continuar.
+      </div>
+    }
+
+    @if (logoutReason === 'timeout') {
+      <div class="alert alert-info" role="status">
+        Tu sesión se cerró por inactividad.
+      </div>
+    } @else if (logoutReason === 'expired') {
+      <div class="alert alert-info" role="status">
+        Tu sesión expiró. Iniciá sesión nuevamente.
+      </div>
+    }
+
+    @if (loading()) {
+      <span class="visually-hidden" role="status" aria-live="polite">Iniciando sesión...</span>
+    }
+
+    <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" [attr.aria-busy]="loading()">
+      <div class="form-group">
+        <label for="username">Usuario</label>
+        <input
+          id="username"
+          type="text"
+          formControlName="username"
+          autocomplete="username"
+        />
+        @if (
+          loginForm.get('username')?.touched &&
+          loginForm.get('username')?.invalid
+        ) {
+          <small class="field-error">El usuario es obligatorio.</small>
+        }
+      </div>
+
+      <div class="form-group">
+        <label for="password">Contraseña</label>
+        <input
+          id="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+        />
+        @if (
+          loginForm.get('password')?.touched &&
+          loginForm.get('password')?.invalid
+        ) {
+          <small class="field-error">La contraseña es obligatoria.</small>
+        }
+      </div>
+
+      @if (error()) {
+        <div class="alert alert-error" role="alert">{{ error() }}</div>
+      }
+
+      <button
+        type="submit"
+        class="btn btn-primary btn-lg btn-block"
+        [disabled]="loading() || loginForm.invalid"
+        [attr.aria-busy]="loading()"
+      >
+        @if (loading()) {
+          Iniciando sesión...
+        } @else {
+          Iniciar sesión
+        }
+      </button>
+    </form>
+  </div>
+</section>

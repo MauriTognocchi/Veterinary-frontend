@@ -1,0 +1,72 @@
+.appointment-form-container {
+      display: flex;
+      justify-content: center;
+      padding: 1rem 0;
+    }
+
+    .appointment-form-card {
+      width: 100%;
+      max-width: 720px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .appointment-form-card h2 {
+      font-size: clamp(1.4rem, 3vw, 1.75rem);
+      margin: 0;
+    }
+
+    .full-width {
+      grid-column: 1 / -1;
+    }
+
+    .slots-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .slot-chip {
+      padding: 0.5rem 0.85rem;
+      border-radius: 6px;
+      border: 1px solid var(--violet-300, #c4b5fd);
+      background-color: #f5f3ff;
+      color: var(--violet-900, #4c1d95);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease-in-out;
+    }
+
+    .slot-chip:hover {
+      background-color: var(--violet-100, #ede9fe);
+      border-color: var(--violet-500, #8b5cf6);
+    }
+
+    .slot-chip.is-selected {
+      background-color: var(--violet-700, #6d28d9);
+      color: #ffffff;
+      border-color: var(--violet-700, #6d28d9);
+      box-shadow: 0 2px 4px rgba(109, 40, 217, 0.2);
+    }
+
+    .slots-empty-note {
+      margin: 0.35rem 0;
+      font-size: 0.85rem;
+      color: #6b7280;
+      font-style: italic;
+    }
+
+    .is-loading-sm {
+      font-size: 0.85rem;
+      color: var(--violet-700, #6d28d9);
+      margin: 0.25rem 0;
+    }
+
+    .filters-warning {
+      margin: 0.25rem 0;
+      color: #8a5a00;
+      font-size: 0.85rem;
+    }

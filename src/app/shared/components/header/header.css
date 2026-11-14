@@ -1,0 +1,139 @@
+:host {
+    display: block;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+}
+
+.site-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    min-width: 0;
+    padding: 1rem var(--layout-gutter);
+    background: linear-gradient(120deg, var(--violet-800), var(--violet-600) 55%, var(--violet-500));
+    border-bottom: 3px solid var(--violet-300);
+    box-shadow: var(--shadow-md);
+    color: #ffffff;
+}
+
+.brand {
+    display: flex;
+    flex: 1 1 auto;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.brand-mark {
+    display: grid;
+    place-items: center;
+    flex-shrink: 0;
+    width: 48px;
+    height: 48px;
+    border-radius: 16px;
+    background-color: rgba(255, 255, 255, 0.16);
+    border: 1px solid rgba(255, 255, 255, 0.32);
+}
+
+.brand-mark .paw-icon {
+    font-size: 26px;
+    line-height: 1;
+    filter: grayscale(1) brightness(0) invert(1);
+}
+
+.brand-text {
+    min-width: 0;
+}
+
+.brand-text h1 {
+    color: #ffffff;
+    font-size: clamp(1rem, 2.2vw, 1.35rem);
+    font-weight: 700;
+    line-height: 1.25;
+    overflow-wrap: break-word;
+}
+
+.brand-subtitle {
+    display: block;
+    margin-top: 0.15rem;
+    color: var(--violet-100);
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.main-nav {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    min-width: 0;
+    max-width: 100%;
+}
+
+.main-nav a {
+    padding: 0.55rem 0.9rem;
+    color: #ffffff;
+    font-size: 0.9rem;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+    border-radius: 999px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.main-nav a:hover {
+    background-color: rgba(255, 255, 255, 0.16);
+}
+
+.main-nav a.active {
+    background-color: #ffffff;
+    color: var(--violet-700);
+    box-shadow: var(--shadow-sm);
+}
+
+@media (max-width: 860px) {
+    :host {
+        position: static;
+    }
+
+    .site-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.9rem;
+    }
+
+    .main-nav {
+        justify-content: flex-start;
+        width: 100%;
+    }
+}
+
+@media (max-width: 520px) {
+    .brand-mark {
+        width: 40px;
+        height: 40px;
+        border-radius: 12px;
+    }
+
+    .brand-mark .paw-icon {
+        font-size: 22px;
+    }
+
+    .brand-text h1 {
+        font-size: 0.95rem;
+    }
+
+    .main-nav {
+        gap: 0.25rem;
+    }
+
+    .main-nav a {
+        padding: 0.45rem 0.7rem;
+        font-size: 0.82rem;
+    }
+}

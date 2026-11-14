@@ -1,0 +1,73 @@
+.receptionist-detail-container {
+      display: flex;
+      justify-content: center;
+    }
+
+    .receptionist-detail-card {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+
+    .receptionist-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .receptionist-detail-header h2 {
+      font-size: clamp(1.4rem, 3vw, 1.75rem);
+    }
+
+    .receptionist-detail-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .detail-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin: 0;
+    }
+
+    .detail-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .detail-row dt {
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #6b7280;
+    }
+
+    .detail-row dd {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--text, #111827);
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.15rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      background-color: #d1e7dd;
+      color: #0a3622;
+    }
+
+    .status-badge.is-inactive {
+      background-color: #f8d7da;
+      color: #58151c;
+    }

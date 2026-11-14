@@ -1,0 +1,61 @@
+:host {
+  display: block;
+}
+
+.owner-form-container {
+  display: flex;
+  justify-content: center;
+  padding: clamp(0.5rem, 2vw, 1rem) 0;
+}
+
+.owner-form-card {
+  max-width: 760px;
+}
+
+.owner-form-card h2 {
+  margin-bottom: 1.5rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.address-toggle {
+  margin: 1.5rem 0 1rem 0;
+}
+
+.address-toggle label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.6rem 1rem;
+  color: var(--violet-900);
+  background-color: var(--violet-50);
+  border: 1px solid var(--violet-200);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.address-toggle input[type="checkbox"] {
+  width: 1.05rem;
+  height: 1.05rem;
+  accent-color: var(--violet-600);
+  cursor: pointer;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 700px) {
+  .actions {
+    flex-direction: column-reverse;
+  }
+
+  .actions .btn {
+    width: 100%;
+  }
+}

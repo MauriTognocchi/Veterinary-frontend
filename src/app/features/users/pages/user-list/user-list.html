@@ -1,0 +1,137 @@
+<section class="user-list">
+  <div class="user-list-header">
+    <h2 #listHeading tabindex="-1">Usuarios</h2>
+  </div>
+
+  @if (success()) {
+    <div class="alert alert-success" role="status">{{ success() }}</div>
+  }
+
+  @if (deleteError()) {
+    <div class="alert alert-error" role="alert">{{ deleteError() }}</div>
+  }
+
+  @if (reactivateError()) {
+    <div class="alert alert-error" role="alert">{{ reactivateError() }}</div>
+  }
+
+  <div class="user-filters" role="search">
+    <div class="form-group">
+      <label for="user-search">Buscar</label>
+      <input
+        id="user-search"
+        type="search"
+        [placeholder]="isAdmin() ? 'Nombre, apellido o email' : 'Nombre o apellido'"
+        [value]="searchTerm()"
+        (input)="updateSearch($event)"
+      />
+    </div>
+
+    @if (isAdmin()) {
+    <div class="form-group">
+      <label for="user-status">Estado</label>
+      <select
+        id="user-status"
+        [value]="statusFilter()"
+        (change)="updateStatusFilter($event)"
+      >
+        <option value="ALL">Todos</option>
+        <option value="ACTIVE">Activos</option>
+        <option value="INACTIVE">Inactivos</option>
+      </select>
+    </div>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando usuarios...
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (users().length === 0) {
+    <div class="state-message" role="status">No hay usuarios registrados.</div>
+  } @else if (filteredUsers().length === 0) {
+    <div class="state-message" role="status">
+      No se encontraron usuarios con esos criterios.
+    </div>
+  } @else {
+    <table>
+      <caption>
+        Usuarios registrados
+      </caption>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Apellido</th>
+          @if (isAdmin()) {
+          <th>Email</th>
+          <th>Estado</th>
+          }
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (user of filteredUsers(); track user.externalId) {
+          <tr>
+            <td>{{ user.firstName }}</td>
+            <td>{{ user.lastName }}</td>
+            @if (isAdmin()) {
+            <td>{{ user.email }}</td>
+            <td>
+              <span
+                class="state-badge"
+                [class.is-inactive]="user.userState === 'INACTIVE'"
+              >
+                {{ user.userState }}
+              </span>
+            </td>
+            }
+            <td class="actions-cell">
+              <a [routerLink]="['/users', user.externalId]" class="detail-link">
+                Ver detalle
+              </a>
+              @if (isAdmin() && canDeleteUsers() && user.userState === 'ACTIVE') {
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  [disabled]="actionPending()"
+                  (click)="deactivateUser(user)"
+                >
+                  @if (deletingId() === user.externalId) {
+                    Desactivando...
+                  } @else {
+                    Desactivar
+                  }
+                </button>
+              }
+              @if (isAdmin() && canReactivateUsers() && user.userState === 'INACTIVE') {
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm reactivate-button"
+                  [disabled]="actionPending()"
+                  (click)="reactivateUser(user)"
+                >
+                  @if (reactivatingId() === user.externalId) {
+                    Reactivando...
+                  } @else {
+                    Reactivar cuenta
+                  }
+                </button>
+              }
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

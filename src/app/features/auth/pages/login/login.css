@@ -1,0 +1,40 @@
+:host {
+  display: block;
+}
+
+.login-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 0;
+}
+
+.login-card {
+  max-width: 420px;
+}
+
+.login-card .form-group {
+  margin-bottom: 1.1rem;
+}
+
+.login-header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.login-header h2 {
+  margin-bottom: 0.4rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+}
+
+.login-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 480px) {
+  .login-container {
+    padding: 1rem 0;
+  }
+}

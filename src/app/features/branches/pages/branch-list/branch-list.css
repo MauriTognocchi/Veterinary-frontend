@@ -1,0 +1,40 @@
+.branch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.branch-list > .alert {
+  margin-bottom: 0;
+}
+
+.branch-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.branch-list-header h2 {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.branch-name {
+  font-weight: 600;
+  color: var(--violet-900);
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .branch-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

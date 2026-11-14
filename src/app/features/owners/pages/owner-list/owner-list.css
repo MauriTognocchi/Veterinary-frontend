@@ -1,0 +1,51 @@
+.owner-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.owner-list > .alert {
+  margin-bottom: 0;
+}
+
+.owner-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.owner-list-header h2 {
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+
+.owner-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.detail-link {
+  color: var(--violet-700);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.detail-link:hover {
+  text-decoration: underline;
+}
+
+.actions-cell {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .owner-list-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}

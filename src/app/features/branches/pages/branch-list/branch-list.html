@@ -1,0 +1,55 @@
+<section class="branch-list">
+  <div class="branch-list-header">
+    <h2 #listHeading tabindex="-1">Sucursales</h2>
+    @if (isAdmin()) {
+      <a routerLink="/branches/new" class="btn btn-primary">Nueva sucursal</a>
+    }
+  </div>
+
+  @if (loading()) {
+    <div class="state-message is-loading" role="status" aria-live="polite">
+      Cargando sucursales...
+    </div>
+  } @else if (error()) {
+    <div class="alert alert-error" role="alert">
+      <p>{{ error() }}</p>
+      @if (loadErrorRetryable()) {
+        <div class="state-actions">
+          <button type="button" class="btn btn-secondary btn-sm" (click)="retryLoad()">
+            Reintentar
+          </button>
+        </div>
+      }
+    </div>
+  } @else if (branches().length === 0) {
+    <div class="state-message" role="status">No hay sucursales registradas.</div>
+  } @else {
+    <table>
+      <caption>
+        Sucursales registradas
+      </caption>
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Dirección</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (branch of branches(); track branch.externalId) {
+          <tr>
+            <td>
+              <span class="branch-name">{{ branch.name }}</span>
+            </td>
+            <td>{{ formatAddress(branch) }}</td>
+            <td class="actions-cell">
+              <a [routerLink]="['/branches', branch.externalId]" class="btn btn-sm btn-secondary">
+                Ver detalle
+              </a>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</section>

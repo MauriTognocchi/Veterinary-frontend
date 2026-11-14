@@ -1,0 +1,55 @@
+:host {
+  display: block;
+}
+
+.register-container {
+  display: flex;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 3.5rem) 0;
+}
+
+.register-card {
+  max-width: 680px;
+}
+
+.register-header {
+  margin-bottom: 1.75rem;
+  text-align: center;
+}
+
+.register-header h2 {
+  margin-bottom: 0.4rem;
+  color: var(--violet-900);
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+}
+
+.register-header p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.register-card .form-grid {
+  margin-bottom: 1rem;
+}
+
+.register-card button[type='submit'] {
+  margin-top: 1.5rem;
+}
+
+.register-footer {
+  margin-top: 1.25rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+  text-align: center;
+}
+
+.register-footer a {
+  color: var(--violet-700);
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .register-container {
+    padding: 1rem 0;
+  }
+}

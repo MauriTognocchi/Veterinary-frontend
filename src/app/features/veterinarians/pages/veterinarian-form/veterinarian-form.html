@@ -1,0 +1,203 @@
+<section class="veterinarian-form-container">
+  <div class="card card-accent veterinarian-form-card">
+    <h2 #formHeading tabindex="-1">Editar veterinario</h2>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando veterinario...
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">
+        No encontramos el veterinario solicitado.
+      </div>
+      <div class="state-actions">
+        <a routerLink="/veterinarians" class="btn btn-secondary btn-sm">
+          Volver al listado
+        </a>
+      </div>
+    } @else if (loadError()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ loadError() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoad()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <form [formGroup]="veterinarianForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="firstName">Nombre</label>
+            <input
+              id="firstName"
+              type="text"
+              formControlName="firstName"
+              autocomplete="given-name"
+            />
+            @if (
+              veterinarianForm.get('firstName')?.touched &&
+              veterinarianForm.get('firstName')?.invalid
+            ) {
+              <small class="field-error">El nombre es obligatorio.</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="lastName">Apellido</label>
+            <input
+              id="lastName"
+              type="text"
+              formControlName="lastName"
+              autocomplete="family-name"
+            />
+            @if (
+              veterinarianForm.get('lastName')?.touched &&
+              veterinarianForm.get('lastName')?.invalid
+            ) {
+              <small class="field-error">El apellido es obligatorio.</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="licenseNumber">Matrícula</label>
+            <input
+              id="licenseNumber"
+              type="text"
+              formControlName="licenseNumber"
+              autocomplete="off"
+            />
+            @if (
+              veterinarianForm.get('licenseNumber')?.touched &&
+              veterinarianForm.get('licenseNumber')?.invalid
+            ) {
+              <small class="field-error">La matrícula es obligatoria.</small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              autocomplete="tel"
+            />
+            @if (
+              veterinarianForm.get('phone')?.touched &&
+              veterinarianForm.get('phone')?.invalid
+            ) {
+              <small class="field-error">El teléfono es obligatorio.</small>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              autocomplete="email"
+            />
+            @if (
+              veterinarianForm.get('email')?.touched &&
+              veterinarianForm.get('email')?.invalid
+            ) {
+              <small class="field-error">Ingresá un email válido.</small>
+            }
+          </div>
+        </div>
+
+        <fieldset class="form-fieldset">
+          <legend>Horario laboral</legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="workStartTime">Hora de inicio</label>
+              <input id="workStartTime" type="time" formControlName="workStartTime" />
+              @if (
+                veterinarianForm.get('workStartTime')?.touched &&
+                veterinarianForm.get('workStartTime')?.invalid
+              ) {
+                <small class="field-error">La hora de inicio es obligatoria.</small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="workEndTime">Hora de fin</label>
+              <input id="workEndTime" type="time" formControlName="workEndTime" />
+              @if (
+                veterinarianForm.get('workEndTime')?.touched &&
+                veterinarianForm.get('workEndTime')?.invalid
+              ) {
+                <small class="field-error">La hora de fin es obligatoria.</small>
+              } @else if (
+                veterinarianForm.hasError('timeRange') &&
+                veterinarianForm.get('workEndTime')?.touched
+              ) {
+                <small class="field-error">
+                  La hora de fin debe ser posterior a la hora de inicio.
+                </small>
+              }
+            </div>
+          </div>
+
+          <div class="form-group" formGroupName="workDays">
+            <span class="group-label">Días de trabajo</span>
+            <div class="days-grid">
+              @for (day of weekDays; track day.value) {
+                <label class="day-option">
+                  <input type="checkbox" [formControlName]="day.value" />
+                  {{ day.label }}
+                </label>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        <div class="form-group">
+          <label for="branchExternalId">Sucursal</label>
+          @if (branchesLoadError()) {
+            <p class="filters-warning">
+              No pudimos cargar las sucursales. Se mantendrá la sucursal actual.
+            </p>
+          } @else {
+            <select id="branchExternalId" formControlName="branchExternalId">
+              <option value="">Mantener sucursal actual</option>
+              @for (branch of branches(); track branch.externalId) {
+                <option [value]="branch.externalId">{{ branch.name }}</option>
+              }
+            </select>
+          }
+        </div>
+
+        @if (error()) {
+          <div class="alert alert-error" role="alert">{{ error() }}</div>
+        }
+
+        <div class="actions">
+          <a [routerLink]="['/veterinarians', externalId()]" class="btn btn-secondary">
+            Cancelar
+          </a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="saving() || veterinarianForm.invalid"
+          >
+            @if (saving()) {
+              Guardando...
+            } @else {
+              Guardar cambios
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</section>

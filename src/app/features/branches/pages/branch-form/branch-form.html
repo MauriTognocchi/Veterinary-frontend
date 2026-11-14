@@ -1,0 +1,216 @@
+<section class="branch-form-container">
+  <div class="card card-accent branch-form-card">
+    <h2 #formHeading tabindex="-1">
+      {{ editando() ? 'Editar sucursal' : 'Nueva sucursal' }}
+    </h2>
+
+    @if (loading()) {
+      <div class="state-message is-loading" role="status" aria-live="polite">
+        Cargando sucursal...
+      </div>
+    } @else if (notFound()) {
+      <div class="state-message" role="status">
+        No encontramos la sucursal solicitada.
+      </div>
+      <div class="state-actions">
+        <a routerLink="/branches" class="btn btn-secondary btn-sm">
+          Volver al listado
+        </a>
+      </div>
+    } @else if (loadError()) {
+      <div class="alert alert-error" role="alert">
+        <p>{{ loadError() }}</p>
+        @if (loadErrorRetryable()) {
+          <div class="state-actions">
+            <button
+              type="button"
+              class="btn btn-secondary btn-sm"
+              (click)="retryLoad()"
+            >
+              Reintentar
+            </button>
+          </div>
+        }
+      </div>
+    } @else {
+      <form [formGroup]="branchForm" (ngSubmit)="onSubmit()">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="name">Nombre</label>
+            <input
+              id="name"
+              type="text"
+              formControlName="name"
+              maxlength="50"
+              autocomplete="off"
+            />
+            @if (
+              branchForm.get('name')?.touched &&
+              branchForm.get('name')?.invalid
+            ) {
+              <small class="field-error">
+                El nombre es obligatorio (máximo 50 caracteres).
+              </small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="phone">Teléfono</label>
+            <input
+              id="phone"
+              type="tel"
+              formControlName="phone"
+              maxlength="20"
+              autocomplete="tel"
+            />
+            @if (
+              branchForm.get('phone')?.touched &&
+              branchForm.get('phone')?.invalid
+            ) {
+              <small class="field-error">
+                El teléfono es obligatorio (máximo 20 caracteres).
+              </small>
+            }
+          </div>
+
+          <div class="form-group full-width">
+            <label for="email">Email</label>
+            <input
+              id="email"
+              type="email"
+              formControlName="email"
+              maxlength="50"
+              autocomplete="email"
+            />
+            @if (
+              branchForm.get('email')?.touched &&
+              branchForm.get('email')?.invalid
+            ) {
+              <small class="field-error">
+                Ingresá un email válido (máximo 50 caracteres).
+              </small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="openingTime">Hora de apertura</label>
+            <input id="openingTime" type="time" formControlName="openingTime" />
+            @if (
+              branchForm.get('openingTime')?.touched &&
+              branchForm.get('openingTime')?.invalid
+            ) {
+              <small class="field-error">
+                La hora de apertura es obligatoria.
+              </small>
+            }
+          </div>
+
+          <div class="form-group">
+            <label for="closingTime">Hora de cierre</label>
+            <input id="closingTime" type="time" formControlName="closingTime" />
+            @if (
+              branchForm.get('closingTime')?.touched &&
+              branchForm.get('closingTime')?.invalid
+            ) {
+              <small class="field-error">
+                La hora de cierre es obligatoria.
+              </small>
+            }
+          </div>
+        </div>
+
+        <fieldset class="form-fieldset" formGroupName="address">
+          <legend>Dirección</legend>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="street">Calle</label>
+              <input id="street" type="text" formControlName="street" maxlength="100" />
+              @if (
+                addressGroup.get('street')?.touched &&
+                addressGroup.get('street')?.invalid
+              ) {
+                <small class="field-error">
+                  La calle es obligatoria (máximo 100 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="number">Número</label>
+              <input id="number" type="text" formControlName="number" maxlength="50" />
+              @if (
+                addressGroup.get('number')?.touched &&
+                addressGroup.get('number')?.invalid
+              ) {
+                <small class="field-error">
+                  El número es obligatorio (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="city">Ciudad</label>
+              <input id="city" type="text" formControlName="city" maxlength="50" />
+              @if (
+                addressGroup.get('city')?.touched &&
+                addressGroup.get('city')?.invalid
+              ) {
+                <small class="field-error">
+                  La ciudad es obligatoria (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="province">Provincia</label>
+              <input id="province" type="text" formControlName="province" maxlength="50" />
+              @if (
+                addressGroup.get('province')?.touched &&
+                addressGroup.get('province')?.invalid
+              ) {
+                <small class="field-error">
+                  La provincia es obligatoria (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+
+            <div class="form-group">
+              <label for="country">País</label>
+              <input id="country" type="text" formControlName="country" maxlength="50" />
+              @if (
+                addressGroup.get('country')?.touched &&
+                addressGroup.get('country')?.invalid
+              ) {
+                <small class="field-error">
+                  El país es obligatorio (máximo 50 caracteres).
+                </small>
+              }
+            </div>
+          </div>
+        </fieldset>
+
+        @if (error()) {
+          <div class="alert alert-error" role="alert">{{ error() }}</div>
+        }
+
+        <div class="actions">
+          <a routerLink="/branches" class="btn btn-secondary">Cancelar</a>
+          <button
+            type="submit"
+            class="btn btn-primary"
+            [disabled]="saving() || branchForm.invalid"
+          >
+            @if (saving()) {
+              Guardando...
+            } @else if (editando()) {
+              Guardar cambios
+            } @else {
+              Crear sucursal
+            }
+          </button>
+        </div>
+      </form>
+    }
+  </div>
+</section>

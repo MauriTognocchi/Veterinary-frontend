@@ -1,0 +1,26 @@
+.receptionist-form-container {
+      display: flex;
+      justify-content: center;
+    }
+    
+    .receptionist-form-card {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+    
+    .receptionist-form-card h2 {
+      font-size: clamp(1.4rem, 3vw, 1.75rem);
+    }
+    
+    .full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .filters-warning {
+      margin-top: 0.25rem;
+      color: #8a5a00;
+      font-size: 0.85rem;
+    }
